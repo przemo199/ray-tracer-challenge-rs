@@ -1,0 +1,125 @@
+use std::fmt::{Display, Formatter};
+use crate::{Intersection, Intersections, Material, Matrix, Ray, Tuple};
+use crate::shape::Shape;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Plane {
+    pub material: Material,
+    pub transformation: Matrix,
+    pub normal: Tuple,
+}
+
+impl Plane {
+    pub fn new(material: Material, transformation: Matrix) -> Plane {
+        let normal = Tuple::vector(0.0, 1.0, 0.0);
+        return Plane {
+            material,
+            transformation,
+            normal,
+        };
+    }
+}
+
+impl Default for Plane {
+    fn default() -> Plane {
+        return Plane::new(Material::default(), Matrix::identity());
+    }
+}
+
+impl Shape for Plane {
+    fn local_normal_at(&self, _: Tuple) -> Tuple {
+        return self.normal;
+    }
+
+    fn material(&self) -> Material {
+        return self.material.clone();
+    }
+
+    fn set_material(&mut self, material: Material) {
+        self.material = material;
+    }
+
+    fn transformation(&self) -> Matrix {
+        return self.transformation.clone();
+    }
+
+    fn set_transformation(&mut self, transformation: Matrix) {
+        self.transformation = transformation;
+    }
+
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
+        if ray.direction.y.abs() < crate::EPSILON {
+            return Intersections::new();
+        }
+
+        let t = -ray.origin.y / ray.direction.y;
+        let mut result = Intersections::new();
+        result.add(Intersection::new(t, self.clone()));
+        return result;
+    }
+
+    fn box_clone(&self) -> Box<dyn Shape> {
+        return Box::new(self.clone());
+    }
+}
+
+impl Display for Plane {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        return formatter.debug_struct("Plane")
+            .field("material", &self.material)
+            .field("transformation", &self.transformation)
+            .field("normal", &self.normal)
+            .finish();
+    }
+}
+
+impl From<Plane> for Box<dyn Shape> {
+    fn from(plane: Plane) -> Box<dyn Shape> {
+        return Box::new(plane);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normal_is_constant() {
+        let plane = Plane::default();
+        let normal1 = plane.normal_at(Tuple::point(0.0, 0.0, 0.0));
+        let normal2 = plane.normal_at(Tuple::point(10.0, 0.0, -10.0));
+        let normal3 = plane.normal_at(Tuple::point(-5.0, 0.0, 150.0));
+        let normal = Tuple::vector(0.0, 1.0, 0.0);
+        assert_eq!(normal1, normal);
+        assert_eq!(normal2, normal);
+        assert_eq!(normal3, normal);
+    }
+
+    #[test]
+    fn ray_intersects_plane_in_parallel() {
+        let plane = Plane::default();
+        let ray = Ray::new(Tuple::point(0.0, 10.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let intersections = plane.local_intersect(&ray);
+        assert_eq!(intersections.len(), 0);
+    }
+
+    #[test]
+    fn ray_intersects_plane_from_above() {
+        let plane = Plane::default();
+        let ray = Ray::new(Tuple::point(0.0, 1.0, 0.0), Tuple::vector(0.0, -1.0, 0.0));
+        let intersections = plane.local_intersect(&ray);
+        assert_eq!(intersections.len(), 1);
+        assert_eq!(intersections[0].t, 1.0);
+        assert_eq!(&intersections[0].object, &plane.box_clone());
+    }
+
+    #[test]
+    fn ray_intersects_plane_from_below() {
+        let plane = Plane::default();
+        let ray = Ray::new(Tuple::point(0.0, -1.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        let intersections = plane.local_intersect(&ray);
+        assert_eq!(intersections.len(), 1);
+        assert_eq!(intersections[0].t, 1.0);
+        assert_eq!(&intersections[0].object, &plane.box_clone());
+    }
+}
