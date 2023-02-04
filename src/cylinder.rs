@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, EPSILON};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -33,7 +34,7 @@ impl Cylinder {
         return x * x + z * z <= 1.0;
     }
 
-    fn intersect_caps(&self, ray: &Ray, intersections: &mut Intersections) {
+    fn intersect_caps(self: Arc<Self>, ray: &Ray, intersections: &mut Intersections) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
@@ -45,7 +46,7 @@ impl Cylinder {
 
         let t1 = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, t1) {
-            intersections.add(Intersection::new(t1, self.clone()));
+            intersections.add(Intersection::new(t1, self));
         }
     }
 }
@@ -81,7 +82,7 @@ impl Shape for Cylinder {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
@@ -108,20 +109,16 @@ impl Shape for Cylinder {
 
         let y0 = ray.origin.y + t0 * ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            intersections.add(Intersection::new(t0, self.box_clone()));
+            intersections.add(Intersection::new(t0, self.clone()));
         }
 
         let y1 = ray.origin.y + t1 * ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            intersections.add(Intersection::new(t1, self.box_clone()));
+            intersections.add(Intersection::new(t1, self.clone()));
         }
 
         self.intersect_caps(ray, &mut intersections);
         return intersections;
-    }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
     }
 }
 
@@ -181,8 +178,9 @@ mod tests {
 
         for (origin, direction) in origins.iter().zip(directions.iter()) {
             let cylinder = Cylinder::default();
+            let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(*origin, direction.normalize());
-            let intersections = cylinder.local_intersect(&ray);
+            let intersections = arc_cylinder.local_intersect(&ray);
             assert_eq!(intersections.len(), 0);
         }
     }
@@ -202,8 +200,9 @@ mod tests {
 
         for i in 0..origins.len() {
             let cylinder = Cylinder::default();
+            let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(origins[i], directions[i].normalize());
-            let intersections = cylinder.local_intersect(&ray);
+            let intersections = arc_cylinder.local_intersect(&ray);
             assert_eq!(intersections.len(), 2);
             assert_eq!(intersections[0].t, t0s[i]);
             assert_eq!(intersections[1].t, t1s[i]);
@@ -252,8 +251,9 @@ mod tests {
             let mut cylinder = Cylinder::default();
             cylinder.minimum = 1.0;
             cylinder.maximum = 2.0;
+            let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(*point, direction.normalize());
-            let intersections = cylinder.local_intersect(&ray);
+            let intersections = arc_cylinder.local_intersect(&ray);
             assert_eq!(intersections.len(), *count);
         }
     }
@@ -279,8 +279,9 @@ mod tests {
             cylinder.minimum = 1.0;
             cylinder.maximum = 2.0;
             cylinder.closed = true;
+            let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(*point, direction.normalize());
-            let intersections = cylinder.local_intersect(&ray);
+            let intersections = arc_cylinder.local_intersect(&ray);
             assert_eq!(intersections.len(), *count);
         }
     }

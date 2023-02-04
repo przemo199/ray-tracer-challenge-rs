@@ -46,15 +46,17 @@ impl Index<usize> for Intersections {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use super::*;
     use crate::{Shape, Sphere};
 
     #[test]
     fn hit_when_all_intersections_positive() {
         let sphere = Sphere::default();
+        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(1.0, sphere.box_clone());
-        let intersection2 = Intersection::new(2.0, sphere.box_clone());
+        let intersection1 = Intersection::new(1.0, arc_sphere.clone());
+        let intersection2 = Intersection::new(2.0, arc_sphere);
         intersections.add(intersection1.clone());
         intersections.add(intersection2);
         assert_eq!(intersections.hit().unwrap(), &intersection1);
@@ -63,9 +65,10 @@ mod tests {
     #[test]
     fn hit_when_some_intersections_negative() {
         let sphere = Sphere::default();
+        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-1.0, sphere.box_clone());
-        let intersection2 = Intersection::new(1.0, sphere.box_clone());
+        let intersection1 = Intersection::new(-1.0, arc_sphere.clone());
+        let intersection2 = Intersection::new(1.0, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2.clone());
         assert_eq!(intersections.hit().unwrap(), &intersection2);
@@ -74,9 +77,10 @@ mod tests {
     #[test]
     fn hit_when_all_intersections_negative() {
         let sphere = Sphere::default();
+        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-2.0, sphere.box_clone());
-        let intersection2 = Intersection::new(-1.0, sphere.box_clone());
+        let intersection1 = Intersection::new(-2.0, arc_sphere.clone());
+        let intersection2 = Intersection::new(-1.0, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2);
         assert_eq!(intersections.hit(), None);
@@ -85,11 +89,12 @@ mod tests {
     #[test]
     fn hit_always_lowest_nonnegative() {
         let sphere = Sphere::default();
+        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(5.0, sphere.box_clone());
-        let intersection2 = Intersection::new(7.0, sphere.box_clone());
-        let intersection3 = Intersection::new(-3.0, sphere.box_clone());
-        let intersection4 = Intersection::new(2.0, sphere.box_clone());
+        let intersection1 = Intersection::new(5.0, arc_sphere.clone());
+        let intersection2 = Intersection::new(7.0, arc_sphere.clone());
+        let intersection3 = Intersection::new(-3.0, arc_sphere.clone());
+        let intersection4 = Intersection::new(2.0, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2);
         intersections.add(intersection3);

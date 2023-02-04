@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use crate::{Intersection, Intersections, Material, Matrix, Ray, Tuple};
 use crate::shape::Shape;
 
@@ -47,19 +48,15 @@ impl Shape for Plane {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
         if ray.direction.y.abs() < crate::EPSILON {
             return Intersections::new();
         }
 
         let t = -ray.origin.y / ray.direction.y;
         let mut result = Intersections::new();
-        result.add(Intersection::new(t, self.clone()));
+        result.add(Intersection::new(t, self));
         return result;
-    }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
     }
 }
 
@@ -98,28 +95,31 @@ mod tests {
     #[test]
     fn ray_intersects_plane_in_parallel() {
         let plane = Plane::default();
+        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
         let ray = Ray::new(Tuple::point(0.0, 10.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
-        let intersections = plane.local_intersect(&ray);
+        let intersections = arc_plane.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 
     #[test]
     fn ray_intersects_plane_from_above() {
         let plane = Plane::default();
+        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
         let ray = Ray::new(Tuple::point(0.0, 1.0, 0.0), Tuple::vector(0.0, -1.0, 0.0));
-        let intersections = plane.local_intersect(&ray);
+        let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].t, 1.0);
-        assert_eq!(&intersections[0].object, &plane.box_clone());
+        assert_eq!(&intersections[0].object, &arc_plane);
     }
 
     #[test]
     fn ray_intersects_plane_from_below() {
         let plane = Plane::default();
+        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
         let ray = Ray::new(Tuple::point(0.0, -1.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
-        let intersections = plane.local_intersect(&ray);
+        let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].t, 1.0);
-        assert_eq!(&intersections[0].object, &plane.box_clone());
+        assert_eq!(&intersections[0].object, &arc_plane);
     }
 }

@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display};
+use std::sync::Arc;
 use crate::{Intersections, Material, Matrix, Ray, Tuple, TupleTrait};
 
 pub trait Shape: Debug + Display + Send + Sync {
@@ -21,24 +22,16 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn set_transformation(&mut self, transformation: Matrix);
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections;
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections;
 
     fn local_ray(&self, ray: &Ray) -> Ray {
         return ray.transform(self.transformation().inverse());
     }
-
-    fn box_clone(&self) -> Box<dyn Shape>;
 }
 
-impl PartialEq for Box<dyn Shape> {
-    fn eq(&self, rhs: &Box<dyn Shape>) -> bool {
-        return self.to_string() == rhs.to_string();
-    }
-}
-
-impl Clone for Box<dyn Shape> {
-    fn clone(&self) -> Box<dyn Shape> {
-        return self.box_clone();
+impl PartialEq for dyn Shape {
+    fn eq(&self, other: &Self) -> bool {
+        return self.to_string() == other.to_string();
     }
 }
 

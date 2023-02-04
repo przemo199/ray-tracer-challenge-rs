@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -65,7 +66,7 @@ impl Shape for Cube {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
         let (x_tmin, x_tmax) = Cube::check_axis(ray.origin.x, ray.direction.x);
         let (y_tmin, y_tmax) = Cube::check_axis(ray.origin.y, ray.direction.y);
         let (z_tmin, z_tmax) = Cube::check_axis(ray.origin.z, ray.direction.z);
@@ -78,12 +79,8 @@ impl Shape for Cube {
             return result;
         }
         result.add(Intersection::new(t_min, self.clone()));
-        result.add(Intersection::new(t_max, self.clone()));
+        result.add(Intersection::new(t_max, self));
         return result;
-    }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
     }
 }
 
@@ -136,8 +133,9 @@ mod tests {
 
         for i in 0..origins.len() {
             let cube = Cube::default();
+            let arc_cube: Arc<dyn Shape> = Arc::new(cube);
             let ray = Ray::new(origins[i], directions[i]);
-            let intersections = cube.local_intersect(&ray);
+            let intersections = arc_cube.local_intersect(&ray);
             assert_eq!(intersections.len(), 2);
             assert_eq!(intersections[0].t, t1s[i]);
             assert_eq!(intersections[1].t, t2s[i]);
@@ -162,8 +160,9 @@ mod tests {
             Tuple::vector(-1.0, 0.0, 0.0)];
         for i in 0..origins.len() {
             let cube = Cube::default();
+            let arc_cube: Arc<dyn Shape> = Arc::new(cube);
             let ray = Ray::new(origins[i], directions[i]);
-            let intersections = cube.local_intersect(&ray);
+            let intersections = arc_cube.local_intersect(&ray);
             assert_eq!(intersections.len(), 0);
         }
     }

@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Transformations, Tuple, TupleTrait};
 
 #[derive(Clone, Debug)]
@@ -57,7 +58,7 @@ impl Shape for Sphere {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, local_ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, local_ray: &Ray) -> Intersections {
         let sphere_to_ray_distance = Tuple::vector(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
@@ -71,12 +72,8 @@ impl Shape for Sphere {
         let t_1 = (-b - discriminant_root) / (2.0 * a);
         let t_2 = (-b + discriminant_root) / (2.0 * a);
         intersections.add(Intersection::new(t_1, self.clone()));
-        intersections.add(Intersection::new(t_2, self.clone()));
+        intersections.add(Intersection::new(t_2, self));
         return intersections;
-    }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
     }
 }
 

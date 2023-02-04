@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
+use std::sync::Arc;
 use crate::{EPSILON, Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, TupleTrait};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -23,13 +24,22 @@ impl Triangle {
 }
 
 impl Display for Triangle {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        return formatter.debug_struct("Triangle")
+            .field("p1", &self.p1)
+            .field("p2", &self.p2)
+            .field("p3", &self.p3)
+            .field("e1", &self.e1)
+            .field("e2", &self.e1)
+            .field("normal", &self.normal)
+            .field("material", &self.material)
+            .field("transformation", &self.transformation)
+            .finish();
     }
 }
 
 impl Shape for Triangle {
-    fn local_normal_at(&self, point: Tuple) -> Tuple {
+    fn local_normal_at(&self, _: Tuple) -> Tuple {
         return self.normal;
     }
 
@@ -49,7 +59,7 @@ impl Shape for Triangle {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let direction_cross_e2 = ray.direction.cross(&self.e2);
         let determinant = self.e1.dot(&direction_cross_e2);
@@ -68,17 +78,14 @@ impl Shape for Triangle {
             return intersections;
         }
         let t = f * self.e2.dot(&origin_cross_e1);
-        intersections.add(Intersection::new(t, self.box_clone()));
+        intersections.add(Intersection::new(t, self));
         return intersections;
-    }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use crate::{Ray, Shape, Tuple, TupleTrait};
     use crate::triangle::Triangle;
 
@@ -117,7 +124,8 @@ mod tests {
             Tuple::point(-1.0, 0.0, 0.0),
             Tuple::point(1.0, 0.0, 0.0));
         let ray = Ray::new(Tuple::point(0.0, -1.0, -2.0), Tuple::vector(0.0, 1.0, 0.0));
-        assert_eq!(triangle.local_intersect(&ray).len(), 0);
+        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
+        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -127,7 +135,8 @@ mod tests {
             Tuple::point(-1.0, 0.0, 0.0),
             Tuple::point(1.0, 0.0, 0.0));
         let ray = Ray::new(Tuple::point(1.0, 1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
-        assert_eq!(triangle.local_intersect(&ray).len(), 0);
+        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
+        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -137,7 +146,8 @@ mod tests {
             Tuple::point(-1.0, 0.0, 0.0),
             Tuple::point(1.0, 0.0, 0.0));
         let ray = Ray::new(Tuple::point(-1.0, 1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
-        assert_eq!(triangle.local_intersect(&ray).len(), 0);
+        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
+        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -147,7 +157,8 @@ mod tests {
             Tuple::point(-1.0, 0.0, 0.0),
             Tuple::point(1.0, 0.0, 0.0));
         let ray = Ray::new(Tuple::point(0.0, -1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
-        assert_eq!(triangle.local_intersect(&ray).len(), 0);
+        let arc_triangle = Arc::new(triangle);
+        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -157,7 +168,8 @@ mod tests {
             Tuple::point(-1.0, 0.0, 0.0),
             Tuple::point(1.0, 0.0, 0.0));
         let ray = Ray::new(Tuple::point(0.0, 0.5, -2.0), Tuple::vector(0.0, 0.0, 1.0));
-        let intersections = triangle.local_intersect(&ray);
+        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
+        let intersections = arc_triangle.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].t, 2.0);
     }

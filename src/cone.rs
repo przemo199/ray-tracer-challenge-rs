@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, EPSILON};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -33,7 +34,7 @@ impl Cone {
         return x * x + z * z <= (ray.origin.y + t * ray.direction.y).abs();
     }
 
-    fn intersect_caps(&self, ray: &Ray, intersections: &mut Intersections) {
+    fn intersect_caps(self: Arc<Self>, ray: &Ray, intersections: &mut Intersections) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
@@ -45,7 +46,7 @@ impl Cone {
 
         let t1 = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(ray, t1) {
-            intersections.add(Intersection::new(t1, self.clone()));
+            intersections.add(Intersection::new(t1, self));
         }
     }
 }
@@ -86,7 +87,7 @@ impl Shape for Cone {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let a = ray.direction.x.powi(2) -
             ray.direction.y.powi(2) +
@@ -129,10 +130,6 @@ impl Shape for Cone {
         self.intersect_caps(ray, &mut intersections);
         return intersections;
     }
-
-    fn box_clone(&self) -> Box<dyn Shape> {
-        return Box::new(self.clone());
-    }
 }
 
 impl Default for Cone {
@@ -159,14 +156,9 @@ impl Display for Cone {
     }
 }
 
-impl From<Cone> for Box<dyn Shape> {
-    fn from(cone: Cone) -> Box<dyn Shape> {
-        return Box::new(cone);
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use crate::cone::Cone;
     use crate::{Ray, Shape, Tuple, TupleTrait};
 
@@ -185,8 +177,9 @@ mod tests {
 
         for i in 0..origins.len() {
             let cone = Cone::default();
+            let arc_cone: Arc<dyn Shape> = Arc::new(cone);
             let ray = Ray::new(origins[i], directions[i].normalize());
-            let intersections = cone.local_intersect(&ray);
+            let intersections = arc_cone.local_intersect(&ray);
             assert_eq!(intersections.len(), 2);
             assert_eq!(intersections[0].t, t0s[i]);
             assert_eq!(intersections[1].t, t1s[i]);
@@ -196,8 +189,9 @@ mod tests {
     #[test]
     fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
         let cone = Cone::default();
+        let arc_cone: Arc<dyn Shape> = Arc::new(cone);
         let ray = Ray::new(Tuple::point(0.0, 0.0, -1.0), Tuple::vector(0.0, 1.0, 1.0).normalize());
-        let intersections = cone.local_intersect(&ray);
+        let intersections = arc_cone.local_intersect(&ray);
         assert_eq!(intersections.intersections.len(), 1);
         assert_eq!(intersections[0].t, 0.3535533905932738);
     }
@@ -219,8 +213,9 @@ mod tests {
             cone.minimum = -0.5;
             cone.maximum = 0.5;
             cone.closed = true;
+            let arc_cone: Arc<dyn Shape> = Arc::new(cone);
             let ray = Ray::new(origins[i], directions[i].normalize());
-            let intersections = cone.local_intersect(&ray);
+            let intersections = arc_cone.local_intersect(&ray);
             assert_eq!(intersections.len(), count[i]);
         }
     }

@@ -1,5 +1,6 @@
 extern crate core;
 
+use std::sync::Arc;
 use std::time::Instant;
 use rayon::prelude::*;
 use crate::camera::Camera;
@@ -70,7 +71,7 @@ fn raytrace_red_sphere() {
     let mut canvas = Canvas::new(canvas_side_length, canvas_side_length);
     let color = Color::red();
     let shape = Sphere::default();
-    let shape_box: Box<dyn Shape> = Box::new(shape);
+    let arc_shape: Arc<dyn Shape> = Arc::new(shape);
 
     for y in 0..canvas_side_length {
         let world_y = half_wall_size - pixel_size * (y as f64);
@@ -78,7 +79,7 @@ fn raytrace_red_sphere() {
             let world_x = -half_wall_size + pixel_size * (x as f64);
             let position = Tuple::point(world_x, world_y, wall_z);
             let ray = Ray::new(ray_origin, (position - ray_origin).normalize());
-            let intersections = ray.intersect(&shape_box);
+            let intersections = ray.intersect(&arc_shape);
             let hit = intersections.hit();
             if hit.is_some() {
                 canvas.set_pixel(x, y, color);
@@ -99,7 +100,7 @@ fn raytrace_red_sphere_parallel() {
     let mut canvas = Canvas::new(canvas_side_length, canvas_side_length);
     let color = Color::red();
     let shape = Sphere::default();
-    let shape_box: Box<dyn Shape> = Box::new(shape);
+    let shape_box: Arc<dyn Shape> = Arc::new(shape);
 
     canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
         let x: u32 = index as u32 % canvas_side_length;
@@ -130,7 +131,7 @@ fn raytrace_shaded_sphere_parallel() {
     shape.material = Material::default();
     shape.material.color = Color::new(0.5, 0.5, 1.0);
     // shape.material.color = Color::green();
-    let shape_box: Box<dyn Shape> = Box::new(shape);
+    let shape_box: Arc<dyn Shape> = Arc::new(shape);
     let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
 
     canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
@@ -202,12 +203,12 @@ fn render_scene_parallel(x: u32, y: u32) {
 
     let mut world = World::default();
     world.objects = vec![
-        Box::new(floor),
-        Box::new(left_wall),
-        Box::new(right_wall),
-        Box::new(middle_sphere),
-        Box::new(right_sphere),
-        Box::new(left_sphere),
+        Arc::new(floor),
+        Arc::new(left_wall),
+        Arc::new(right_wall),
+        Arc::new(middle_sphere),
+        Arc::new(right_sphere),
+        Arc::new(left_sphere),
     ];
 
     world.light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
@@ -265,10 +266,10 @@ fn render_scene_parallel2(x: u32, y: u32) {
 
     let mut world = World::default();
     world.objects = vec![
-        Box::new(floor),
-        Box::new(middle_sphere),
-        Box::new(right_sphere),
-        Box::new(left_sphere),
+        Arc::new(floor),
+        Arc::new(middle_sphere),
+        Arc::new(right_sphere),
+        Arc::new(left_sphere),
     ];
 
     world.light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
@@ -343,11 +344,11 @@ fn render_scene_parallel3(x: u32, y: u32) {
 
     let mut world = World::default();
     world.objects = vec![
-        Box::new(floor),
-        Box::new(middle_sphere),
-        Box::new(right_sphere),
-        Box::new(left_sphere),
-        Box::new(cone),
+        Arc::new(floor),
+        Arc::new(middle_sphere),
+        Arc::new(right_sphere),
+        Arc::new(left_sphere),
+        Arc::new(cone),
     ];
 
     world.light = Light::new(Tuple::point(-100.0, 100.0, -100.0), Color::white());
