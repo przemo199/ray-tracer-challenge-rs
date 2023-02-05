@@ -1,7 +1,11 @@
-use crate::{Color, Light, Shape, Tuple, TupleTrait};
+use crate::color::Color;
+use crate::consts::EPSILON;
+use crate::light::Light;
 use crate::pattern::Pattern;
+use crate::shape::Shape;
+use crate::tuple::{Tuple, TupleTrait};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Material {
     pub color: Color,
     pub pattern: Option<Box<dyn Pattern>>,
@@ -71,10 +75,24 @@ impl Default for Material {
     }
 }
 
+impl PartialEq for Material {
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.color == rhs.color &&
+            self.pattern == rhs.pattern &&
+            (self.ambient - rhs.ambient).abs() < EPSILON &&
+            (self.diffuse - rhs.diffuse).abs() < EPSILON &&
+            (self.specular - rhs.specular).abs() < EPSILON &&
+            (self.shininess - rhs.shininess).abs() < EPSILON &&
+            (self.reflectiveness - rhs.reflectiveness).abs() < EPSILON &&
+            (self.refractive_index - rhs.refractive_index).abs() < EPSILON &&
+            (self.transparency - rhs.transparency).abs() < EPSILON;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::light::Light;
-    use crate::Sphere;
+    use crate::sphere::Sphere;
     use crate::tuple::Tuple;
     use super::*;
 

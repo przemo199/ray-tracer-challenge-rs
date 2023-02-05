@@ -1,6 +1,14 @@
 use std::sync::Arc;
-use crate::{Color, ComputedHit, Intersections, Light, Ray, Shape, Sphere, Transformations, Tuple};
-use crate::tuple::TupleTrait;
+use crate::color::Color;
+use crate::computed_hit::ComputedHit;
+use crate::consts::MAX_REFLECTION_ITERATIONS;
+use crate::intersections::Intersections;
+use crate::light::Light;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::sphere::Sphere;
+use crate::transformations::Transformations;
+use crate::tuple::{Tuple, TupleTrait};
 
 #[derive(Clone, Debug)]
 pub struct World {
@@ -58,7 +66,7 @@ impl World {
     }
 
     pub fn color_at(&self, ray: &Ray) -> Color {
-        return self.internal_color_at(ray, crate::MAX_REFLECTION_ITERATIONS);
+        return self.internal_color_at(ray, MAX_REFLECTION_ITERATIONS);
     }
 
     pub fn is_shadowed(&self, point: &Tuple) -> bool {
@@ -118,12 +126,23 @@ impl Default for World {
     }
 }
 
+impl PartialEq for World {
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.light == rhs.light &&
+            self.objects.len() == rhs.objects.len() &&
+            self.objects.iter().all(| object | {
+                rhs.objects.contains(object)
+            });
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::consts::PI;
     use super::*;
-    use std::ops::IndexMut;
     use crate::intersection::Intersection;
-    use crate::{Material, Plane, Transformations};
+    use crate::material::Material;
+    use crate::plane::Plane;
 
     #[test]
     fn default_world() {
@@ -139,6 +158,23 @@ mod tests {
         assert_eq!(world.objects.len(), 2);
         assert!(world.objects.contains(&(Arc::new(sphere1) as Arc<dyn Shape>)));
         assert!(world.objects.contains(&(Arc::new(sphere2) as Arc<dyn Shape>)));
+    }
+
+    #[test]
+    fn compare_worlds() {
+        let mut world1 = World::default();
+        let mut world2 = World::default();
+        assert_eq!(world1, world2);
+        let sphere1 = Sphere::default();
+        let mut sphere2 = Sphere::default();
+        sphere2.set_transformation(Transformations::rotation_z(PI));
+        world2.objects.push(Arc::new(sphere2.clone()) as Arc<dyn Shape>);
+        assert_ne!(world1, world2);
+        world1.objects.push(Arc::new(sphere1.clone()) as Arc<dyn Shape>);
+        assert_ne!(world1, world2);
+        world2.objects.push(Arc::new(sphere1) as Arc<dyn Shape>);
+        world1.objects.push(Arc::new(sphere2) as Arc<dyn Shape>);
+        assert_eq!(world1, world2);
     }
 
     #[test]
@@ -338,7 +374,7 @@ mod tests {
     #[test]
     fn refracted_color_with_opaque_material() {
         let mut world = World::default();
-        let shape = world.objects.index_mut(0);
+        let shape = &world.objects[0];
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(4.0, shape.clone()));

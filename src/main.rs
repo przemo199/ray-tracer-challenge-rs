@@ -1,52 +1,20 @@
-extern crate core;
-
 use std::sync::Arc;
 use std::time::Instant;
 use rayon::prelude::*;
-use crate::camera::Camera;
-use crate::canvas::Canvas;
-use crate::color::Color;
-use crate::computed_hit::ComputedHit;
-use crate::cone::Cone;
-use crate::light::Light;
-use crate::intersection::Intersection;
-use crate::intersections::Intersections;
-use crate::material::Material;
-use crate::matrix::Matrix;
-use crate::plane::Plane;
-use crate::ray::Ray;
-use crate::shape::Shape;
-use crate::sphere::Sphere;
-use crate::transformations::Transformations;
-use crate::tuple::{Tuple, TupleTrait};
-use crate::world::World;
-
-mod tuple;
-mod color;
-mod canvas;
-mod matrix;
-mod ray;
-mod sphere;
-mod intersection;
-mod intersections;
-mod transformations;
-mod light;
-mod material;
-mod world;
-mod camera;
-mod computed_hit;
-mod shape;
-mod plane;
-mod pattern;
-mod cube;
-mod cylinder;
-mod cone;
-mod group;
-mod triangle;
-
-pub const EPSILON: f64 = 0.0000001;
-pub const PI: f64 = std::f64::consts::PI;
-pub const MAX_REFLECTION_ITERATIONS: u8 = 5;
+use raytracer::camera::Camera;
+use raytracer::canvas::Canvas;
+use raytracer::color::Color;
+use raytracer::cone::Cone;
+use raytracer::consts::PI;
+use raytracer::light::Light;
+use raytracer::material::Material;
+use raytracer::plane::Plane;
+use raytracer::ray::Ray;
+use raytracer::shape::Shape;
+use raytracer::sphere::Sphere;
+use raytracer::transformations::Transformations;
+use raytracer::tuple::{Tuple, TupleTrait};
+use raytracer::world::World;
 
 fn main() {
     // use std::time::Instant;
@@ -56,7 +24,7 @@ fn main() {
     // println!("Elapsed: {:.2?}", elapsed.as_millis());
 
     let now2 = Instant::now();
-    render_scene_parallel(1000, 1000);
+    render_scene_parallel(1920, 1080);
     let elapsed2 = now2.elapsed();
     println!("Elapsed: {:.2?}", elapsed2.as_millis());
 }

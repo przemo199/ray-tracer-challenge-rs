@@ -1,15 +1,22 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple};
+use crate::consts::EPSILON;
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::tuple::Tuple;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cube {
     pub material: Material,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
 }
 
 impl Cube {
-    pub fn new(material: Material, transformation: Matrix) -> Cube {
+    pub fn new(material: Material, transformation: Matrix<4>) -> Cube {
         return Cube {
             material,
             transformation,
@@ -22,8 +29,7 @@ impl Cube {
         let t_min_numerator = -1.0 - origin;
         let t_max_numerator = 1.0 - origin;
 
-        // might need to be EPSILON not 0.0
-        if direction.abs() >= crate::EPSILON {
+        if direction.abs() >= EPSILON {
             t_min = t_min_numerator / direction;
             t_max = t_max_numerator / direction;
         } else {
@@ -58,11 +64,11 @@ impl Shape for Cube {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
@@ -108,7 +114,7 @@ impl From<Cube> for Box<dyn Shape> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Ray, Tuple};
+    use crate::tuple::Tuple;
 
     #[test]
     fn ray_intersects_cube() {

@@ -1,6 +1,11 @@
 use std::fmt::Debug;
 use std::sync::Arc;
-use crate::{ComputedHit, Intersections, Ray, Shape, TupleTrait};
+use crate::computed_hit::ComputedHit;
+use crate::consts::EPSILON;
+use crate::intersections::Intersections;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::tuple::TupleTrait;
 
 #[derive(Clone, Debug)]
 pub struct Intersection {
@@ -69,14 +74,17 @@ impl Intersection {
 
 impl PartialEq for Intersection {
     fn eq(&self, rhs: &Intersection) -> bool {
-        return (self.t - rhs.t).abs() < crate::EPSILON && &self.object == &rhs.object;
+        return (self.t - rhs.t).abs() < EPSILON && &self.object == &rhs.object;
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::plane::Plane;
+    use crate::sphere::Sphere;
+    use crate::transformations::Transformations;
+    use crate::tuple::Tuple;
     use super::*;
-    use crate::{Plane, Sphere, Transformations, Tuple};
 
     #[test]
     fn new_intersection() {
@@ -131,7 +139,7 @@ mod tests {
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection = Intersection::new(5.0, arc_sphere);
         let computations = intersection.prepare_computations(&ray, &Intersections::new());
-        assert!(computations.over_point.z < -crate::EPSILON / 2.0);
+        assert!(computations.over_point.z < -EPSILON / 2.0);
         assert!(computations.point.z > computations.over_point.z);
     }
 
@@ -194,7 +202,7 @@ mod tests {
         let mut intersections = Intersections::new();
         intersections.add(intersection.clone());
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        assert!(computed_hit.under_point.z > crate::EPSILON / 2.0);
+        assert!(computed_hit.under_point.z > EPSILON / 2.0);
         assert!(computed_hit.point.z < computed_hit.under_point.z);
     }
 }

@@ -1,8 +1,10 @@
 use std::sync::Arc;
-use crate::{Intersections, Matrix, Tuple};
+use crate::intersections::Intersections;
+use crate::matrix::Matrix;
 use crate::shape::Shape;
+use crate::tuple::Tuple;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Ray {
     pub origin: Tuple,
     pub direction: Tuple,
@@ -17,44 +19,13 @@ impl Ray {
         return self.origin + self.direction * distance;
     }
 
-    // fn discriminant(&self, sphere: &Sphere) -> f64 {
-    //     let sphere_to_ray_distance = self.origin;
-    //     let a = self.direction.dot(&self.direction);
-    //     let b = 2.0 * self.direction.dot(&sphere_to_ray_distance);
-    //     let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - sphere.radius * sphere.radius;
-    //     return b * b - 4.0 * a * c;
-    // }
-    //
-    // pub fn intersects(&self, sphere: &Sphere) -> bool {
-    //     return self.discriminant(sphere) > 0.0;
-    // }
-
-    // pub fn intersections(&self, sphere: &Box<dyn Shape>) -> Intersections {
-    //     let transformed_ray = self.transform(sphere.transformation().inverse());
-    //     let sphere_to_ray_distance = transformed_ray.origin.clone() - sphere.center.clone();
-    //     let a = transformed_ray.direction.dot(&transformed_ray.direction);
-    //     let b = 2.0 * transformed_ray.direction.dot(&sphere_to_ray_distance);
-    //     let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - sphere.radius * sphere.radius;
-    //     let discriminant = b * b - 4.0 * a * c;
-    //     let mut intersections = Intersections::new();
-    //     if discriminant < 0.0 {
-    //         return intersections;
-    //     }
-    //     let discriminant_root = discriminant.sqrt();
-    //     let t_1 = (-b - discriminant_root) / (2.0 * a);
-    //     let t_2 = (-b + discriminant_root) / (2.0 * a);
-    //     intersections.add(Intersection::new(t_1, sphere.box_clone()));
-    //     intersections.add(Intersection::new(t_2, sphere.box_clone()));
-    //     return intersections;
-    // }
-
     pub fn intersect(&self, shape: &Arc<dyn Shape>) -> Intersections {
         let local_ray = self.transform(shape.transformation().inverse());
         return shape.clone().local_intersect(&local_ray);
     }
 
-    pub fn transform(&self, matrix: Matrix) -> Ray {
-        let new_origin = matrix.clone() * self.origin;
+    pub fn transform(&self, matrix: Matrix<4>) -> Ray {
+        let new_origin = matrix * self.origin;
         let new_direction = matrix * self.direction;
         return Ray::new(new_origin, new_direction);
     }
@@ -62,8 +33,9 @@ impl Ray {
 
 #[cfg(test)]
 mod tests {
+    use crate::sphere::Sphere;
+    use crate::transformations::Transformations;
     use super::*;
-    use crate::{Sphere, Transformations};
     use crate::tuple::Tuple;
 
     #[test]

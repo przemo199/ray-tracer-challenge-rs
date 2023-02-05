@@ -1,7 +1,13 @@
-use indicatif::{ParallelProgressIterator, ProgressIterator};
 use rayon::prelude::*;
-use crate::{Canvas, Matrix, Ray, Transformations, Tuple, TupleTrait, World};
+use crate::canvas::Canvas;
+use crate::consts::EPSILON;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::transformations::Transformations;
+use crate::tuple::{Tuple, TupleTrait};
+use crate::world::World;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Camera {
     pub horizontal_size: u32,
     pub vertical_size: u32,
@@ -9,15 +15,15 @@ pub struct Camera {
     pub half_width: f64,
     pub half_height: f64,
     pub pixel_size: f64,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
 }
 
 impl Camera {
     pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: f64) -> Camera {
         let half_view = (field_of_view / 2.0).tan();
         let aspect = horizontal_size as f64 / vertical_size as f64;
-        let half_width;
-        let half_height;
+        let half_width: f64;
+        let half_height: f64;
         if aspect >= 1.0 {
             half_width = half_view;
             half_height = half_view / aspect;
@@ -58,7 +64,7 @@ impl Camera {
 
     pub fn render(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        canvas.pixels.iter_mut().progress().enumerate().for_each(|(index, pixel)| {
+        canvas.pixels.iter_mut().enumerate().for_each(|(index, pixel)| {
             let x: u32 = index as u32 % canvas.width;
             let y: u32 = index as u32 / canvas.width;
             let ray = self.ray_for_pixel(x, y);
@@ -69,7 +75,7 @@ impl Camera {
 
     pub fn render_parallel(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        canvas.pixels.par_iter_mut().progress().enumerate().for_each(|(index, pixel)| {
+        canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
             let x: u32 = index as u32 % canvas.width;
             let y: u32 = index as u32 / canvas.width;
             let ray = self.ray_for_pixel(x, y);
@@ -79,16 +85,29 @@ impl Camera {
     }
 }
 
+impl PartialEq for Camera {
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.horizontal_size == rhs.horizontal_size &&
+            self.vertical_size == rhs.vertical_size &&
+            self.horizontal_size == rhs.horizontal_size &&
+            (self.field_of_view - rhs.field_of_view).abs() < EPSILON &&
+            (self.half_width - rhs.half_width).abs() < EPSILON &&
+            (self.half_height - rhs.half_height).abs() < EPSILON &&
+            (self.pixel_size - rhs.pixel_size).abs() < EPSILON;
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::color::Color;
     use super::*;
-    use crate::Color;
+    use crate::consts::PI;
 
     #[test]
     fn constructing_camera() {
         let horizontal_size = 160;
         let vertical_size = 120;
-        let field_of_view = crate::PI / 2.0;
+        let field_of_view = PI / 2.0;
         let camera = Camera::new(horizontal_size, vertical_size, field_of_view);
         assert_eq!(camera.horizontal_size, horizontal_size);
         assert_eq!(camera.vertical_size, vertical_size);
@@ -98,19 +117,19 @@ mod tests {
 
     #[test]
     fn pixel_size_for_horizontal_canvas() {
-        let camera = Camera::new(200, 125, crate::PI / 2.0);
+        let camera = Camera::new(200, 125, PI / 2.0);
         assert_eq!(camera.pixel_size, 0.009999999999999998);
     }
 
     #[test]
     fn pixel_size_for_vertical_canvas() {
-        let camera = Camera::new(125, 200, crate::PI / 2.0);
+        let camera = Camera::new(125, 200, PI / 2.0);
         assert_eq!(camera.pixel_size, 0.009999999999999998);
     }
 
     #[test]
     fn ray_through_canvas_center() {
-        let camera = Camera::new(201, 101, crate::PI / 2.0);
+        let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Tuple::point(0.0, 0.0, 0.0));
         assert_eq!(ray.direction, Tuple::vector(0.0, 0.0, -1.0));
@@ -118,7 +137,7 @@ mod tests {
 
     #[test]
     fn ray_through_canvas_corner() {
-        let camera = Camera::new(201, 101, crate::PI / 2.0);
+        let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(0, 0);
         assert_eq!(ray.origin, Tuple::point(0.0, 0.0, 0.0));
         assert_eq!(ray.direction, Tuple::vector(0.6651864261194508, 0.3325932130597254, -0.6685123582500481));
@@ -126,8 +145,8 @@ mod tests {
 
     #[test]
     fn ray_through_canvas_with_transformed_camera() {
-        let mut camera = Camera::new(201, 101, crate::PI / 2.0);
-        camera.transformation = Transformations::rotation_y(crate::PI / 4.0) * Transformations::translation(0.0, -2.0, 5.0);
+        let mut camera = Camera::new(201, 101, PI / 2.0);
+        camera.transformation = Transformations::rotation_y(PI / 4.0) * Transformations::translation(0.0, -2.0, 5.0);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Tuple::point(0.0, 2.0, -5.0));
         assert_eq!(ray.direction, Tuple::vector(2.0_f64.sqrt() / 2.0, 0.0, -(2.0_f64.sqrt()) / 2.0));
@@ -136,7 +155,7 @@ mod tests {
     #[test]
     fn rendering_world_with_camera() {
         let world = World::default();
-        let mut camera = Camera::new(11, 11, crate::PI / 2.0);
+        let mut camera = Camera::new(11, 11, PI / 2.0);
         let from = Tuple::point(0.0, 0.0, -5.0);
         let to = Tuple::point(0.0, 0.0, 0.0);
         let up = Tuple::vector(0.0, 1.0, 0.0);
@@ -148,7 +167,7 @@ mod tests {
     #[test]
     fn rendering_world_in_parallel_with_camera() {
         let world = World::default();
-        let mut camera = Camera::new(11, 11, crate::PI / 2.0);
+        let mut camera = Camera::new(11, 11, PI / 2.0);
         let from = Tuple::point(0.0, 0.0, -5.0);
         let to = Tuple::point(0.0, 0.0, 0.0);
         let up = Tuple::vector(0.0, 1.0, 0.0);

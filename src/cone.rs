@@ -1,13 +1,20 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, EPSILON};
+use crate::consts::EPSILON;
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::tuple::Tuple;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Cone {
     pub minimum: f64,
     pub maximum: f64,
     pub closed: bool,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
     pub material: Material,
 }
 
@@ -16,7 +23,7 @@ impl Cone {
         minimum: f64,
         maximum: f64,
         closed: bool,
-        transformation: Matrix,
+        transformation: Matrix<4>,
         material: Material,
     ) -> Cone {
         return Cone {
@@ -79,11 +86,11 @@ impl Shape for Cone {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
@@ -156,11 +163,23 @@ impl Display for Cone {
     }
 }
 
+impl PartialEq for Cone {
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.material == rhs.material &&
+            self.transformation == rhs.transformation &&
+            self.closed == rhs.closed &&
+            (self.minimum - rhs.minimum).abs() < EPSILON &&
+            (self.maximum - rhs.maximum).abs() < EPSILON;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
     use crate::cone::Cone;
-    use crate::{Ray, Shape, Tuple, TupleTrait};
+    use crate::ray::Ray;
+    use crate::shape::Shape;
+    use crate::tuple::{Tuple, TupleTrait};
 
     #[test]
     fn intersecting_ray_with_cone() {

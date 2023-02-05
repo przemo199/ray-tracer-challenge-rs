@@ -4,13 +4,15 @@ version = "0.1.0"
 authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "raytracer"
+crate-type = ["lib", "dylib"]
 
 [dependencies]
 image = "0.24.5"
-indicatif = {version = "0.17.2", features = ["rayon"]}
 rayon = "1.6.1"
 
 [profile.release]
 codegen-units = 1
 lto = true
+panic = "abort"

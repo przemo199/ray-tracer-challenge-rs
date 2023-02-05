@@ -1,5 +1,5 @@
 use std::ops::Index;
-use crate::Intersection;
+use crate::intersection::Intersection;
 
 #[derive(Clone, Debug)]
 pub struct Intersections {
@@ -47,8 +47,9 @@ impl Index<usize> for Intersections {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+    use crate::shape::Shape;
     use super::*;
-    use crate::{Shape, Sphere};
+    use crate::sphere::Sphere;
 
     #[test]
     fn hit_when_all_intersections_positive() {

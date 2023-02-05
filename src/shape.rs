@@ -1,11 +1,15 @@
 use std::fmt::{Debug, Display};
 use std::sync::Arc;
-use crate::{Intersections, Material, Matrix, Ray, Tuple, TupleTrait};
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::tuple::{Tuple, TupleTrait};
 
 pub trait Shape: Debug + Display + Send + Sync {
     fn normal_at(&self, point: Tuple) -> Tuple {
         let transform_inverse = self.transformation().inverse();
-        let local_point = transform_inverse.clone() * point;
+        let local_point = transform_inverse * point;
         let local_normal = self.local_normal_at(local_point);
         let mut world_normal = transform_inverse.transpose() * local_normal;
         world_normal.w = 0.0;
@@ -18,9 +22,9 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn set_material(&mut self, material: Material);
 
-    fn transformation(&self) -> Matrix;
+    fn transformation(&self) -> Matrix<4>;
 
-    fn set_transformation(&mut self, transformation: Matrix);
+    fn set_transformation(&mut self, transformation: Matrix<4>);
 
     fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections;
 
@@ -30,15 +34,16 @@ pub trait Shape: Debug + Display + Send + Sync {
 }
 
 impl PartialEq for dyn Shape {
-    fn eq(&self, other: &Self) -> bool {
-        return self.to_string() == other.to_string();
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.to_string() == rhs.to_string();
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::color::Color;
+    use crate::sphere::Sphere;
     use super::*;
-    use crate::{Color, Sphere};
 
     // #[derive(Clone, Debug)]
     // pub struct TestShape {

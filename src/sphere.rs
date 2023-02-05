@@ -1,11 +1,18 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Transformations, Tuple, TupleTrait};
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::transformations::Transformations;
+use crate::tuple::{Tuple, TupleTrait};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Sphere {
     pub material: Material,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
 }
 
 impl Sphere {
@@ -23,14 +30,6 @@ impl Sphere {
         sphere.set_material(material);
         return sphere;
     }
-
-    // pub fn normal_at(&self, world_point: Tuple) -> Tuple {
-    //     let object_point = self.transformation.clone().inverse() * world_point;
-    //     let object_normal = object_point - self.center.clone();
-    //     let mut world_normal = self.transformation.inverse().transpose() * object_normal;
-    //     world_normal.w = 0.0;
-    //     return world_normal.normalize();
-    // }
 
     fn mut_material(&mut self) -> &mut Material {
         return &mut self.material;
@@ -50,11 +49,11 @@ impl Shape for Sphere {
         self.material = material
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
@@ -92,21 +91,9 @@ impl Display for Sphere {
     }
 }
 
-impl From<Sphere> for Box<dyn Shape> {
-    fn from(sphere: Sphere) -> Box<dyn Shape> {
-        return Box::new(sphere);
-    }
-}
-
-impl PartialEq for Sphere {
-    fn eq(&self, rhs: &Sphere) -> bool {
-        return self.transformation == rhs.transformation && self.material == rhs.material;
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::Transformations;
+    use crate::consts::PI;
     use super::*;
 
     #[test]
@@ -121,7 +108,7 @@ mod tests {
     fn changing_transformation() {
         let mut sphere = Sphere::default();
         let transformation = Transformations::translation(2.0, 3.0, 4.0);
-        sphere.transformation = transformation.clone();
+        sphere.transformation = transformation;
         assert_eq!(sphere.transformation, transformation);
     }
 
@@ -159,7 +146,7 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut sphere = Sphere::default();
-        let transformation = Transformations::scaling(1.0, 0.5, 1.0) * Transformations::rotation_z(crate::PI / 5.0);
+        let transformation = Transformations::scaling(1.0, 0.5, 1.0) * Transformations::rotation_z(PI / 5.0);
         sphere.transformation = transformation;
         let normal = sphere.normal_at(Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
         assert_eq!(normal, Tuple::vector(0.0, 0.9701425001453319, -0.24253562503633294));

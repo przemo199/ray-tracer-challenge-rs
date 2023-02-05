@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Mul, Sub};
-use crate::EPSILON;
+use crate::consts::EPSILON;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
@@ -64,34 +64,34 @@ impl PartialEq for Color {
 }
 
 impl Add for Color {
-    type Output = Color;
+    type Output = Self;
 
-    fn add(self, rhs: Color) -> Color {
+    fn add(self, rhs: Color) -> Self::Output {
         return Color::new(self.red + rhs.red, self.green + rhs.green, self.blue + rhs.blue);
     }
 }
 
 impl Sub for Color {
-    type Output = Color;
+    type Output = Self;
 
-    fn sub(self, rhs: Color) -> Color {
+    fn sub(self, rhs: Color) -> Self::Output {
         return Color::new(self.red - rhs.red, self.green - rhs.green, self.blue - rhs.blue);
     }
 }
 
-impl Mul<f64> for Color {
-    type Output = Color;
+impl Mul for Color {
+    type Output = Self;
 
-    fn mul(self, rhs: f64) -> Color {
-        return Color::new(self.red * rhs, self.green * rhs, self.blue * rhs);
+    fn mul(self, rhs: Color) -> Self::Output {
+        return Color::new(self.red * rhs.red, self.green * rhs.green, self.blue * rhs.blue);
     }
 }
 
-impl Mul for Color {
-    type Output = Color;
+impl Mul<f64> for Color {
+    type Output = Self;
 
-    fn mul(self, rhs: Color) -> Color {
-        return Color::new(self.red * rhs.red, self.green * rhs.green, self.blue * rhs.blue);
+    fn mul(self, rhs: f64) -> Self::Output {
+        return Color::new(self.red * rhs, self.green * rhs, self.blue * rhs);
     }
 }
 

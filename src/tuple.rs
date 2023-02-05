@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::consts::EPSILON;
 
 pub trait TupleTrait: Clone + Copy + Debug + PartialEq + Add<Self, Output=Self> + Sub<Self, Output=Self> + Mul<f64, Output=Self> + Div<f64, Output=Self> + Neg<Output=Self> {
     fn new(x: f64, y: f64, z: f64, w: f64) -> Self;
@@ -7,8 +8,8 @@ pub trait TupleTrait: Clone + Copy + Debug + PartialEq + Add<Self, Output=Self> 
     fn is_point(&self) -> bool;
     fn magnitude(&self) -> f64;
     fn normalize(&self) -> Self;
-    fn dot(&self, other: &Self) -> f64;
-    fn cross(&self, other: &Self) -> Self;
+    fn dot(&self, rhs: &Self) -> f64;
+    fn cross(&self, rhs: &Self) -> Self;
     fn reflect(&self, normal: &Self) -> Self;
 }
 
@@ -64,32 +65,29 @@ impl TupleTrait for Tuple {
         return Tuple::new(self.x / magnitude, self.y / magnitude, self.z / magnitude, self.w / magnitude);
     }
 
-    fn dot(&self, other: &Tuple) -> f64 {
-        // if self.is_point() || other.is_point() {
-        //     panic!("Cannot compute a dot product of a point");
-        // }
-        return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w;
+    fn dot(&self, rhs: &Tuple) -> f64 {
+        return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w;
     }
 
-    fn cross(&self, other: &Tuple) -> Tuple {
+    fn cross(&self, rhs: &Tuple) -> Tuple {
         return Tuple::vector(
-            self.y * other.z - self.z * other.y,
-            self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x,
+            self.y * rhs.z - self.z * rhs.y,
+            self.z * rhs.x - self.x * rhs.z,
+            self.x * rhs.y - self.y * rhs.x,
         );
     }
 
     fn reflect(&self, normal: &Tuple) -> Tuple {
-        return self.clone() - normal.clone() * 2.0_f64 * self.dot(normal);
+        return *self - *normal * 2.0_f64 * self.dot(normal);
     }
 }
 
 impl PartialEq for Tuple {
     fn eq(&self, rhs: &Tuple) -> bool {
         return self.w == rhs.w &&
-            (self.x - rhs.x).abs() < crate::EPSILON &&
-            (self.y - rhs.y).abs() < crate::EPSILON &&
-            (self.z - rhs.z).abs() < crate::EPSILON;
+            (self.x - rhs.x).abs() < EPSILON &&
+            (self.y - rhs.y).abs() < EPSILON &&
+            (self.z - rhs.z).abs() < EPSILON;
     }
 }
 
@@ -109,7 +107,7 @@ impl Sub for Tuple {
 
     fn sub(self, rhs: Tuple) -> Self::Output {
         if self.is_vector() && rhs.is_point() {
-            panic!("Cannot subtract point from vector!");
+            panic!("Cannot subtract point from a vector!");
         }
         return Tuple::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z, self.w - rhs.w);
     }
@@ -167,8 +165,8 @@ mod tests {
     fn eq_point() {
         let point1 = Tuple::point(4.0, -4.0, 3.0);
         let point2 = point1;
-        let point3 = Tuple::point(4.1 + crate::EPSILON, -4.0, 3.0);
-        let point4 = Tuple::point(4.0 + crate::EPSILON - (crate::EPSILON / 2.0), -4.0, 3.0);
+        let point3 = Tuple::point(4.1 + EPSILON, -4.0, 3.0);
+        let point4 = Tuple::point(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
         assert_eq!(point1, point2);
         assert_ne!(point2, point3);
         assert_eq!(point2, point4);
@@ -178,8 +176,8 @@ mod tests {
     fn eq_vector() {
         let vector1 = Tuple::vector(4.0, -4.0, 3.0);
         let vector2 = vector1;
-        let vector3 = Tuple::vector(4.0 + crate::EPSILON, -4.0, 3.0);
-        let vector4 = Tuple::vector(4.0 + crate::EPSILON - (crate::EPSILON / 2.0), -4.0, 3.0);
+        let vector3 = Tuple::vector(4.0 + EPSILON, -4.0, 3.0);
+        let vector4 = Tuple::vector(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
         assert_eq!(vector1, vector2);
         assert_ne!(vector2, vector3);
         assert_eq!(vector2, vector4);
@@ -296,7 +294,7 @@ mod tests {
         assert_eq!(normalised3.magnitude(), 1.0);
         let magnitude = vector4.magnitude();
         assert_eq!(normalised4, Tuple::vector(1.0 / magnitude, 2.0 / magnitude, 3.0 / magnitude));
-        assert!(normalised4.magnitude() - 1.0 < crate::EPSILON);
+        assert!(normalised4.magnitude() - 1.0 < EPSILON);
     }
 
     #[test]

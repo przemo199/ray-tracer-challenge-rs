@@ -1,91 +1,116 @@
+use std::fmt::{Display, Formatter};
+use std::mem;
 use std::ops::Mul;
-use crate::{Tuple, TupleTrait};
+use crate::consts::EPSILON;
+use crate::tuple::{Tuple, TupleTrait};
 
-trait MatrixTrait: Clone + Copy + Mul + PartialEq {
-    fn new(content: Vec<f64>) -> Self;
-    fn get_index(&self, row: usize, column: usize) -> f64;
-    fn set_index(&mut self, row: usize, column: usize, value: f64);
-    fn identity() -> Self;
-    fn transpose(&self) -> Self;
-    fn determinant(&self) -> f64;
-    fn submatrix(&self, row: usize, column: usize) -> Self;
-    fn minor(&self, row: usize, column: usize) -> f64;
-    fn cofactor(&self, row: usize, column: usize) -> f64;
+#[derive(Clone, Copy, Debug)]
+pub struct Matrix<const SIDE_LENGTH: usize> {
+    elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH],
 }
 
-#[derive(Clone, Debug)]
-pub struct Matrix {
-    elements: Vec<f64>,
-    side_length: usize,
-}
-
-impl Matrix {
-    pub fn new<T: Into<Vec<f64>>>(content: T) -> Matrix {
-        let local_content = content.into();
-        let side_length = (local_content.len() as f64).sqrt();
-        if side_length.trunc() != side_length {
-            panic!("Matrix must be square");
-        }
-        return Matrix { elements: local_content, side_length: side_length as usize };
+impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
+    pub fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
+        return Matrix { elements };
     }
 
-    pub fn empty(size: usize) -> Matrix {
-        return Matrix::new(vec![0.0; size]);
+    pub fn empty() -> Matrix<SIDE_LENGTH> {
+        return Matrix {
+            elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH]
+        }
+    }
+
+    pub fn identity() -> Matrix<SIDE_LENGTH> {
+        let mut result = Self::empty();
+        for index in 0..SIDE_LENGTH {
+            result.elements[index][index] = 1.0;
+        }
+        return result;
     }
 
     pub fn get_index(&self, row: usize, column: usize) -> f64 {
-        return self.elements[column + row * self.side_length];
+        return self.elements[row][column];
     }
 
     pub fn set_index(&mut self, row: usize, column: usize, value: f64) {
-        self.elements[column + row * self.side_length] = value;
+        self.elements[row][column] = value;
     }
 
-    pub fn identity() -> Matrix {
-        return Matrix::new(vec![
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        ]);
+    pub fn transpose(&self) -> Matrix<SIDE_LENGTH> {
+        let mut result = *self;
+        for row in 0..SIDE_LENGTH {
+            let row_offset = row + 1;
+            let (upper_slice, lower_slice) = result.elements.split_at_mut(row_offset);
+            for column in row_offset..SIDE_LENGTH {
+                mem::swap(&mut upper_slice[row][column], &mut lower_slice[column - row_offset][row]);
+            }
+        }
+        return result;
+    }
+}
+
+impl Matrix<2> {
+    pub fn submatrix(&self, row: usize, column: usize) -> f64 {
+        return self.elements[row][column];
     }
 
-    pub fn transpose(&self) -> Matrix {
-        let mut result = self.clone();
-        let side_length = result.side_length;
-        for row in 0..side_length {
-            for column in row..side_length {
-                result.elements.swap(column + row * side_length, row + column * side_length);
+    fn determinant(&self) -> f64 {
+        return self.elements[0][0] * self.elements[1][1]
+            - self.elements[0][1] * self.elements[1][0];
+    }
+
+    pub fn minor(&self, row: usize, column: usize) -> f64 {
+        return self.submatrix(row, column);
+    }
+
+    pub fn cofactor(&self, row: usize, column: usize) -> f64 {
+        let minor = self.minor(row, column);
+        return if (row + column) % 2 == 0 { minor } else { -minor };
+    }
+
+    pub fn revertible(&self) -> bool {
+        return self.determinant() != 0.0;
+    }
+
+    pub fn inverse(&self) -> Matrix<2> {
+        let mut result = Matrix::<2>::empty();
+        let determinant = self.determinant();
+
+        for row in 0..2 {
+            for column in 0..2 {
+                let cofactor = self.cofactor(row, column);
+                result.set_index(column, row, cofactor / determinant);
+            }
+        }
+
+        return result;
+    }
+}
+
+impl Matrix<3> {
+    fn submatrix(&self, row: usize, column: usize) -> Matrix<2> {
+        let mut result = Matrix::<2>::empty();
+
+        for row_index in 0..self.elements.len() {
+            if row_index != row {
+                for column_index in 0..self.elements.len() {
+                    if column_index != column {
+                        let new_row_index = if row_index < row { row_index } else { row_index - 1 };
+                        let new_column_index = if column_index < column { column_index } else { column_index - 1 };
+                        result.elements[new_row_index][new_column_index] = self.elements[row_index][column_index];
+                    }
+                }
             }
         }
         return result;
     }
 
     fn determinant(&self) -> f64 {
-        if self.side_length == 2 {
-            return self.elements[0] * self.elements[3] - self.elements[1] * self.elements[2];
-        }
-
         let mut determinant = 0.0;
-        for column in 0..self.side_length {
-            determinant += self.get_index(0, column) * self.cofactor(0, column);
+        for column in 0..self.elements.len() {
+            determinant += self.elements[0][column] * self.cofactor(0, column);
         }
         return determinant;
-    }
-
-    fn submatrix(&self, row: usize, column: usize) -> Matrix {
-        let mut submatrix = Vec::new();
-
-        for row_index in 0..self.side_length {
-            if row_index != row {
-                for column_index in 0..self.side_length {
-                    if column_index != column {
-                        submatrix.push(self.get_index(row_index, column_index));
-                    }
-                }
-            }
-        }
-        return Matrix::new(submatrix);
     }
 
     pub fn minor(&self, row: usize, column: usize) -> f64 {
@@ -101,16 +126,12 @@ impl Matrix {
         return self.determinant() != 0.0;
     }
 
-    pub fn inverse(&self) -> Matrix {
+    pub fn inverse(&self) -> Matrix<3> {
+        let mut result = Matrix::<3>::empty();
         let determinant = self.determinant();
-        if determinant == 0.0 {
-            panic!("Matrix is not revertible");
-        }
 
-        let mut result = Matrix::empty(self.elements.len());
-
-        for row in 0..self.side_length {
-            for column in 0..self.side_length {
+        for row in 0..3 {
+            for column in 0..3 {
                 let cofactor = self.cofactor(row, column);
                 result.set_index(column, row, cofactor / determinant);
             }
@@ -120,59 +141,118 @@ impl Matrix {
     }
 }
 
-impl Default for Matrix {
-    fn default() -> Matrix {
-        return Matrix::identity();
-    }
-}
+impl Matrix<4> {
+    fn submatrix(&self, row: usize, column: usize) -> Matrix<3> {
+        let mut result = Matrix::<3>::empty();
 
-impl PartialEq for Matrix {
-    fn eq(&self, rhs: &Matrix) -> bool {
-        for (a, b) in self.elements.iter().zip(rhs.elements.iter()) {
-            if (a - b).abs() > crate::EPSILON {
-                return false;
+        for row_index in 0..self.elements.len() {
+            if row_index != row {
+                for column_index in 0..self.elements.len() {
+                    if column_index != column {
+                        let new_row_index = if row_index < row { row_index } else { row_index - 1 };
+                        let new_column_index = if column_index < column { column_index } else { column_index - 1 };
+                        result.elements[new_row_index][new_column_index] = self.elements[row_index][column_index];
+                    }
+                }
             }
         }
-        return true;
+        return result;
     }
-}
 
-impl Mul<Matrix> for Matrix {
-    type Output = Matrix;
+    fn determinant(&self) -> f64 {
+        let mut determinant = 0.0;
+        for column in 0..self.elements.len() {
+            determinant += self.elements[0][column] * self.cofactor(0, column);
+        }
+        return determinant;
+    }
 
-    fn mul(self, rhs: Matrix) -> Matrix {
-        let mut result = Matrix::new(vec![0.0; self.elements.len()]);
-        let side_length = self.side_length;
-        for (index, value) in result.elements.iter_mut().enumerate() {
-            let row = index / side_length;
-            let column = index % side_length;
-            let mut sum = 0.0;
-            for i in 0..side_length {
-                sum += self.get_index(row, i) * rhs.get_index(i, column);
+    pub fn minor(&self, row: usize, column: usize) -> f64 {
+        return self.submatrix(row, column).determinant();
+    }
+
+    pub fn cofactor(&self, row: usize, column: usize) -> f64 {
+        let minor = self.minor(row, column);
+        return if (row + column) % 2 == 0 { minor } else { -minor };
+    }
+
+    pub fn revertible(&self) -> bool {
+        return self.determinant() != 0.0;
+    }
+
+    pub fn inverse(&self) -> Matrix<4> {
+        let mut result = Matrix::<4>::empty();
+        let determinant = self.determinant();
+
+        for row in 0..4 {
+            for column in 0..4 {
+                let cofactor = self.cofactor(row, column);
+                result.set_index(column, row, cofactor / determinant);
             }
-            *value = sum;
         }
 
         return result;
     }
 }
 
-impl Mul<Tuple> for Matrix {
-    type Output = Tuple;
+impl<const SIDE_LENGTH: usize> Default for Matrix<SIDE_LENGTH> {
+    fn default() -> Matrix<SIDE_LENGTH> {
+        return Matrix::<SIDE_LENGTH>::identity();
+    }
+}
 
-    fn mul(self, rhs: Tuple) -> Tuple {
-        if self.side_length != 4 {
-            panic!("Matrix must be 4x4 to be multiplied by a tuple");
+impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        return formatter.debug_struct("Matrix")
+            .field("elements", &self.elements)
+            .finish();
+    }
+}
+
+impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
+    fn eq(&self, rhs: &Matrix<SIDE_LENGTH>) -> bool {
+        for (self_row, rhs_row) in self.elements.iter().zip(rhs.elements.iter()) {
+            for (self_value, rhs_value) in self_row.iter().zip(rhs_row.iter()) {
+                if (self_value - rhs_value).abs() > EPSILON {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
+    type Output = Matrix<SIDE_LENGTH>;
+
+    fn mul(self, rhs: Matrix<SIDE_LENGTH>) -> Self::Output {
+        let mut result = Matrix::<SIDE_LENGTH>::empty();
+        for (row_index, row) in result.elements.iter_mut().enumerate() {
+            for (column_index, value) in row.iter_mut().enumerate() {
+                let mut sum = 0.0;
+                for i in 0..SIDE_LENGTH {
+                    sum += self.get_index(row_index, i) * rhs.get_index(i, column_index);
+                }
+                *value = sum;
+            }
         }
 
+        return result;
+    }
+}
+
+impl Mul<Tuple> for Matrix<4> {
+    type Output = Tuple;
+
+    fn mul(self, rhs: Tuple) -> Self::Output {
         let mut result = [0.0; 4];
         let tuple_values = rhs.get_values();
-        for i in 0..4 {
+        for (index, row) in self.elements.iter().enumerate() {
             let mut sum = 0.0;
-            for j in 0..4 {
-                sum += self.get_index(i, j) * tuple_values[j];
+            for (matrix_value, tuple_value) in row.iter().zip(tuple_values) {
+                sum += matrix_value * tuple_value;
             }
-            result[i] = sum;
+            result[index] = sum;
         }
         return Tuple::new(result[0], result[1], result[2], result[3]);
     }
@@ -184,35 +264,55 @@ mod tests {
 
     #[test]
     fn matrix_indices() {
-        let matrix = Matrix::new(vec![
-            1.0, 2.0, 3.0, 4.0,
-            5.5, 6.5, 7.5, 8.5,
-            9.0, 10.0, 11.0, 12.0,
-            13.5, 14.5, 15.5, 16.5,
+        let matrix2 = Matrix::<2>::new([
+            [1.0, 2.0],
+            [5.5, 6.5]
         ]);
-        assert_eq!(matrix.get_index(0, 0), 1.0);
-        assert_eq!(matrix.get_index(0, 3), 4.0);
-        assert_eq!(matrix.get_index(1, 0), 5.5);
-        assert_eq!(matrix.get_index(1, 2), 7.5);
-        assert_eq!(matrix.get_index(2, 2), 11.0);
-        assert_eq!(matrix.get_index(3, 0), 13.5);
-        assert_eq!(matrix.get_index(3, 2), 15.5);
+        assert_eq!(matrix2.get_index(0, 0), 1.0);
+        assert_eq!(matrix2.get_index(0, 1), 2.0);
+        assert_eq!(matrix2.get_index(1, 0), 5.5);
+        assert_eq!(matrix2.get_index(1, 1), 6.5);
+
+        let matrix3 = Matrix::<3>::new([
+            [1.0, 2.0, 3.0],
+            [5.5, 6.5, 7.5],
+            [9.0, 10.0, 11.0]
+        ]);
+        assert_eq!(matrix3.get_index(0, 0), 1.0);
+        assert_eq!(matrix3.get_index(0, 1), 2.0);
+        assert_eq!(matrix3.get_index(1, 0), 5.5);
+        assert_eq!(matrix3.get_index(1, 1), 6.5);
+        assert_eq!(matrix3.get_index(2, 2), 11.0);
+
+        let matrix4 = Matrix::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.5, 6.5, 7.5, 8.5],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.5, 14.5, 15.5, 16.5]
+        ]);
+        assert_eq!(matrix4.get_index(0, 0), 1.0);
+        assert_eq!(matrix4.get_index(0, 3), 4.0);
+        assert_eq!(matrix4.get_index(1, 0), 5.5);
+        assert_eq!(matrix4.get_index(1, 2), 7.5);
+        assert_eq!(matrix4.get_index(2, 2), 11.0);
+        assert_eq!(matrix4.get_index(3, 0), 13.5);
+        assert_eq!(matrix4.get_index(3, 2), 15.5);
     }
 
     #[test]
     fn matrix_comparison() {
-        let matrix1 = Matrix::new(vec![
-            1.0, 2.0, 3.0, 4.0,
-            5.0, 6.0, 7.0, 8.0,
-            9.0, 8.0, 7.0, 6.0,
-            5.0, 4.0, 3.0, 2.0,
+        let matrix1 = Matrix::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 8.0, 7.0, 6.0],
+            [5.0, 4.0, 3.0, 2.0]
         ]);
-        let matrix2 = matrix1.clone();
-        let matrix3 = Matrix::new(vec![
-            2.0, 3.0, 4.0, 5.0,
-            6.0, 7.0, 8.0, 9.0,
-            8.0, 7.0, 6.0, 5.0,
-            4.0, 3.0, 2.0, 1.0,
+        let matrix2 = matrix1;
+        let matrix3 = Matrix::<4>::new([
+            [2.0, 3.0, 4.0, 5.0],
+            [6.0, 7.0, 8.0, 9.0],
+            [8.0, 7.0, 6.0, 5.0],
+            [4.0, 3.0, 2.0, 1.0]
         ]);
         assert_eq!(matrix1, matrix2);
         assert_ne!(matrix2, matrix3);
@@ -220,34 +320,34 @@ mod tests {
 
     #[test]
     fn matrix_multiplication_by_matrix() {
-        let matrix1 = Matrix::new(vec![
-            1.0, 2.0, 3.0, 4.0,
-            5.0, 6.0, 7.0, 8.0,
-            9.0, 8.0, 7.0, 6.0,
-            5.0, 4.0, 3.0, 2.0,
+        let matrix1 = Matrix::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 8.0, 7.0, 6.0],
+            [5.0, 4.0, 3.0, 2.0]
         ]);
-        let matrix2 = Matrix::new(vec![
-            -2.0, 1.0, 2.0, 3.0,
-            3.0, 2.0, 1.0, -1.0,
-            4.0, 3.0, 6.0, 5.0,
-            1.0, 2.0, 7.0, 8.0,
+        let matrix2 = Matrix::<4>::new([
+            [-2.0, 1.0, 2.0, 3.0],
+            [3.0, 2.0, 1.0, -1.0],
+            [4.0, 3.0, 6.0, 5.0],
+            [1.0, 2.0, 7.0, 8.0]
         ]);
-        let result_matrix = Matrix::new(vec![
-            20.0, 22.0, 50.0, 48.0,
-            44.0, 54.0, 114.0, 108.0,
-            40.0, 58.0, 110.0, 102.0,
-            16.0, 26.0, 46.0, 42.0,
+        let result_matrix = Matrix::<4>::new([
+            [20.0, 22.0, 50.0, 48.0],
+            [44.0, 54.0, 114.0, 108.0],
+            [40.0, 58.0, 110.0, 102.0],
+            [16.0, 26.0, 46.0, 42.0]
         ]);
         assert_eq!(matrix1 * matrix2, result_matrix);
     }
 
     #[test]
     fn matrix_multiplication_by_tuple() {
-        let matrix = Matrix::new(vec![
-            1.0, 2.0, 3.0, 4.0,
-            2.0, 4.0, 4.0, 2.0,
-            8.0, 6.0, 4.0, 1.0,
-            0.0, 0.0, 0.0, 1.0,
+        let matrix = Matrix::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0]
         ]);
         let tuple = Tuple::new(1.0, 2.0, 3.0, 1.0);
         assert_eq!(matrix * tuple, Tuple::new(18.0, 24.0, 33.0, 1.0));
@@ -255,53 +355,85 @@ mod tests {
 
     #[test]
     fn identity_matrix() {
-        let matrix1 = Matrix::new(vec![
-            0.0, 1.0, 2.0, 4.0,
-            1.0, 2.0, 4.0, 8.0,
-            2.0, 4.0, 8.0, 16.0,
-            4.0, 8.0, 16.0, 32.0,
+        let matrix2 = Matrix::<2>::new([
+            [0.0, 1.0],
+            [1.0, 2.0]
         ]);
-        assert_eq!((matrix1.clone() * Matrix::identity()), matrix1);
+        let matrix3 = Matrix::<3>::new([
+            [0.0, 1.0, 2.0],
+            [1.0, 2.0, 4.0],
+            [2.0, 4.0, 8.0]
+        ]);
+        let matrix4 = Matrix::<4>::new([
+            [0.0, 1.0, 2.0, 4.0],
+            [1.0, 2.0, 4.0, 8.0],
+            [2.0, 4.0, 8.0, 16.0],
+            [4.0, 8.0, 16.0, 32.0]
+        ]);
+        assert_eq!((matrix2 * Matrix::<2>::identity()), matrix2);
+        assert_eq!((matrix3 * Matrix::<3>::identity()), matrix3);
+        assert_eq!((matrix4 * Matrix::<4>::identity()), matrix4);
     }
 
     #[test]
     fn transpose_matrix() {
-        let matrix1 = Matrix::new(vec![
-            0.0, 9.0, 3.0, 0.0,
-            9.0, 8.0, 0.0, 8.0,
-            1.0, 8.0, 5.0, 3.0,
-            0.0, 0.0, 5.0, 8.0,
+        let matrix2 = Matrix::<2>::new([
+            [1.0, 2.0],
+            [5.5, 6.5]
         ]);
-        let matrix2 = Matrix::new(vec![
-            0.0, 9.0, 1.0, 0.0,
-            9.0, 8.0, 8.0, 0.0,
-            3.0, 0.0, 5.0, 5.0,
-            0.0, 8.0, 3.0, 8.0,
+        let matrix2_transposed = Matrix::<2>::new([
+            [1.0, 5.5],
+            [2.0, 6.5]
         ]);
-        assert_eq!(matrix1.transpose(), matrix2);
+        let matrix3 = Matrix::<3>::new([
+            [0.0, 9.0, 3.0],
+            [9.0, 8.0, 0.0],
+            [1.0, 8.0, 5.0]
+        ]);
+        let matrix3_transposed = Matrix::<3>::new([
+            [0.0, 9.0, 1.0],
+            [9.0, 8.0, 8.0],
+            [3.0, 0.0, 5.0]
+        ]);
+        let matrix4 = Matrix::<4>::new([
+            [0.0, 9.0, 3.0, 0.0],
+            [9.0, 8.0, 0.0, 8.0],
+            [1.0, 8.0, 5.0, 3.0],
+            [0.0, 0.0, 5.0, 8.0]
+        ]);
+        let matrix4_transposed = Matrix::<4>::new([
+            [0.0, 9.0, 1.0, 0.0],
+            [9.0, 8.0, 8.0, 0.0],
+            [3.0, 0.0, 5.0, 5.0],
+            [0.0, 8.0, 3.0, 8.0]
+        ]);
+        assert_eq!(matrix2.transpose(), matrix2_transposed);
+        assert_eq!(matrix3.transpose(), matrix3_transposed);
+        assert_eq!(matrix4.transpose(), matrix4_transposed);
     }
 
     #[test]
     fn transpose_identity_matrix() {
-        let matrix1 = Matrix::identity();
-        assert_eq!(matrix1.transpose(), Matrix::identity());
+        assert_eq!(Matrix::<2>::identity().transpose(), Matrix::<2>::identity());
+        assert_eq!(Matrix::<3>::identity().transpose(), Matrix::<3>::identity());
+        assert_eq!(Matrix::<4>::identity().transpose(), Matrix::<4>::identity());
     }
 
     #[test]
     fn matrix_determinant_2x2() {
-        let matrix1 = Matrix::new(vec![
-            1.0, 5.0,
-            -3.0, 2.0,
+        let matrix = Matrix::<2>::new([
+            [1.0, 5.0],
+            [-3.0, 2.0]
         ]);
-        assert_eq!(matrix1.determinant(), 17.0);
+        assert_eq!(matrix.determinant(), 17.0);
     }
 
     #[test]
     fn matrix_determinant_3x3() {
-        let matrix1 = Matrix::new(vec![
-            1.0, 2.0, 6.0,
-            -5.0, 8.0, -4.0,
-            2.0, 6.0, 4.0,
+        let matrix1 = Matrix::<3>::new([
+            [1.0, 2.0, 6.0],
+            [-5.0, 8.0, -4.0],
+            [2.0, 6.0, 4.0]
         ]);
         assert_eq!(matrix1.cofactor(0, 0), 56.0);
         assert_eq!(matrix1.cofactor(0, 1), 12.0);
@@ -311,11 +443,11 @@ mod tests {
 
     #[test]
     fn matrix_determinant_4x4() {
-        let matrix1 = Matrix::new(vec![
-            -2.0, -8.0, 3.0, 5.0,
-            -3.0, 1.0, 7.0, 3.0,
-            1.0, 2.0, -9.0, 6.0,
-            -6.0, 7.0, 7.0, -9.0,
+        let matrix1 = Matrix::<4>::new([
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0]
         ]);
         assert_eq!(matrix1.cofactor(0, 0), 690.0);
         assert_eq!(matrix1.cofactor(0, 1), 447.0);
@@ -326,40 +458,40 @@ mod tests {
 
     #[test]
     fn submatrix_3x3() {
-        let matrix1 = Matrix::new(vec![
-            1.0, 5.0, 0.0,
-            -3.0, 2.0, 7.0,
-            0.0, 6.0, -3.0,
+        let matrix1 = Matrix::<3>::new([
+            [1.0, 5.0, 0.],
+            [-3.0, 2.0, 7.0],
+            [0.0, 6.0, -3.0]
         ]);
-        let matrix2 = Matrix::new(vec![
-            -3.0, 2.0,
-            0.0, 6.0,
+        let matrix2 = Matrix::<2>::new([
+            [-3.0, 2.0],
+            [0.0, 6.0],
         ]);
         assert_eq!(matrix1.submatrix(0, 2), matrix2);
     }
 
     #[test]
     fn submatrix_4x4() {
-        let matrix1 = Matrix::new(vec![
-            -6.0, 1.0, 1.0, 6.0,
-            -8.0, 5.0, 8.0, 6.0,
-            -1.0, 0.0, 8.0, 2.0,
-            -7.0, 1.0, -1.0, 1.0,
+        let matrix1 = Matrix::<4>::new([
+            [-6.0, 1.0, 1.0, 6.0],
+            [-8.0, 5.0, 8.0, 6.0],
+            [-1.0, 0.0, 8.0, 2.],
+            [-7.0, 1.0, -1.0, 1.0]
         ]);
-        let matrix2 = Matrix::new(vec![
-            -6.0, 1.0, 6.0,
-            -8.0, 8.0, 6.0,
-            -7.0, -1.0, 1.0,
+        let matrix2 = Matrix::<3>::new([
+            [-6.0, 1.0, 6.0],
+            [-8.0, 8.0, 6.0],
+            [-7.0, -1.0, 1.0]
         ]);
         assert_eq!(matrix1.submatrix(2, 1), matrix2);
     }
 
     #[test]
     fn matrix_minor_and_cofactor() {
-        let matrix1 = Matrix::new(vec![
-            3.0, 5.0, 0.0,
-            2.0, -1.0, -7.0,
-            6.0, -1.0, 5.0,
+        let matrix1 = Matrix::<3>::new([
+            [3.0, 5.0, 0.0],
+            [2.0, -1.0, -7.0],
+            [6.0, -1.0, 5.0]
         ]);
         assert_eq!(matrix1.minor(0, 0), -12.0);
         assert_eq!(matrix1.cofactor(0, 0), -12.0);
@@ -369,29 +501,29 @@ mod tests {
 
     #[test]
     fn matrix_inverse() {
-        let matrix1 = Matrix::new(vec![
-            -5.0, 2.0, 6.0, -8.0,
-            1.0, -5.0, 1.0, 8.0,
-            7.0, 7.0, -6.0, -7.0,
-            1.0, -3.0, 7.0, 4.0,
+        let matrix1 = Matrix::<4>::new([
+            [-5.0, 2.0, 6.0, -8.0],
+            [1.0, -5.0, 1.0, 8.0],
+            [7.0, 7.0, -6.0, -7.0],
+            [1.0, -3.0, 7.0, 4.0]
         ]);
-        let matrix2 = Matrix::new(vec![
-            0.21804511278195488, 0.45112781954887216, 0.24060150375939848, -0.045112781954887216,
-            -0.8082706766917294, -1.4567669172932332, -0.44360902255639095, 0.5206766917293233,
-            -0.07894736842105263, -0.2236842105263158, -0.05263157894736842, 0.19736842105263158,
-            -0.5225563909774437, -0.8139097744360902, -0.3007518796992481, 0.30639097744360905,
+        let matrix2 = Matrix::<4>::new([
+            [0.21804511278195488, 0.45112781954887216, 0.24060150375939848, -0.045112781954887216],
+            [-0.8082706766917294, -1.4567669172932332, -0.44360902255639095, 0.5206766917293233],
+            [-0.07894736842105263, -0.2236842105263158, -0.05263157894736842, 0.19736842105263158],
+            [-0.5225563909774437, -0.8139097744360902, -0.3007518796992481, 0.30639097744360905]
         ]);
-        let matrix3 = Matrix::new(vec![
-            9.0, 3.0, 0.0, 9.0,
-            -5.0, -2.0, 6.0, -3.0,
-            -4.0, 9.0, 6.0, 4.0,
-            -7.0, 6.0, 6.0, 2.0,
+        let matrix3 = Matrix::<4>::new([
+            [9.0, 3.0, 0.0, 9.0],
+            [-5.0, -2.0, 6.0, -3.0],
+            [-4.0, 9.0, 6.0, 4.0],
+            [-7.0, 6.0, 6.0, 2.0]
         ]);
-        let matrix4 = Matrix::new(vec![
-            -0.004901960784313725, 0.10294117647058823, 0.27941176470588236, -0.38235294117647056,
-            -0.09313725490196079, -0.04411764705882353, 0.3088235294117647, -0.2647058823529412,
-            0.03839869281045752, 0.19362745098039216, 0.14460784313725492, -0.1715686274509804,
-            0.14705882352941177, -0.08823529411764706, -0.38235294117647056, 0.47058823529411764,
+        let matrix4 = Matrix::<4>::new([
+            [-0.004901960784313725, 0.10294117647058823, 0.27941176470588236, -0.38235294117647056],
+            [-0.09313725490196079, -0.04411764705882353, 0.3088235294117647, -0.2647058823529412],
+            [0.03839869281045752, 0.19362745098039216, 0.14460784313725492, -0.1715686274509804],
+            [0.14705882352941177, -0.08823529411764706, -0.38235294117647056, 0.47058823529411764]
         ]);
         let matrix5 = matrix1.inverse();
         assert_eq!(matrix1.determinant(), 532.0);
@@ -405,19 +537,19 @@ mod tests {
 
     #[test]
     fn matrix_product_mul_by_inverse() {
-        let matrix1 = Matrix::new(vec![
-            3.0, -9.0, 7.0, 3.0,
-            3.0, -8.0, 2.0, -9.0,
-            -4.0, 4.0, 4.0, 1.0,
-            -6.0, 5.0, -1.0, 1.0,
+        let matrix1 = Matrix::<4>::new([
+            [3.0, -9.0, 7.0, 3.0],
+            [3.0, -8.0, 2.0, -9.0],
+            [-4.0, 4.0, 4.0, 1.0],
+            [-6.0, 5.0, -1.0, 1.0]
         ]);
-        let matrix2 = Matrix::new(vec![
-            8.0, 2.0, 2.0, 2.0,
-            3.0, -1.0, 7.0, 0.0,
-            7.0, 0.0, 5.0, 4.0,
-            6.0, -2.0, 0.0, 5.0,
+        let matrix2 = Matrix::<4>::new([
+            [8.0, 2.0, 2.0, 2.0],
+            [3.0, -1.0, 7.0, 0.0],
+            [7.0, 0.0, 5.0, 4.0],
+            [6.0, -2.0, 0.0, 5.0]
         ]);
-        let matrix3 = matrix1.clone() * matrix2.clone();
+        let matrix3 = matrix1 * matrix2;
         assert_eq!(matrix3 * matrix2.inverse(), matrix1);
     }
 }

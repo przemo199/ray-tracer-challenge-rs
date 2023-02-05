@@ -1,6 +1,13 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
-use crate::{EPSILON, Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, TupleTrait};
+use crate::consts::EPSILON;
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::tuple::{Tuple, TupleTrait};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Triangle {
@@ -11,7 +18,7 @@ pub struct Triangle {
     e2: Tuple,
     normal: Tuple,
     material: Material,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl Triangle {
@@ -51,11 +58,11 @@ impl Shape for Triangle {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
@@ -86,8 +93,10 @@ impl Shape for Triangle {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use crate::{Ray, Shape, Tuple, TupleTrait};
+    use crate::ray::Ray;
+    use crate::shape::Shape;
     use crate::triangle::Triangle;
+    use crate::tuple::Tuple;
 
     #[test]
     fn creating_triangle() {

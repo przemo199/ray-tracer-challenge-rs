@@ -1,17 +1,23 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use crate::{Intersection, Intersections, Material, Matrix, Ray, Tuple};
+use crate::consts::EPSILON;
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
 use crate::shape::Shape;
+use crate::tuple::Tuple;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
     pub material: Material,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
     pub normal: Tuple,
 }
 
 impl Plane {
-    pub fn new(material: Material, transformation: Matrix) -> Plane {
+    pub fn new(material: Material, transformation: Matrix<4>) -> Plane {
         let normal = Tuple::vector(0.0, 1.0, 0.0);
         return Plane {
             material,
@@ -40,16 +46,16 @@ impl Shape for Plane {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
     fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
-        if ray.direction.y.abs() < crate::EPSILON {
+        if ray.direction.y.abs() < EPSILON {
             return Intersections::new();
         }
 

@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use image::ImageFormat;
-use crate::{Color};
+use crate::color::Color;
 
 pub struct Canvas {
     pub width: u32,
@@ -12,10 +12,8 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new(width: u32, height: u32) -> Canvas {
-        let mut pixels = Vec::new();
-        for _ in 0..(width * height) {
-            pixels.push(Color::new(0.0, 0.0, 0.0));
-        }
+        let pixel_count = (width * height) as usize;
+        let pixels = vec![Color::new(0.0, 0.0, 0.0); pixel_count];
         return Canvas {
             width,
             height,

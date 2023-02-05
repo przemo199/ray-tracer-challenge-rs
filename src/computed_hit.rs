@@ -1,6 +1,7 @@
 use std::sync::Arc;
-use crate::{Tuple, TupleTrait};
+use crate::consts::EPSILON;
 use crate::shape::Shape;
+use crate::tuple::{Tuple, TupleTrait};
 
 #[derive(Clone, Debug)]
 pub struct ComputedHit {
@@ -19,8 +20,8 @@ pub struct ComputedHit {
 
 impl ComputedHit {
     pub fn new(t: f64, object: Arc<dyn Shape>, point: Tuple, camera_vector: Tuple, normal_vector: Tuple, reflection_vector: Tuple, is_inside: bool, n1: f64, n2: f64) -> ComputedHit {
-        let over_point = point + normal_vector * crate::EPSILON;
-        let under_point = point - normal_vector * crate::EPSILON;
+        let over_point = point + normal_vector * EPSILON;
+        let under_point = point - normal_vector * EPSILON;
         return ComputedHit {
             t,
             object,
@@ -57,8 +58,11 @@ impl ComputedHit {
 
 #[cfg(test)]
 mod tests {
+    use crate::intersection::Intersection;
+    use crate::intersections::Intersections;
+    use crate::ray::Ray;
+    use crate::sphere::Sphere;
     use super::*;
-    use crate::{Intersection, Intersections, Ray, Sphere};
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {

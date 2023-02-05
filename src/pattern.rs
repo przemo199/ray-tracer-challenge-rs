@@ -1,7 +1,15 @@
 use std::fmt::{Debug, Display, Formatter};
-use crate::{Color, Matrix, Shape, Transformations, Tuple};
+use crate::color::Color;
+use crate::matrix::Matrix;
+use crate::shape::Shape;
+use crate::transformations::Transformations;
+use crate::tuple::Tuple;
 
-pub trait Pattern: Debug + Display + Sync + Send {
+pub trait PatternClone {
+    fn box_clone(&self) -> Box<dyn Pattern>;
+}
+
+pub trait Pattern: PatternClone + Debug + Display + Sync + Send {
     fn color_at(&self, point: &Tuple) -> Color;
 
     fn color_at_shape(&self, object: &dyn Shape, point: &Tuple) -> Color {
@@ -10,16 +18,20 @@ pub trait Pattern: Debug + Display + Sync + Send {
         return self.color_at(&pattern_point);
     }
 
-    fn transformation(&self) -> Matrix;
+    fn transformation(&self) -> Matrix<4>;
 
-    fn set_transformation(&mut self, transformation: Matrix);
+    fn set_transformation(&mut self, transformation: Matrix<4>);
+}
 
-    fn box_clone(&self) -> Box<dyn Pattern>;
+impl<T> PatternClone for T where T: 'static + Pattern + Clone {
+    fn box_clone(&self) -> Box<dyn Pattern> {
+        return Box::new(self.clone());
+    }
 }
 
 impl PartialEq for Box<dyn Pattern> {
-    fn eq(&self, other: &Box<dyn Pattern>) -> bool {
-        return self.to_string() == other.to_string();
+    fn eq(&self, rhs: &Box<dyn Pattern>) -> bool {
+        return self.to_string() == rhs.to_string();
     }
 }
 
@@ -33,7 +45,7 @@ impl Clone for Box<dyn Pattern> {
 pub struct StripePattern {
     color_a: Color,
     color_b: Color,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl StripePattern {
@@ -48,16 +60,12 @@ impl Pattern for StripePattern {
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -72,8 +80,8 @@ impl Display for StripePattern {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TestPattern {
-    transformation: Matrix,
+struct TestPattern {
+    transformation: Matrix<4>,
 }
 
 impl TestPattern {
@@ -87,16 +95,12 @@ impl Pattern for TestPattern {
         return Color::new(point.x, point.y, point.z);
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -112,7 +116,7 @@ impl Display for TestPattern {
 pub struct GradientPattern {
     color_a: Color,
     color_b: Color,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl GradientPattern {
@@ -131,16 +135,12 @@ impl Pattern for GradientPattern {
         return self.color_a + (distance * fraction);
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -158,7 +158,7 @@ impl Display for GradientPattern {
 pub struct RingPattern {
     color_a: Color,
     color_b: Color,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl RingPattern {
@@ -173,16 +173,12 @@ impl Pattern for RingPattern {
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -200,7 +196,7 @@ impl Display for RingPattern {
 pub struct CheckerPattern {
     color_a: Color,
     color_b: Color,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl CheckerPattern {
@@ -215,16 +211,12 @@ impl Pattern for CheckerPattern {
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -242,7 +234,7 @@ impl Display for CheckerPattern {
 pub struct ComplexPattern {
     pattern_a: Box<dyn Pattern>,
     pattern_b: Box<dyn Pattern>,
-    transformation: Matrix,
+    transformation: Matrix<4>,
 }
 
 impl ComplexPattern {
@@ -257,16 +249,12 @@ impl Pattern for ComplexPattern {
         return if distance % 2 == 0 { self.pattern_a.color_at(point) } else { self.pattern_b.color_at(point) };
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
-    }
-
-    fn box_clone(&self) -> Box<dyn Pattern> {
-        return Box::new(self.clone());
     }
 }
 
@@ -282,8 +270,10 @@ impl Display for ComplexPattern {
 
 #[cfg(test)]
 mod tests {
+    use crate::light::Light;
+    use crate::material::Material;
+    use crate::sphere::Sphere;
     use super::*;
-    use crate::{Light, Material, Shape, Sphere, Transformations};
 
     #[test]
     fn white_and_black_exist() {

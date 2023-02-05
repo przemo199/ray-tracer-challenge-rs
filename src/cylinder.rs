@@ -1,13 +1,20 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use crate::{Intersection, Intersections, Material, Matrix, Ray, Shape, Tuple, EPSILON};
+use crate::consts::EPSILON;
+use crate::intersection::Intersection;
+use crate::intersections::Intersections;
+use crate::material::Material;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::shape::Shape;
+use crate::tuple::Tuple;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cylinder {
     pub minimum: f64,
     pub maximum: f64,
     pub closed: bool,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
     pub material: Material,
 }
 
@@ -16,7 +23,7 @@ impl Cylinder {
         minimum: f64,
         maximum: f64,
         closed: bool,
-        transformation: Matrix,
+        transformation: Matrix<4>,
         material: Material,
     ) -> Cylinder {
         return Cylinder {
@@ -74,11 +81,11 @@ impl Shape for Cylinder {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix {
-        return self.transformation.clone();
+    fn transformation(&self) -> Matrix<4> {
+        return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix) {
+    fn set_transformation(&mut self, transformation: Matrix<4>) {
         self.transformation = transformation;
     }
 
@@ -154,8 +161,8 @@ impl From<Cylinder> for Box<dyn Shape> {
 
 #[cfg(test)]
 mod tests {
+    use crate::tuple::TupleTrait;
     use super::*;
-    use crate::TupleTrait;
 
     #[test]
     fn default_cylinder() {

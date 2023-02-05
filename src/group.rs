@@ -1,8 +1,11 @@
-use crate::{Matrix, Shape, Transformations};
+use crate::matrix::Matrix;
+use crate::shape::Shape;
+use crate::transformations::Transformations;
 
+#[derive(Debug)]
 pub struct Group {
     pub shapes: Vec<Box<dyn Shape>>,
-    pub transformation: Matrix,
+    pub transformation: Matrix<4>,
 }
 
 impl Group {
@@ -20,7 +23,7 @@ impl Default for Group {
 #[cfg(test)]
 mod tests {
     use crate::group::Group;
-    use crate::Transformations;
+    use crate::transformations::Transformations;
 
     #[test]
     fn creating_new_group() {
