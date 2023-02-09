@@ -47,7 +47,8 @@ impl Cube {
 
 impl Shape for Cube {
     fn local_normal_at(&self, point: Tuple) -> Tuple {
-        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().to_owned()
+            .copied().fold(f64::NEG_INFINITY, f64::max);
         if max_value == point.x.abs() {
             return Tuple::vector(point.x, 0.0, 0.0)
         } else if max_value == point.y.abs() {
@@ -105,12 +106,6 @@ impl Display for Cube {
     }
 }
 
-impl From<Cube> for Box<dyn Shape> {
-    fn from(cube: Cube) -> Box<dyn Shape> {
-        return Box::new(cube);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,10 +159,10 @@ mod tests {
             Tuple::vector(0.0, 0.0, -1.0),
             Tuple::vector(0.0, -1.0, 0.0),
             Tuple::vector(-1.0, 0.0, 0.0)];
-        for i in 0..origins.len() {
+        for (origin, direction) in origins.iter().zip(directions) {
             let cube = Cube::default();
             let arc_cube: Arc<dyn Shape> = Arc::new(cube);
-            let ray = Ray::new(origins[i], directions[i]);
+            let ray = Ray::new(*origin, direction);
             let intersections = arc_cube.local_intersect(&ray);
             assert_eq!(intersections.len(), 0);
         }
@@ -196,11 +191,10 @@ mod tests {
             Tuple::vector(-1.0, 0.0, 0.0),
         ];
 
-        for i in 0..points.len() {
+        for (point, normal) in points.iter().zip(normals) {
             let cube = Cube::default();
-            let point = points[i];
-            let normal = cube.local_normal_at(point);
-            assert_eq!(normal, normals[i]);
+            let cube_normal = cube.local_normal_at(*point);
+            assert_eq!(cube_normal, normal);
         }
     }
 }

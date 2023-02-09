@@ -13,7 +13,7 @@ pub struct Canvas {
 impl Canvas {
     pub fn new(width: u32, height: u32) -> Canvas {
         let pixel_count = (width * height) as usize;
-        let pixels = vec![Color::new(0.0, 0.0, 0.0); pixel_count];
+        let pixels = vec![Color::black(); pixel_count];
         return Canvas {
             width,
             height,
@@ -48,16 +48,16 @@ impl Canvas {
         for line in self.pixels.chunks(self.width as usize) {
             let mut line_content: Vec<String> = Vec::new();
             for pixel in line {
-                for mut color_value in pixel.get_colors().iter() {
-                    if color_value < &0.0 {
-                        color_value = &0.0;
+                for mut color_value in pixel.get_colors() {
+                    if color_value < 0.0 {
+                        color_value = 0.0;
                     }
 
-                    if color_value > &1.0 {
-                        color_value = &1.0;
+                    if color_value > 1.0 {
+                        color_value = 1.0;
                     }
 
-                    let scaled_color_value = ((*color_value / max_color_value) * 255.0).round() as i32;
+                    let scaled_color_value = ((color_value / max_color_value) * 255.0).round() as i32;
                     line_content.push(scaled_color_value.to_string());
                 }
             }
@@ -103,7 +103,7 @@ mod tests {
         assert_eq!(canvas.width, 10);
         assert_eq!(canvas.height, 20);
         assert_eq!(canvas.pixels.len(), 200);
-        let black = Color::new(0.0, 0.0, 0.0);
+        let black = Color::black();
         for pixel in canvas.pixels.iter() {
             assert_eq!(pixel, &black);
         }
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn set_pixel() {
         let mut canvas = Canvas::new(10, 20);
-        canvas.set_pixel(2, 3, Color::new(1.0, 0.0, 0.0));
+        canvas.set_pixel(2, 3, Color::red());
         assert_eq!(canvas.get_pixel(2, 3), &Color::new(1.0, 0.0, 0.0));
     }
 

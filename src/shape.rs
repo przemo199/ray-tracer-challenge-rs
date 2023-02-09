@@ -41,9 +41,9 @@ impl PartialEq for dyn Shape {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::color::Color;
     use crate::sphere::Sphere;
-    use super::*;
 
     // #[derive(Clone, Debug)]
     // pub struct TestShape {
@@ -65,10 +65,6 @@ mod tests {
     //     }
     //
     //     fn local_intersect(&self, ray: &Ray) -> Intersections {
-    //         todo!()
-    //     }
-    //
-    //     fn box_clone(&self) -> Box<dyn Shape> {
     //         todo!()
     //     }
     // }

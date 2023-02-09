@@ -100,6 +100,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn colors_exist() {
+        assert_eq!(Color::white(), Color::new(1.0, 1.0, 1.0));
+        assert_eq!(Color::black(), Color::new(0.0, 0.0, 0.0));
+        assert_eq!(Color::red(), Color::new(1.0, 0.0, 0.0));
+        assert_eq!(Color::green(), Color::new(0.0, 1.0, 0.0));
+        assert_eq!(Color::blue(), Color::new(0.0, 0.0, 1.0));
+    }
+
+    #[test]
     fn new_color() {
         let color1 = Color::new(-0.5, 0.4, 1.7);
         assert_eq!(color1.red, -0.5);

@@ -93,14 +93,12 @@ impl Display for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::PI;
     use super::*;
+    use crate::consts::PI;
 
     #[test]
     fn default_transformation() {
         let sphere = Sphere::default();
-        // assert_eq!(sphere.center, Tuple::point(0.0, 0.0, 0.0));
-        // assert_eq!(sphere.radius, 1.0);
         assert_eq!(sphere.transformation, Transformations::identity());
     }
 

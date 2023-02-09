@@ -19,7 +19,16 @@ pub struct ComputedHit {
 }
 
 impl ComputedHit {
-    pub fn new(t: f64, object: Arc<dyn Shape>, point: Tuple, camera_vector: Tuple, normal_vector: Tuple, reflection_vector: Tuple, is_inside: bool, n1: f64, n2: f64) -> ComputedHit {
+    pub fn new(
+        t: f64,
+        object: Arc<dyn Shape>,
+        point: Tuple,
+        camera_vector: Tuple,
+        normal_vector: Tuple,
+        reflection_vector: Tuple,
+        is_inside: bool,
+        n1: f64,
+        n2: f64) -> ComputedHit {
         let over_point = point + normal_vector * EPSILON;
         let under_point = point - normal_vector * EPSILON;
         return ComputedHit {
@@ -51,18 +60,18 @@ impl ComputedHit {
             camera_dot = (1.0 - sin2_t).sqrt();
         }
 
-        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powf(2.0);
+        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powi(2);
         return r0 + (1.0 - r0) * (1.0 - camera_dot).powf(5.0);
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::intersection::Intersection;
     use crate::intersections::Intersections;
     use crate::ray::Ray;
     use crate::sphere::Sphere;
-    use super::*;
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {

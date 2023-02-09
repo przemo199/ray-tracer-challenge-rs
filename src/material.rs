@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn default_material() {
         let material = Material::default();
-        assert_eq!(material.color, Color::new(1.0, 1.0, 1.0));
+        assert_eq!(material.color, Color::white());
         assert_eq!(material.ambient, 0.1);
         assert_eq!(material.diffuse, 0.9);
         assert_eq!(material.specular, 0.9);

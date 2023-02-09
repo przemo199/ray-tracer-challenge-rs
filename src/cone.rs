@@ -228,10 +228,7 @@ mod tests {
         let count = [0, 2, 4];
 
         for i in 0..origins.len() {
-            let mut cone = Cone::default();
-            cone.minimum = -0.5;
-            cone.maximum = 0.5;
-            cone.closed = true;
+            let cone = Cone { minimum: -0.5, maximum: 0.5, closed: true, ..Default::default() };
             let arc_cone: Arc<dyn Shape> = Arc::new(cone);
             let ray = Ray::new(origins[i], directions[i].normalize());
             let intersections = arc_cone.local_intersect(&ray);

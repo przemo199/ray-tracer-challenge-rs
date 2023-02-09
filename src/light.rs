@@ -13,6 +13,12 @@ impl Light {
     }
 }
 
+impl Default for Light {
+    fn default() -> Self {
+        return Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -20,7 +26,7 @@ mod tests {
     #[test]
     fn light_has_position_and_intensity() {
         let position = Tuple::point(0.0, 0.0, 0.0);
-        let intensity = Color::new(1.0, 1.0, 1.0);
+        let intensity = Color::white();
         let light = Light::new(position, intensity);
         assert_eq!(light.position, position);
         assert_eq!(light.intensity, intensity);

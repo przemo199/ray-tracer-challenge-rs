@@ -183,7 +183,7 @@ mod tests {
             Tuple::vector(0.0, 1.0, 0.0),
             Tuple::vector(1.0, 1.0, 1.0)];
 
-        for (origin, direction) in origins.iter().zip(directions.iter()) {
+        for (origin, direction) in origins.iter().zip(directions) {
             let cylinder = Cylinder::default();
             let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(*origin, direction.normalize());
@@ -255,9 +255,11 @@ mod tests {
         let counts = [0, 0, 0, 0, 0, 2];
 
         for ((point, direction), count) in points.iter().zip(directions.iter()).zip(counts.iter()) {
-            let mut cylinder = Cylinder::default();
-            cylinder.minimum = 1.0;
-            cylinder.maximum = 2.0;
+            let cylinder = Cylinder {
+                minimum: 1.0,
+                maximum: 2.0,
+                ..Default::default()
+            };
             let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
             let ray = Ray::new(*point, direction.normalize());
             let intersections = arc_cylinder.local_intersect(&ray);

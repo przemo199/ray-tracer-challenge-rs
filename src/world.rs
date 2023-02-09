@@ -22,12 +22,12 @@ impl World {
     }
 
     pub fn intersections(&self, ray: &Ray) -> Intersections {
-        let mut result = Intersections::new();
+        let mut intersections = Intersections::new();
         for object in &self.objects {
-            result.add_all(ray.intersect(object));
+            intersections.add_all(ray.intersect(object));
         }
-        result.intersections.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
-        return result;
+        intersections.intersections.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+        return intersections;
     }
 
     // TODO: add handling for multiple light sources
@@ -112,7 +112,7 @@ impl World {
 
 impl Default for World {
     fn default() -> World {
-        let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
+        let light = Light::default();
         let mut objects: Vec<Arc<dyn Shape>> = Vec::new();
         let mut sphere1 = Sphere::default();
         sphere1.material.color = Color::new(0.8, 1.0, 0.6);
@@ -130,19 +130,21 @@ impl PartialEq for World {
     fn eq(&self, rhs: &Self) -> bool {
         return self.light == rhs.light &&
             self.objects.len() == rhs.objects.len() &&
-            self.objects.iter().all(| object | {
-                rhs.objects.contains(object)
+            self.objects.iter().all(|object| {
+                return rhs.objects.contains(object);
             });
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::PI;
     use super::*;
+    use crate::consts::PI;
     use crate::intersection::Intersection;
     use crate::material::Material;
+    use crate::pattern::TestPattern;
     use crate::plane::Plane;
+    use crate::utils::{world_default_sphere_1, world_default_sphere_2};
 
     #[test]
     fn default_world() {
@@ -203,8 +205,7 @@ mod tests {
     #[test]
     fn shading_intersection_from_inside() {
         let world = World {
-            light: Light::new(Tuple::point(0.0, 0.25, 0.0),
-                              Color::new(1.0, 1.0, 1.0)),
+            light: Light::new(Tuple::point(0.0, 0.25, 0.0), Color::white()),
             ..Default::default()
         };
         let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
@@ -220,7 +221,7 @@ mod tests {
         let world = World::default();
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 1.0, 0.0));
         let color = world.color_at(&ray);
-        assert_eq!(color, Color::new(0.0, 0.0, 0.0));
+        assert_eq!(color, Color::black());
     }
 
     #[test]
@@ -231,19 +232,26 @@ mod tests {
         assert_eq!(color, Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
     }
 
-    // #[test]
-    // fn color_with_intersection_behind_ray() {
-    //     let mut world = World::default();
-    //     let mut material = world.objects[0].material();
-    //     material.ambient = 1.0;
-    //     world.objects[0].set_material(material);
-    //     let mut material = world.objects[1].material();
-    //     material.ambient = 1.0;
-    //     world.objects[1].set_material(material);
-    //     let ray = Ray::new(Tuple::point(0.0, 0.0, 0.75), Tuple::vector(0.0, 0.0, -1.0));
-    //     let color = world.color_at(&ray);
-    //     assert_eq!(color, world.objects[1].material().color);
-    // }
+    #[test]
+    fn color_with_intersection_behind_ray() {
+        let mut world = World::default();
+
+        let mut sphere1 = world_default_sphere_1();
+        let mut material1 = sphere1.material();
+        material1.ambient = 1.0;
+        sphere1.set_material(material1);
+        world.objects[0] = Arc::new(sphere1) as Arc<dyn Shape>;
+
+        let mut sphere2 = world_default_sphere_2();
+        let mut material2 = sphere2.material();
+        material2.ambient = 1.0;
+        sphere2.set_material(material2);
+        world.objects[1] = Arc::new(sphere2) as Arc<dyn Shape>;
+
+        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.75), Tuple::vector(0.0, 0.0, -1.0));
+        let color = world.color_at(&ray);
+        assert_eq!(color, world.objects[1].material().color);
+    }
 
     #[test]
     fn no_shadow_when_nothing_obscures_light() {
@@ -276,7 +284,7 @@ mod tests {
     #[test]
     fn shade_hit_is_given_intersection_in_shadow() {
         let mut world = World::default();
-        world.light = Light::new(Tuple::point(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
+        world.light = Light::new(Tuple::point(0.0, 0.0, -10.0), Color::white());
         world.objects.push(Arc::new(Sphere::default()));
         let sphere = Sphere { transformation: Transformations::translation(0.0, 0.0, 10.0), ..Default::default() };
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
@@ -288,18 +296,20 @@ mod tests {
         assert_eq!(color, Color::new(0.1, 0.1, 0.1));
     }
 
-    // #[test]
-    // fn reflected_color_for_nonreflective_material() {
-    //     let mut world = World::default();
-    //     let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
-    //     let mut material = world.objects[1].material();
-    //     material.ambient = 1.0;
-    //     world.objects[1].set_material(material);
-    //     let intersection = Intersection::new(1.0, world.objects[1].clone());
-    //     let computed_hit = intersection.prepare_computations(&ray, &Intersections::new());
-    //     let color = world.reflected_color(&computed_hit, 0);
-    //     assert_eq!(color, Color::black());
-    // }
+    #[test]
+    fn reflected_color_for_nonreflective_material() {
+        let mut world = World::default();
+        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let mut sphere1 = world_default_sphere_2();
+        let mut material = sphere1.material();
+        material.ambient = 1.0;
+        sphere1.set_material(material);
+        world.objects[0] = Arc::new(sphere1) as Arc<dyn Shape>;
+        let intersection = Intersection::new(1.0, world.objects[1].clone());
+        let computed_hit = intersection.prepare_computations(&ray, &Intersections::new());
+        let color = world.reflected_color(&computed_hit, 0);
+        assert_eq!(color, Color::black());
+    }
 
     #[test]
     fn reflected_color_for_reflective_material() {
@@ -384,63 +394,69 @@ mod tests {
         assert_eq!(color, Color::black());
     }
 
-    // #[test]
-    // fn refracted_color_at_maximum_recursion_depth() {
-    //     let mut world = World::default();
-    //     let shape = world.objects.index_mut(0);
-    //     let mut material = shape.material();
-    //     material.transparency = 1.0;
-    //     material.refractive_index = 1.5;
-    //     shape.set_material(material);
-    //     let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-    //     let mut intersections = Intersections::new();
-    //     intersections.add(Intersection::new(4.0, shape.clone()));
-    //     intersections.add(Intersection::new(6.0, shape.clone()));
-    //     let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-    //     let color = world.refracted_color(&computed_hit, 0);
-    //     assert_eq!(color, Color::black());
-    // }
+    #[test]
+    fn refracted_color_at_maximum_recursion_depth() {
+        let mut world = World::default();
+        let mut sphere1 = world_default_sphere_1();
+        let mut material = sphere1.material();
+        material.transparency = 1.0;
+        material.refractive_index = 1.5;
+        sphere1.set_material(material);
+        let shape = Arc::new(sphere1) as Arc<dyn Shape>;
+        world.objects[0] = shape.clone();
+        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let mut intersections = Intersections::new();
+        intersections.add(Intersection::new(4.0, shape.clone()));
+        intersections.add(Intersection::new(6.0, shape));
+        let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
+        let color = world.refracted_color(&computed_hit, 0);
+        assert_eq!(color, Color::black());
+    }
 
-    // #[test]
-    // fn refracted_color_under_total_internal_reflection() {
-    //     let mut world = World::default();
-    //     let shape = world.objects.index_mut(0);
-    //     let mut material = shape.material();
-    //     material.transparency = 1.0;
-    //     material.refractive_index = 1.5;
-    //     shape.set_material(material);
-    //     let ray = Ray::new(Tuple::point(0.0, 0.0, 2.0_f64.sqrt() / 2.0), Tuple::vector(0.0, 1.0, 0.0));
-    //     let mut intersections = Intersections::new();
-    //     intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()));
-    //     intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, shape.clone()));
-    //     let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
-    //     let color = world.refracted_color(&computed_hit, 5);
-    //     assert_eq!(color, Color::black());
-    // }
+    #[test]
+    fn refracted_color_under_total_internal_reflection() {
+        let mut world = World::default();
+        let mut sphere1 = world_default_sphere_1();
+        let mut material = sphere1.material();
+        material.transparency = 1.0;
+        material.refractive_index = 1.5;
+        sphere1.set_material(material);
+        let shape = Arc::new(sphere1) as Arc<dyn Shape>;
+        world.objects[0] = shape.clone();
+        let ray = Ray::new(Tuple::point(0.0, 0.0, 2.0_f64.sqrt() / 2.0), Tuple::vector(0.0, 1.0, 0.0));
+        let mut intersections = Intersections::new();
+        intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()));
+        intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, shape.clone()));
+        let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
+        let color = world.refracted_color(&computed_hit, 5);
+        assert_eq!(color, Color::black());
+    }
 
-    // #[test]
-    // fn refracted_color_with_refracted_ray() {
-    //     let mut world = World::default();
-    //     let shape = world.objects.index_mut(0);
-    //     let mut material = shape.material();
-    //     material.ambient = 1.0;
-    //     material.pattern = Some(Box::new(TestPattern::new()));
-    //     shape.set_material(material);
-    //     let shape2 = world.objects.index_mut(1);
-    //     let mut material2 = shape2.material();
-    //     material2.transparency = 1.0;
-    //     material2.refractive_index = 1.5;
-    //     shape2.set_material(material2);
-    //     let ray = Ray::new(Tuple::point(0.0, 0.0, 0.1), Tuple::vector(0.0, 1.0, 0.0));
-    //     let mut intersections = Intersections::new();
-    //     intersections.add(Intersection::new(-0.9899, world.objects[0].clone()));
-    //     intersections.add(Intersection::new(-0.4899, world.objects[1].clone()));
-    //     intersections.add(Intersection::new(0.4899, world.objects[1].clone()));
-    //     intersections.add(Intersection::new(0.9899, world.objects[0].clone()));
-    //     let computed_hit = intersections[2].prepare_computations(&ray, &intersections);
-    //     let color = world.refracted_color(&computed_hit, 5);
-    //     assert_eq!(color, Color::new(0.0, 0.9988846813665367, 0.04721645191320928));
-    // }
+    #[test]
+    fn refracted_color_with_refracted_ray() {
+        let mut world = World::default();
+        let mut sphere1 = world_default_sphere_1();
+        let mut material1 = sphere1.material();
+        material1.ambient = 1.0;
+        material1.pattern = Some(Box::new(TestPattern::new()));
+        sphere1.set_material(material1);
+        world.objects[0] = Arc::new(sphere1) as Arc<dyn Shape>;
+        let mut sphere2 = world_default_sphere_2();
+        let mut material2 = sphere2.material();
+        material2.transparency = 1.0;
+        material2.refractive_index = 1.5;
+        sphere2.set_material(material2);
+        world.objects[1] = Arc::new(sphere2) as Arc<dyn Shape>;
+        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.1), Tuple::vector(0.0, 1.0, 0.0));
+        let mut intersections = Intersections::new();
+        intersections.add(Intersection::new(-0.9899, world.objects[0].clone()));
+        intersections.add(Intersection::new(-0.4899, world.objects[1].clone()));
+        intersections.add(Intersection::new(0.4899, world.objects[1].clone()));
+        intersections.add(Intersection::new(0.9899, world.objects[0].clone()));
+        let computed_hit = intersections[2].prepare_computations(&ray, &intersections);
+        let color = world.refracted_color(&computed_hit, 5);
+        assert_eq!(color, Color::new(0.0, 0.9988846813665367, 0.04721645191320928));
+    }
 
     #[test]
     fn shade_hit_with_transparent_material() {
@@ -453,7 +469,7 @@ mod tests {
         let arc_floor: Arc<dyn Shape> = Arc::new(floor);
         world.objects.push(arc_floor.clone());
         let mut ball_material = Material::default();
-        ball_material.color = Color::new(1.0, 0.0, 0.0);
+        ball_material.color = Color::red();
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
         ball.set_material(ball_material);
@@ -480,7 +496,7 @@ mod tests {
         let arc_floor: Arc<dyn Shape> = Arc::new(floor);
         world.objects.push(arc_floor.clone());
         let mut ball_material = Material::default();
-        ball_material.color = Color::new(1.0, 0.0, 0.0);
+        ball_material.color = Color::red();
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
         ball.set_material(ball_material);

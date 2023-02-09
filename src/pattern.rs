@@ -80,7 +80,7 @@ impl Display for StripePattern {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct TestPattern {
+pub struct TestPattern {
     transformation: Matrix<4>,
 }
 
@@ -274,12 +274,6 @@ mod tests {
     use crate::material::Material;
     use crate::sphere::Sphere;
     use super::*;
-
-    #[test]
-    fn white_and_black_exist() {
-        assert_eq!(Color::white(), Color::new(1.0, 1.0, 1.0));
-        assert_eq!(Color::black(), Color::new(0.0, 0.0, 0.0));
-    }
 
     #[test]
     fn stripe_pattern_is_constant_in_y() {
