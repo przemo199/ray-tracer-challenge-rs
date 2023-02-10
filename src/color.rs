@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Mul, Sub};
-use crate::consts::EPSILON;
+use crate::utils::CloseEnough;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
@@ -57,9 +57,9 @@ impl Display for Color {
 
 impl PartialEq for Color {
     fn eq(&self, rhs: &Color) -> bool {
-        return (self.red - rhs.red).abs() < EPSILON &&
-            (self.green - rhs.green).abs() < EPSILON &&
-            (self.blue - rhs.blue).abs() < EPSILON;
+        return self.red.close_enough(rhs.red) &&
+            self.green.close_enough(rhs.green) &&
+            self.blue.close_enough(rhs.blue);
     }
 }
 

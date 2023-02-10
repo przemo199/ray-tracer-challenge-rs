@@ -11,14 +11,14 @@ use crate::tuple::{Tuple, TupleTrait};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Triangle {
-    p1: Tuple,
-    p2: Tuple,
-    p3: Tuple,
-    e1: Tuple,
-    e2: Tuple,
-    normal: Tuple,
-    material: Material,
-    transformation: Matrix<4>,
+    pub p1: Tuple,
+    pub p2: Tuple,
+    pub p3: Tuple,
+    pub e1: Tuple,
+    pub e2: Tuple,
+    pub normal: Tuple,
+    pub material: Material,
+    pub transformation: Matrix<4>,
 }
 
 impl Triangle {
@@ -26,7 +26,16 @@ impl Triangle {
         let e1 = p2 - p1;
         let e2 = p3 - p1;
         let normal = (e2.cross(&e1)).normalize();
-        return Triangle { p1, p2, p3, e1, e2, normal, material: Material::default(), transformation: Matrix::identity() };
+        return Triangle {
+            p1,
+            p2,
+            p3,
+            e1,
+            e2,
+            normal,
+            material: Material::default(),
+            transformation: Matrix::identity(),
+        };
     }
 }
 

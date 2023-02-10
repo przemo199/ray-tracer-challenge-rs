@@ -1,9 +1,9 @@
 use crate::color::Color;
-use crate::consts::EPSILON;
 use crate::light::Light;
 use crate::pattern::Pattern;
 use crate::shape::Shape;
 use crate::tuple::{Tuple, TupleTrait};
+use crate::utils::CloseEnough;
 
 #[derive(Clone, Debug)]
 pub struct Material {
@@ -79,13 +79,13 @@ impl PartialEq for Material {
     fn eq(&self, rhs: &Self) -> bool {
         return self.color == rhs.color &&
             self.pattern == rhs.pattern &&
-            (self.ambient - rhs.ambient).abs() < EPSILON &&
-            (self.diffuse - rhs.diffuse).abs() < EPSILON &&
-            (self.specular - rhs.specular).abs() < EPSILON &&
-            (self.shininess - rhs.shininess).abs() < EPSILON &&
-            (self.reflectiveness - rhs.reflectiveness).abs() < EPSILON &&
-            (self.refractive_index - rhs.refractive_index).abs() < EPSILON &&
-            (self.transparency - rhs.transparency).abs() < EPSILON;
+            self.ambient.close_enough(rhs.ambient) &&
+            self.diffuse.close_enough(rhs.diffuse) &&
+            self.specular.close_enough(rhs.specular) &&
+            self.shininess.close_enough(rhs.shininess) &&
+            self.reflectiveness.close_enough(rhs.reflectiveness) &&
+            self.refractive_index.close_enough(rhs.refractive_index) &&
+            self.transparency.close_enough(rhs.transparency);
     }
 }
 

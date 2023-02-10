@@ -8,6 +8,7 @@ use crate::matrix::Matrix;
 use crate::ray::Ray;
 use crate::shape::Shape;
 use crate::tuple::Tuple;
+use crate::utils::CloseEnough;
 
 #[derive(Clone, Debug)]
 pub struct Cone {
@@ -168,8 +169,8 @@ impl PartialEq for Cone {
         return self.material == rhs.material &&
             self.transformation == rhs.transformation &&
             self.closed == rhs.closed &&
-            (self.minimum - rhs.minimum).abs() < EPSILON &&
-            (self.maximum - rhs.maximum).abs() < EPSILON;
+            self.minimum.close_enough(rhs.minimum) &&
+            self.maximum.close_enough(rhs.maximum);
     }
 }
 

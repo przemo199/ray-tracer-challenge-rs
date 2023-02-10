@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 use crate::computed_hit::ComputedHit;
-use crate::consts::EPSILON;
 use crate::intersections::Intersections;
 use crate::ray::Ray;
 use crate::shape::Shape;
 use crate::tuple::TupleTrait;
+use crate::utils::CloseEnough;
 
 #[derive(Clone, Debug)]
 pub struct Intersection {
@@ -74,12 +74,13 @@ impl Intersection {
 
 impl PartialEq for Intersection {
     fn eq(&self, rhs: &Intersection) -> bool {
-        return (self.t - rhs.t).abs() < EPSILON && &self.object == &rhs.object;
+        return self.t.close_enough(rhs.t) && &self.object == &rhs.object;
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::consts::EPSILON;
     use crate::plane::Plane;
     use crate::sphere::Sphere;
     use crate::transformations::Transformations;

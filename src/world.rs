@@ -6,9 +6,8 @@ use crate::intersections::Intersections;
 use crate::light::Light;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::sphere::Sphere;
-use crate::transformations::Transformations;
 use crate::tuple::{Tuple, TupleTrait};
+use crate::utils::{world_default_sphere_1, world_default_sphere_2};
 
 #[derive(Clone, Debug)]
 pub struct World {
@@ -114,14 +113,8 @@ impl Default for World {
     fn default() -> World {
         let light = Light::default();
         let mut objects: Vec<Arc<dyn Shape>> = Vec::new();
-        let mut sphere1 = Sphere::default();
-        sphere1.material.color = Color::new(0.8, 1.0, 0.6);
-        sphere1.material.diffuse = 0.7;
-        sphere1.material.specular = 0.2;
-        objects.push(Arc::new(sphere1));
-        let mut sphere2 = Sphere::default();
-        sphere2.transformation = Transformations::scaling(0.5, 0.5, 0.5);
-        objects.push(Arc::new(sphere2));
+        objects.push(Arc::new(world_default_sphere_1()));
+        objects.push(Arc::new(world_default_sphere_2()));
         return World::new(light, objects);
     }
 }
@@ -144,6 +137,8 @@ mod tests {
     use crate::material::Material;
     use crate::pattern::TestPattern;
     use crate::plane::Plane;
+    use crate::sphere::Sphere;
+    use crate::transformations::Transformations;
     use crate::utils::{world_default_sphere_1, world_default_sphere_2};
 
     #[test]

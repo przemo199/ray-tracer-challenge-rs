@@ -36,6 +36,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         self.elements[row][column] = value;
     }
 
+    #[inline(always)]
     pub fn transpose(&self) -> Matrix<SIDE_LENGTH> {
         let mut result = *self;
         for row in 0..SIDE_LENGTH {
@@ -50,10 +51,12 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
 }
 
 impl Matrix<2> {
+    #[inline(always)]
     pub fn submatrix(&self, row: usize, column: usize) -> f64 {
         return self.elements[row][column];
     }
 
+    #[inline(always)]
     fn determinant(&self) -> f64 {
         return self.elements[0][0] * self.elements[1][1]
             - self.elements[0][1] * self.elements[1][0];
@@ -72,6 +75,7 @@ impl Matrix<2> {
         return self.determinant() != 0.0;
     }
 
+    #[inline(always)]
     pub fn inverse(&self) -> Matrix<2> {
         let mut result = Matrix::<2>::empty();
         let determinant = self.determinant();
@@ -88,6 +92,7 @@ impl Matrix<2> {
 }
 
 impl Matrix<3> {
+    #[inline(always)]
     fn submatrix(&self, row: usize, column: usize) -> Matrix<2> {
         let mut result = Matrix::<2>::empty();
 
@@ -105,6 +110,7 @@ impl Matrix<3> {
         return result;
     }
 
+    #[inline(always)]
     fn determinant(&self) -> f64 {
         let mut determinant = 0.0;
         for column in 0..self.elements.len() {
@@ -126,6 +132,7 @@ impl Matrix<3> {
         return self.determinant() != 0.0;
     }
 
+    #[inline(always)]
     pub fn inverse(&self) -> Matrix<3> {
         let mut result = Matrix::<3>::empty();
         let determinant = self.determinant();
@@ -142,6 +149,7 @@ impl Matrix<3> {
 }
 
 impl Matrix<4> {
+    #[inline(always)]
     fn submatrix(&self, row: usize, column: usize) -> Matrix<3> {
         let mut result = Matrix::<3>::empty();
 
@@ -159,6 +167,7 @@ impl Matrix<4> {
         return result;
     }
 
+    #[inline(always)]
     fn determinant(&self) -> f64 {
         let mut determinant = 0.0;
         for column in 0..self.elements.len() {
@@ -167,11 +176,11 @@ impl Matrix<4> {
         return determinant;
     }
 
-    pub fn minor(&self, row: usize, column: usize) -> f64 {
+    fn minor(&self, row: usize, column: usize) -> f64 {
         return self.submatrix(row, column).determinant();
     }
 
-    pub fn cofactor(&self, row: usize, column: usize) -> f64 {
+    fn cofactor(&self, row: usize, column: usize) -> f64 {
         let minor = self.minor(row, column);
         return if (row + column) % 2 == 0 { minor } else { -minor };
     }
@@ -180,6 +189,7 @@ impl Matrix<4> {
         return self.determinant() != 0.0;
     }
 
+    #[inline(always)]
     pub fn inverse(&self) -> Matrix<4> {
         let mut result = Matrix::<4>::empty();
         let determinant = self.determinant();

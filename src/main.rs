@@ -24,7 +24,7 @@ fn main() {
     // println!("Elapsed: {:.2?}", elapsed.as_millis());
 
     let now2 = Instant::now();
-    render_scene_parallel(1920, 1080);
+    render_scene_parallel(3840, 2560);
     let elapsed2 = now2.elapsed();
     println!("Elapsed: {:.2?}", elapsed2.as_millis());
 }
@@ -307,8 +307,13 @@ fn render_scene_parallel3(x: u32, y: u32) {
     material.reflectiveness = 0.7;
     material.transparency = 0.7;
     material.refractive_index = 2.5;
-    material.color = Color::new(0.373, 0.404, 0.550);
+    material.color = Color::new(1.0, 1.0, 1.0);
+    // material.color = Color::new(0.373, 0.404, 0.550);
     cone.set_material(material);
+
+    let mut cone2 = cone.clone();
+    cone2.set_transformation(Transformations::translation(0.0, 0.25, -1.5) *
+        Transformations::scaling(0.4, 0.4, 0.4));
 
     let mut world = World::default();
     world.objects = vec![
@@ -317,6 +322,7 @@ fn render_scene_parallel3(x: u32, y: u32) {
         Arc::new(right_sphere),
         Arc::new(left_sphere),
         Arc::new(cone),
+        Arc::new(cone2),
     ];
 
     world.light = Light::new(Tuple::point(-100.0, 100.0, -100.0), Color::white());

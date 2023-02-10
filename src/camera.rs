@@ -1,10 +1,10 @@
 use rayon::prelude::*;
 use crate::canvas::Canvas;
-use crate::consts::EPSILON;
 use crate::matrix::Matrix;
 use crate::ray::Ray;
 use crate::transformations::Transformations;
 use crate::tuple::{Tuple, TupleTrait};
+use crate::utils::CloseEnough;
 use crate::world::World;
 
 #[derive(Clone, Copy, Debug)]
@@ -90,17 +90,17 @@ impl PartialEq for Camera {
         return self.horizontal_size == rhs.horizontal_size &&
             self.vertical_size == rhs.vertical_size &&
             self.horizontal_size == rhs.horizontal_size &&
-            (self.field_of_view - rhs.field_of_view).abs() < EPSILON &&
-            (self.half_width - rhs.half_width).abs() < EPSILON &&
-            (self.half_height - rhs.half_height).abs() < EPSILON &&
-            (self.pixel_size - rhs.pixel_size).abs() < EPSILON;
+            self.field_of_view.close_enough(rhs.field_of_view) &&
+            self.half_width.close_enough(rhs.half_width) &&
+            self.half_height.close_enough(rhs.half_height) &&
+            self.pixel_size.close_enough(rhs.pixel_size);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::color::Color;
     use super::*;
+    use crate::color::Color;
     use crate::consts::PI;
 
     #[test]

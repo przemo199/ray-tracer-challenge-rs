@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use crate::consts::EPSILON;
+use crate::utils::CloseEnough;
 
 pub trait TupleTrait: Clone + Copy + Debug + PartialEq + Add<Self, Output=Self> + Sub<Self, Output=Self> + Mul<f64, Output=Self> + Div<f64, Output=Self> + Neg<Output=Self> {
     fn new(x: f64, y: f64, z: f64, w: f64) -> Self;
@@ -85,9 +85,9 @@ impl TupleTrait for Tuple {
 impl PartialEq for Tuple {
     fn eq(&self, rhs: &Tuple) -> bool {
         return self.w == rhs.w &&
-            (self.x - rhs.x).abs() < EPSILON &&
-            (self.y - rhs.y).abs() < EPSILON &&
-            (self.z - rhs.z).abs() < EPSILON;
+            self.x.close_enough(rhs.x) &&
+            self.y.close_enough(rhs.y) &&
+            self.z.close_enough(rhs.z);
     }
 }
 
@@ -140,6 +140,7 @@ impl Div<f64> for Tuple {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::consts::EPSILON;
 
     #[test]
     fn new_point() {
