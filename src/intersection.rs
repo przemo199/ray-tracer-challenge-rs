@@ -80,12 +80,12 @@ impl PartialEq for Intersection {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::consts::EPSILON;
     use crate::plane::Plane;
     use crate::sphere::Sphere;
     use crate::transformations::Transformations;
     use crate::tuple::Tuple;
-    use super::*;
 
     #[test]
     fn new_intersection() {
@@ -101,9 +101,9 @@ mod tests {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersection1 = Intersection::new(4.0, arc_sphere.clone());
-        let computed_hit = intersection1.prepare_computations(&ray, &Intersections::new());
-        assert_eq!(computed_hit.t, intersection1.t);
+        let intersection = Intersection::new(4.0, arc_sphere.clone());
+        let computed_hit = intersection.prepare_computations(&ray, &Intersections::new());
+        assert_eq!(computed_hit.t, intersection.t);
         assert_eq!(&computed_hit.object, &arc_sphere);
         assert_eq!(computed_hit.point, Tuple::point(0.0, 0.0, -1.0));
         assert_eq!(computed_hit.camera_vector, Tuple::vector(0.0, 0.0, -1.0));
@@ -127,10 +127,9 @@ mod tests {
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection1 = Intersection::new(1.0, arc_sphere);
         let computations = intersection1.prepare_computations(&ray, &Intersections::new());
-        assert_eq!(computations.point, Tuple::point(0.0, 0.0, 1.0));
-        assert_eq!(computations.camera_vector, Tuple::vector(0.0, 0.0, -1.0));
         assert!(computations.is_inside);
         assert_eq!(computations.point, Tuple::point(0.0, 0.0, 1.0));
+        assert_eq!(computations.camera_vector, Tuple::vector(0.0, 0.0, -1.0));
     }
 
     #[test]

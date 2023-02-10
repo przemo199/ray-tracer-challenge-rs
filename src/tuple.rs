@@ -82,6 +82,12 @@ impl TupleTrait for Tuple {
     }
 }
 
+impl Default for Tuple {
+    fn default() -> Self {
+        return Tuple::new(0.0, 0.0, 0.0, 0.0)
+    }
+}
+
 impl PartialEq for Tuple {
     fn eq(&self, rhs: &Tuple) -> bool {
         return self.w == rhs.w &&
@@ -227,9 +233,9 @@ mod tests {
     #[test]
     #[should_panic]
     fn sub_vector_and_point() {
-        let vector1 = Tuple::vector(4.0, -4.0, 3.0);
-        let point1 = Tuple::point(4.0, -4.0, 3.0);
-        let _ = vector1 - point1;
+        let vector = Tuple::vector(4.0, -4.0, 3.0);
+        let point = Tuple::point(4.0, -4.0, 3.0);
+        let _ = vector - point;
     }
 
     #[test]
@@ -252,15 +258,15 @@ mod tests {
 
     #[test]
     fn div_tuple() {
-        let tuple1 = Tuple::new(1.0, -2.0, 3.0, -4.0) / 2.0;
-        assert_eq!(tuple1, Tuple::new(0.5, -1.0, 1.5, -2.0));
+        let tuple = Tuple::new(1.0, -2.0, 3.0, -4.0) / 2.0;
+        assert_eq!(tuple, Tuple::new(0.5, -1.0, 1.5, -2.0));
     }
 
     #[test]
     #[should_panic]
     fn point_magnitude() {
-        let point1 = Tuple::point(1.0, 2.0, 3.0);
-        point1.magnitude();
+        let point = Tuple::point(1.0, 2.0, 3.0);
+        point.magnitude();
     }
 
     #[test]
@@ -293,9 +299,13 @@ mod tests {
         assert_eq!(normalised2.magnitude(), 1.0);
         assert_eq!(normalised3, Tuple::vector(0.0, 0.0, 1.0));
         assert_eq!(normalised3.magnitude(), 1.0);
-        let magnitude = vector4.magnitude();
-        assert_eq!(normalised4, Tuple::vector(1.0 / magnitude, 2.0 / magnitude, 3.0 / magnitude));
-        assert!(normalised4.magnitude() - 1.0 < EPSILON);
+        assert_eq!(normalised4, Tuple::vector(0.2672612419124244, 0.5345224838248488, 0.8017837257372732));
+    }
+
+    #[test]
+    fn magnitude_of_normalized_vector() {
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
+        assert!(vector.normalize().magnitude().close_enough(1.0));
     }
 
     #[test]
@@ -315,17 +325,17 @@ mod tests {
 
     #[test]
     fn reflect_vector() {
-        let vector1 = Tuple::vector(1.0, -1.0, 0.0);
+        let vector = Tuple::vector(1.0, -1.0, 0.0);
         let normal = Tuple::vector(0.0, 1.0, 0.0);
-        let reflected = vector1.reflect(&normal);
+        let reflected = vector.reflect(&normal);
         assert_eq!(reflected, Tuple::vector(1.0, 1.0, 0.0));
     }
 
     #[test]
     fn reflect_vector_on_slanted_surface() {
-        let vector1 = Tuple::vector(0.0, -1.0, 0.0);
+        let vector = Tuple::vector(0.0, -1.0, 0.0);
         let normal = Tuple::vector(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0.0);
-        let reflected = vector1.reflect(&normal);
+        let reflected = vector.reflect(&normal);
         assert_eq!(reflected, Tuple::vector(1.0, 0.0, 0.0));
     }
 }

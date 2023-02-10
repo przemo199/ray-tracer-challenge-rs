@@ -270,10 +270,10 @@ impl Display for ComplexPattern {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::light::Light;
     use crate::material::Material;
     use crate::sphere::Sphere;
-    use super::*;
 
     #[test]
     fn stripe_pattern_is_constant_in_y() {

@@ -144,8 +144,8 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut sphere = Sphere::default();
-        let transformation = Transformations::scaling(1.0, 0.5, 1.0) * Transformations::rotation_z(PI / 5.0);
-        sphere.transformation = transformation;
+        sphere.transformation = Transformations::scaling(1.0, 0.5, 1.0) *
+            Transformations::rotation_z(PI / 5.0);
         let normal = sphere.normal_at(Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
         assert_eq!(normal, Tuple::vector(0.0, 0.9701425001453319, -0.24253562503633294));
     }

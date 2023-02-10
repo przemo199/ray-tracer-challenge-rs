@@ -24,9 +24,9 @@ impl Ray {
         return shape.clone().local_intersect(&local_ray);
     }
 
-    pub fn transform(&self, matrix: Matrix<4>) -> Ray {
-        let new_origin = matrix * self.origin;
-        let new_direction = matrix * self.direction;
+    pub fn transform(&self, transformation: Matrix<4>) -> Ray {
+        let new_origin = transformation * self.origin;
+        let new_direction = transformation * self.direction;
         return Ray::new(new_origin, new_direction);
     }
 }

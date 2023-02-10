@@ -24,15 +24,15 @@ impl Intersections {
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
-        let mut hit_item = None;
+        let mut maybe_hit = None;
         let mut hit_t = f64::MAX;
-        for item in self.intersections.iter() {
-            if item.t < hit_t && item.t >= 0.0 {
-                hit_item = Some(item);
-                hit_t = item.t;
+        for intersection in self.intersections.iter() {
+            if intersection.t < hit_t && intersection.t >= 0.0 {
+                maybe_hit = Some(intersection);
+                hit_t = intersection.t;
             }
         }
-        return hit_item;
+        return maybe_hit;
     }
 }
 
@@ -46,9 +46,9 @@ impl Index<usize> for Intersections {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::sync::Arc;
     use crate::shape::Shape;
-    use super::*;
     use crate::sphere::Sphere;
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_always_lowest_nonnegative() {
+    fn hit_always_lowest_non_negative() {
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();

@@ -38,7 +38,7 @@ impl World {
             &computed_hit.point,
             &computed_hit.camera_vector,
             &computed_hit.normal_vector,
-            in_shadow,
+            in_shadow
         );
         let reflected_color = self.reflected_color(computed_hit, remaining_iterations);
         let refracted_color = self.refracted_color(computed_hit, remaining_iterations);
@@ -256,13 +256,6 @@ mod tests {
     }
 
     #[test]
-    fn shadow_when_point_between_point_and_light() {
-        let world = World::default();
-        let point = Tuple::point(10.0, -10.0, 10.0);
-        assert!(world.is_shadowed(&point));
-    }
-
-    #[test]
     fn no_shadow_when_light_is_behind_point() {
         let world = World::default();
         let point = Tuple::point(-20.0, 20.0, -20.0);
@@ -274,6 +267,13 @@ mod tests {
         let world = World::default();
         let point = Tuple::point(-2.0, 2.0, -2.0);
         assert!(!world.is_shadowed(&point));
+    }
+
+    #[test]
+    fn shadow_when_object_between_hit_and_light() {
+        let world = World::default();
+        let point = Tuple::point(10.0, -10.0, 10.0);
+        assert!(world.is_shadowed(&point));
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn refracted_color_with_opaque_material() {
-        let mut world = World::default();
+        let world = World::default();
         let shape = &world.objects[0];
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut intersections = Intersections::new();

@@ -179,8 +179,6 @@ fn render_scene_parallel(x: u32, y: u32) {
         Arc::new(left_sphere),
     ];
 
-    world.light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
-
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.transformation = Transformations::view_transform(
         Tuple::point(0.0, 1.5, -5.0),

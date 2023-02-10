@@ -153,16 +153,10 @@ impl Display for Cylinder {
     }
 }
 
-impl From<Cylinder> for Box<dyn Shape> {
-    fn from(cylinder: Cylinder) -> Box<dyn Shape> {
-        return Box::new(cylinder);
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::tuple::TupleTrait;
     use super::*;
+    use crate::tuple::TupleTrait;
 
     #[test]
     fn default_cylinder() {

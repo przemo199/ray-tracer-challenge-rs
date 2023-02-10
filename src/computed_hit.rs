@@ -47,21 +47,21 @@ impl ComputedHit {
     }
 
     pub fn schlick(&self) -> f64 {
-        let mut camera_dot = self.camera_vector.dot(&self.normal_vector);
+        let mut camera_dot_normal = self.camera_vector.dot(&self.normal_vector);
 
         if self.n1 > self.n2 {
             let n = self.n1 / self.n2;
-            let sin2_t = n * n * (1.0 - camera_dot * camera_dot);
+            let sin2_t = n * n * (1.0 - camera_dot_normal * camera_dot_normal);
 
             if sin2_t > 1.0 {
                 return 1.0;
             }
 
-            camera_dot = (1.0 - sin2_t).sqrt();
+            camera_dot_normal = (1.0 - sin2_t).sqrt();
         }
 
         let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powi(2);
-        return r0 + (1.0 - r0) * (1.0 - camera_dot).powf(5.0);
+        return r0 + (1.0 - r0) * (1.0 - camera_dot_normal).powf(5.0);
     }
 }
 

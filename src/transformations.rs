@@ -91,8 +91,8 @@ impl Transformations {
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::PI;
     use super::*;
+    use crate::consts::PI;
 
     #[test]
     fn point_translation() {

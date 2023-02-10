@@ -76,12 +76,6 @@ impl Display for Plane {
     }
 }
 
-impl From<Plane> for Box<dyn Shape> {
-    fn from(plane: Plane) -> Box<dyn Shape> {
-        return Box::new(plane);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

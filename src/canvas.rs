@@ -21,16 +21,16 @@ impl Canvas {
         };
     }
 
-    fn cords_to_index(&self, x: u32, y: u32) -> usize {
+    fn coords_to_index(&self, x: u32, y: u32) -> usize {
         return (x + (y * self.width)) as usize;
     }
 
     pub fn get_pixel(&self, x: u32, y: u32) -> &Color {
-        return &self.pixels[self.cords_to_index(x, y)];
+        return &self.pixels[self.coords_to_index(x, y)];
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        let index = self.cords_to_index(x, y);
+        let index = self.coords_to_index(x, y);
         self.pixels[index] = color;
     }
 
