@@ -1,18 +1,18 @@
 use std::fmt::{Debug, Display, Formatter};
 use crate::color::Color;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::shape::Shape;
 use crate::transformations::Transformations;
-use crate::tuple::Tuple;
 
 pub trait PatternClone {
     fn box_clone(&self) -> Box<dyn Pattern>;
 }
 
 pub trait Pattern: PatternClone + Debug + Display + Sync + Send {
-    fn color_at(&self, point: &Tuple) -> Color;
+    fn color_at(&self, point: &Point) -> Color;
 
-    fn color_at_shape(&self, object: &dyn Shape, point: &Tuple) -> Color {
+    fn color_at_shape(&self, object: &dyn Shape, point: &Point) -> Color {
         let object_point = object.transformation().inverse() * *point;
         let pattern_point = self.transformation().inverse() * object_point;
         return self.color_at(&pattern_point);
@@ -55,7 +55,7 @@ impl StripePattern {
 }
 
 impl Pattern for StripePattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         let distance = point.x.floor() as i32;
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
@@ -91,7 +91,7 @@ impl TestPattern {
 }
 
 impl Pattern for TestPattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         return Color::new(point.x, point.y, point.z);
     }
 
@@ -126,7 +126,7 @@ impl GradientPattern {
 }
 
 impl Pattern for GradientPattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         let distance = self.color_b - self.color_a;
         let mut fraction = point.x.fract();
         if point.x as i32 % 2 != 0 {
@@ -168,7 +168,7 @@ impl RingPattern {
 }
 
 impl Pattern for RingPattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         let distance = (point.x * point.x + point.z * point.z).sqrt().floor() as i32;
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
@@ -206,7 +206,7 @@ impl CheckerPattern {
 }
 
 impl Pattern for CheckerPattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         let distance = (point.x.floor() + point.y.floor() + point.z.floor()) as i32;
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
@@ -244,7 +244,7 @@ impl ComplexPattern {
 }
 
 impl Pattern for ComplexPattern {
-    fn color_at(&self, point: &Tuple) -> Color {
+    fn color_at(&self, point: &Point) -> Color {
         let distance = point.x.floor() as i32;
         return if distance % 2 == 0 { self.pattern_a.color_at(point) } else { self.pattern_b.color_at(point) };
     }
@@ -274,32 +274,33 @@ mod tests {
     use crate::light::Light;
     use crate::material::Material;
     use crate::sphere::Sphere;
+    use crate::vector::Vector;
 
     #[test]
     fn stripe_pattern_is_constant_in_y() {
         let pattern = StripePattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 1.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 2.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 1.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 2.0, 0.0)), Color::white());
     }
 
     #[test]
     fn stripe_pattern_is_constant_in_z() {
         let pattern = StripePattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 1.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 2.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 2.0)), Color::white());
     }
 
     #[test]
     fn stripe_pattern_alternates_in_x() {
         let pattern = StripePattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.9, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(1.0, 0.0, 0.0)), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(-0.1, 0.0, 0.0)), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(-1.0, 0.0, 0.0)), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(-1.1, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.9, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(1.0, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(-0.1, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(-1.0, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(-1.1, 0.0, 0.0)), Color::white());
     }
 
     #[test]
@@ -310,11 +311,11 @@ mod tests {
         material.ambient = 1.0;
         material.diffuse = 0.0;
         material.specular = 0.0;
-        let camera = Tuple::point(0.0, 0.0, -1.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Color::white());
-        let color1 = material.lighting(&object, &light, &Tuple::point(0.9, 0.0, 0.0), &camera, &normal, false);
-        let color2 = material.lighting(&object, &light, &Tuple::point(1.1, 0.0, 0.0), &camera, &normal, false);
+        let camera = Vector::new(0.0, 0.0, -1.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::white());
+        let color1 = material.lighting(&object, &light, &Point::new(0.9, 0.0, 0.0), &camera, &normal, false);
+        let color2 = material.lighting(&object, &light, &Point::new(1.1, 0.0, 0.0), &camera, &normal, false);
         assert_eq!(color1, Color::white());
         assert_eq!(color2, Color::black());
     }
@@ -324,7 +325,7 @@ mod tests {
         let mut sphere = Sphere::default();
         sphere.set_transformation(Transformations::scaling(2.0, 2.0, 2.0));
         let pattern = StripePattern::new(Color::white(), Color::black());
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(1.5, 0.0, 0.0));
+        let color = pattern.color_at_shape(&sphere, &Point::new(1.5, 0.0, 0.0));
         assert_eq!(color, Color::white());
     }
 
@@ -333,7 +334,7 @@ mod tests {
         let sphere = Sphere::default();
         let mut pattern = StripePattern::new(Color::white(), Color::black());
         pattern.transformation = Transformations::scaling(2.0, 2.0, 2.0);
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(1.5, 0.0, 0.0));
+        let color = pattern.color_at_shape(&sphere, &Point::new(1.5, 0.0, 0.0));
         assert_eq!(color, Color::white());
     }
 
@@ -343,7 +344,7 @@ mod tests {
         sphere.set_transformation(Transformations::scaling(2.0, 2.0, 2.0));
         let mut pattern = StripePattern::new(Color::white(), Color::black());
         pattern.transformation = Transformations::translation(0.5, 0.0, 0.0);
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(2.5, 0.0, 0.0));
+        let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 0.0, 0.0));
         assert_eq!(color, Color::white());
     }
 
@@ -365,7 +366,7 @@ mod tests {
         let mut sphere = Sphere::default();
         sphere.set_transformation(Transformations::scaling(2.0, 2.0, 2.0));
         let pattern = TestPattern::new();
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(2.0, 3.0, 4.0));
+        let color = pattern.color_at_shape(&sphere, &Point::new(2.0, 3.0, 4.0));
         assert_eq!(color, Color::new(1.0, 1.5, 2.0));
     }
 
@@ -374,7 +375,7 @@ mod tests {
         let sphere = Sphere::default();
         let mut pattern = TestPattern::new();
         pattern.transformation = Transformations::scaling(2.0, 2.0, 2.0);
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(2.0, 3.0, 4.0));
+        let color = pattern.color_at_shape(&sphere, &Point::new(2.0, 3.0, 4.0));
         assert_eq!(color, Color::new(1.0, 1.5, 2.0));
     }
 
@@ -384,50 +385,50 @@ mod tests {
         sphere.set_transformation(Transformations::scaling(2.0, 2.0, 2.0));
         let mut pattern = TestPattern::new();
         pattern.transformation = Transformations::translation(0.5, 1.0, 1.5);
-        let color = pattern.color_at_shape(&sphere, &Tuple::point(2.5, 3.0, 3.5));
+        let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 3.0, 3.5));
         assert_eq!(color, Color::new(0.75, 0.5, 0.25));
     }
 
     #[test]
     fn gradient_interpolates_between_colors() {
         let pattern = GradientPattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.25, 0.0, 0.0)), Color::new(0.75, 0.75, 0.75));
-        assert_eq!(pattern.color_at(&Tuple::point(0.5, 0.0, 0.0)), Color::new(0.5, 0.5, 0.5));
-        assert_eq!(pattern.color_at(&Tuple::point(0.75, 0.0, 0.0)), Color::new(0.25, 0.25, 0.25));
-        assert_eq!(pattern.color_at(&Tuple::point(1.0, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.25, 0.0, 0.0)), Color::new(0.75, 0.75, 0.75));
+        assert_eq!(pattern.color_at(&Point::new(0.5, 0.0, 0.0)), Color::new(0.5, 0.5, 0.5));
+        assert_eq!(pattern.color_at(&Point::new(0.75, 0.0, 0.0)), Color::new(0.25, 0.25, 0.25));
+        assert_eq!(pattern.color_at(&Point::new(1.0, 0.0, 0.0)), Color::black());
     }
 
     #[test]
     fn ring_pattern_extends_in_x_and_z() {
         let pattern = RingPattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(1.0, 0.0, 0.0)), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 1.0)), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.708, 0.0, 0.708)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(1.0, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.708, 0.0, 0.708)), Color::black());
     }
 
     #[test]
     fn checker_pattern_repeats_in_x() {
         let pattern = CheckerPattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.99, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(1.01, 0.0, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.99, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(1.01, 0.0, 0.0)), Color::black());
     }
 
     #[test]
     fn checker_pattern_repeats_in_y() {
         let pattern = CheckerPattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.99, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 1.01, 0.0)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.99, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 1.01, 0.0)), Color::black());
     }
 
     #[test]
     fn checker_pattern_repeats_in_z() {
         let pattern = CheckerPattern::new(Color::white(), Color::black());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.0)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 0.99)), Color::white());
-        assert_eq!(pattern.color_at(&Tuple::point(0.0, 0.0, 1.01)), Color::black());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.99)), Color::white());
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.01)), Color::black());
     }
 }

@@ -9,11 +9,12 @@ use raytracer::consts::PI;
 use raytracer::light::Light;
 use raytracer::material::Material;
 use raytracer::plane::Plane;
+use raytracer::point::Point;
 use raytracer::ray::Ray;
 use raytracer::shape::Shape;
 use raytracer::sphere::Sphere;
 use raytracer::transformations::Transformations;
-use raytracer::tuple::{Tuple, TupleTrait};
+use raytracer::vector::Vector;
 use raytracer::world::World;
 
 fn main() {
@@ -30,7 +31,7 @@ fn main() {
 }
 
 fn raytrace_red_sphere() {
-    let ray_origin = Tuple::point(0.0, 0.0, -5.0);
+    let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
     let canvas_side_length = 1000;
@@ -45,7 +46,7 @@ fn raytrace_red_sphere() {
         let world_y = half_wall_size - pixel_size * (y as f64);
         for x in 0..canvas_side_length {
             let world_x = -half_wall_size + pixel_size * (x as f64);
-            let position = Tuple::point(world_x, world_y, wall_z);
+            let position = Point::new(world_x, world_y, wall_z);
             let ray = Ray::new(ray_origin, (position - ray_origin).normalize());
             let intersections = ray.intersect(&arc_shape);
             let hit = intersections.hit();
@@ -59,7 +60,7 @@ fn raytrace_red_sphere() {
 }
 
 fn raytrace_red_sphere_parallel() {
-    let ray_origin = Tuple::point(0.0, 0.0, -5.0);
+    let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
     let canvas_side_length = 1000;
@@ -75,7 +76,7 @@ fn raytrace_red_sphere_parallel() {
         let y: u32 = index as u32 / canvas_side_length;
         let world_x = -half_wall_size + pixel_size * (x as f64);
         let world_y = half_wall_size - pixel_size * (y as f64);
-        let position = Tuple::point(world_x, world_y, wall_z);
+        let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalize());
         let intersections = ray.intersect(&shape_box);
         let hit = intersections.hit();
@@ -84,11 +85,11 @@ fn raytrace_red_sphere_parallel() {
         }
     });
 
-    canvas.to_ppm_file("red_sphere.ppm");
+    canvas.to_ppm_file("rendered_images/red_sphere.ppm");
 }
 
 fn raytrace_shaded_sphere_parallel() {
-    let ray_origin = Tuple::point(0.0, 0.0, -5.0);
+    let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
     let canvas_side_length = 1000;
@@ -100,14 +101,14 @@ fn raytrace_shaded_sphere_parallel() {
     shape.material.color = Color::new(0.5, 0.5, 1.0);
     // shape.material.color = Color::green();
     let shape_box: Arc<dyn Shape> = Arc::new(shape);
-    let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
+    let light = Light::new(Point::new(-10.0, 10.0, -10.0), Color::white());
 
     canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
         let x: u32 = index as u32 % canvas.width;
         let y: u32 = index as u32 / canvas.width;
         let world_x = -half_wall_size + pixel_size * (x as f64);
         let world_y = half_wall_size - pixel_size * (y as f64);
-        let position = Tuple::point(world_x, world_y, wall_z);
+        let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalize());
         let intersections = ray.intersect(&shape_box);
         let maybe_hit = intersections.hit();
@@ -126,7 +127,7 @@ fn raytrace_shaded_sphere_parallel() {
         }
     });
 
-    canvas.to_png_file("shaded_sphere.png");
+    canvas.to_png_file("rendered_images/shaded_sphere.png");
 }
 
 fn render_scene_parallel(x: u32, y: u32) {
@@ -181,14 +182,14 @@ fn render_scene_parallel(x: u32, y: u32) {
 
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.transformation = Transformations::view_transform(
-        Tuple::point(0.0, 1.5, -5.0),
-        Tuple::point(0.0, 1.0, 0.0),
-        Tuple::vector(0.0, 1.0, 0.0),
+        Point::new(0.0, 1.5, -5.0),
+        Point::new(0.0, 1.0, 0.0),
+        Vector::new(0.0, 1.0, 0.0),
     );
 
     let canvas = camera.render_parallel(&world);
-    canvas.to_ppm_file("test.ppm");
-    canvas.to_png_file("test.png");
+    canvas.to_ppm_file("rendered_images/test.ppm");
+    canvas.to_png_file("rendered_images/test.png");
 }
 
 fn render_scene_parallel2(x: u32, y: u32) {
@@ -238,17 +239,17 @@ fn render_scene_parallel2(x: u32, y: u32) {
         Arc::new(left_sphere),
     ];
 
-    world.light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Color::white());
+    world.light = Light::new(Point::new(-10.0, 10.0, -10.0), Color::white());
 
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.transformation = Transformations::view_transform(
-        Tuple::point(0.0, 1.5, -5.0),
-        Tuple::point(0.0, 1.0, 0.0),
-        Tuple::vector(0.0, 1.0, 0.0),
+        Point::new(0.0, 1.5, -5.0),
+        Point::new(0.0, 1.0, 0.0),
+        Vector::new(0.0, 1.0, 0.0),
     );
 
     let canvas = camera.render_parallel(&world);
-    canvas.to_png_file("3_sphere_scene.png");
+    canvas.to_png_file("rendered_images/3_sphere_scene.png");
 }
 
 fn render_scene_parallel3(x: u32, y: u32) {
@@ -323,15 +324,15 @@ fn render_scene_parallel3(x: u32, y: u32) {
         Arc::new(cone2),
     ];
 
-    world.light = Light::new(Tuple::point(-100.0, 100.0, -100.0), Color::white());
+    world.light = Light::new(Point::new(-100.0, 100.0, -100.0), Color::white());
 
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.transformation = Transformations::view_transform(
-        Tuple::point(0.0, 1.5, -5.0),
-        Tuple::point(0.0, 1.0, 0.0),
-        Tuple::vector(0.0, 1.0, 0.0),
+        Point::new(0.0, 1.5, -5.0),
+        Point::new(0.0, 1.0, 0.0),
+        Vector::new(0.0, 1.0, 0.0),
     );
 
     let canvas = camera.render_parallel(&world);
-    canvas.to_png_file("3_sphere_scene.png");
+    canvas.to_png_file("rendered_images/3_sphere_scene.png");
 }

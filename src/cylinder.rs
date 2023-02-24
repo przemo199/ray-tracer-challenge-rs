@@ -5,9 +5,10 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::Tuple;
+use crate::vector::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cylinder {
@@ -59,18 +60,18 @@ impl Cylinder {
 }
 
 impl Shape for Cylinder {
-    fn local_normal_at(&self, point: Tuple) -> Tuple {
+    fn local_normal_at(&self, point: Point) -> Vector {
         let distance = point.x * point.x + point.z * point.z;
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
-            return Tuple::vector(0.0, 1.0, 0.0);
+            return Vector::new(0.0, 1.0, 0.0);
         }
 
         if distance < 1.0 && point.y <= self.minimum + EPSILON {
-            return Tuple::vector(0.0, -1.0, 0.0);
+            return Vector::new(0.0, -1.0, 0.0);
         }
 
-        return Tuple::vector(point.x, 0.0, point.z);
+        return Vector::new(point.x, 0.0, point.z);
     }
 
     fn material(&self) -> Material {
@@ -156,7 +157,6 @@ impl Display for Cylinder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tuple::TupleTrait;
 
     #[test]
     fn default_cylinder() {
@@ -169,13 +169,13 @@ mod tests {
     #[test]
     fn ray_misses_cylinder() {
         let origins = [
-            Tuple::point(1.0, 0.0, 0.0),
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(0.0, 0.0, -5.0)];
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, -5.0)];
         let directions = [
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(1.0, 1.0, 1.0)];
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(1.0, 1.0, 1.0)];
 
         for (origin, direction) in origins.iter().zip(directions) {
             let cylinder = Cylinder::default();
@@ -189,13 +189,13 @@ mod tests {
     #[test]
     fn ray_intersects_cylinder() {
         let origins = [
-            Tuple::point(1.0, 0.0, -5.0),
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::point(0.5, 0.0, -5.0)];
+            Point::new(1.0, 0.0, -5.0),
+            Point::new(0.0, 0.0, -5.0),
+            Point::new(0.5, 0.0, -5.0)];
         let directions = [
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.1, 1.0, 1.0)];
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.1, 1.0, 1.0)];
         let t0s = [5.0, 4.0, 6.80798191702732];
         let t1s = [5.0, 6.0, 7.088723439378861];
 
@@ -213,15 +213,15 @@ mod tests {
     #[test]
     fn normal_vector_on_cylinder() {
         let points = [
-            Tuple::point(1.0, 0.0, 0.0),
-            Tuple::point(0.0, 5.0, -1.0),
-            Tuple::point(0.0, -2.0, 1.0),
-            Tuple::point(-1.0, 1.0, 0.0)];
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, 5.0, -1.0),
+            Point::new(0.0, -2.0, 1.0),
+            Point::new(-1.0, 1.0, 0.0)];
         let normals = [
-            Tuple::vector(1.0, 0.0, 0.0),
-            Tuple::vector(0.0, 0.0, -1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(-1.0, 0.0, 0.0)];
+            Vector::new(1.0, 0.0, 0.0),
+            Vector::new(0.0, 0.0, -1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(-1.0, 0.0, 0.0)];
 
         for (point, normal) in points.iter().zip(normals.iter()) {
             let cylinder = Cylinder::default();
@@ -233,19 +233,19 @@ mod tests {
     #[test]
     fn intersecting_constraint_cylinder() {
         let points = [
-            Tuple::point(0.0, 1.5, 0.0),
-            Tuple::point(0.0, 3.0, -5.0),
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::point(0.0, 2.0, -5.0),
-            Tuple::point(0.0, 1.0, -5.0),
-            Tuple::point(0.0, 1.5, -2.0)];
+            Point::new(0.0, 1.5, 0.0),
+            Point::new(0.0, 3.0, -5.0),
+            Point::new(0.0, 0.0, -5.0),
+            Point::new(0.0, 2.0, -5.0),
+            Point::new(0.0, 1.0, -5.0),
+            Point::new(0.0, 1.5, -2.0)];
         let directions = [
-            Tuple::vector(0.1, 1.0, 0.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0)];
+            Vector::new(0.1, 1.0, 0.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0)];
         let counts = [0, 0, 0, 0, 0, 2];
 
         for ((point, direction), count) in points.iter().zip(directions.iter()).zip(counts.iter()) {
@@ -264,17 +264,17 @@ mod tests {
     #[test]
     fn intersecting_caps_of_closed_cylinder() {
         let points = [
-            Tuple::point(0.0, 3.0, 0.0),
-            Tuple::point(0.0, 3.0, -2.0),
-            Tuple::point(0.0, 4.0, -2.0),
-            Tuple::point(0.0, 0.0, -2.0),
-            Tuple::point(0.0, -1.0, -2.0)];
+            Point::new(0.0, 3.0, 0.0),
+            Point::new(0.0, 3.0, -2.0),
+            Point::new(0.0, 4.0, -2.0),
+            Point::new(0.0, 0.0, -2.0),
+            Point::new(0.0, -1.0, -2.0)];
         let directions = [
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, -1.0, 2.0),
-            Tuple::vector(0.0, -1.0, 1.0),
-            Tuple::vector(0.0, 1.0, 2.0),
-            Tuple::vector(0.0, 1.0, 1.0)];
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, -1.0, 2.0),
+            Vector::new(0.0, -1.0, 1.0),
+            Vector::new(0.0, 1.0, 2.0),
+            Vector::new(0.0, 1.0, 1.0)];
         let counts = [2, 2, 2, 2, 2];
 
         for ((point, direction), count) in points.iter().zip(directions.iter()).zip(counts.iter()) {
@@ -292,19 +292,19 @@ mod tests {
     #[test]
     fn normal_vector_on_cylinder_caps() {
         let points = [
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(0.5, 1.0, 0.0),
-            Tuple::point(0.0, 1.0, 0.5),
-            Tuple::point(0.0, 2.0, 0.0),
-            Tuple::point(0.5, 2.0, 0.0),
-            Tuple::point(0.0, 2.0, 0.5)];
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(0.5, 1.0, 0.0),
+            Point::new(0.0, 1.0, 0.5),
+            Point::new(0.0, 2.0, 0.0),
+            Point::new(0.5, 2.0, 0.0),
+            Point::new(0.0, 2.0, 0.5)];
         let normals = [
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0)];
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0)];
 
         for (point, normal) in points.iter().zip(normals.iter()) {
             let mut cylinder = Cylinder::default();

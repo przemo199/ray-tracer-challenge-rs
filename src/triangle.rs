@@ -5,24 +5,25 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::{Tuple, TupleTrait};
+use crate::vector::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Triangle {
-    pub p1: Tuple,
-    pub p2: Tuple,
-    pub p3: Tuple,
-    pub e1: Tuple,
-    pub e2: Tuple,
-    pub normal: Tuple,
+    pub p1: Point,
+    pub p2: Point,
+    pub p3: Point,
+    pub e1: Vector,
+    pub e2: Vector,
+    pub normal: Vector,
     pub material: Material,
     pub transformation: Matrix<4>,
 }
 
 impl Triangle {
-    pub fn new(p1: Tuple, p2: Tuple, p3: Tuple) -> Triangle {
+    pub fn new(p1: Point, p2: Point, p3: Point) -> Triangle {
         let e1 = p2 - p1;
         let e2 = p3 - p1;
         let normal = (e2.cross(&e1)).normalize();
@@ -55,7 +56,7 @@ impl Display for Triangle {
 }
 
 impl Shape for Triangle {
-    fn local_normal_at(&self, _: Tuple) -> Tuple {
+    fn local_normal_at(&self, _: Point) -> Vector {
         return self.normal;
     }
 
@@ -101,35 +102,35 @@ impl Shape for Triangle {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::sync::Arc;
     use crate::ray::Ray;
     use crate::shape::Shape;
     use crate::triangle::Triangle;
-    use crate::tuple::Tuple;
 
     #[test]
     fn creating_triangle() {
-        let p1 = Tuple::point(0.0, 1.0, 0.0);
-        let p2 = Tuple::point(-1.0, 0.0, 0.0);
-        let p3 = Tuple::point(1.0, 0.0, 0.0);
+        let p1 = Point::new(0.0, 1.0, 0.0);
+        let p2 = Point::new(-1.0, 0.0, 0.0);
+        let p3 = Point::new(1.0, 0.0, 0.0);
         let triangle = Triangle::new(p1, p2, p3);
         assert_eq!(triangle.p1, p1);
         assert_eq!(triangle.p2, p2);
         assert_eq!(triangle.p3, p3);
-        assert_eq!(triangle.e1, Tuple::vector(-1.0, -1.0, 0.0));
-        assert_eq!(triangle.e2, Tuple::vector(1.0, -1.0, 0.0));
-        assert_eq!(triangle.normal, Tuple::vector(0.0, 0.0, -1.0));
+        assert_eq!(triangle.e1, Vector::new(-1.0, -1.0, 0.0));
+        assert_eq!(triangle.e2, Vector::new(1.0, -1.0, 0.0));
+        assert_eq!(triangle.normal, Vector::new(0.0, 0.0, -1.0));
     }
 
     #[test]
     fn normal_on_triangle() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let n1 = triangle.local_normal_at(Tuple::point(0.0, 0.5, 0.0));
-        let n2 = triangle.local_normal_at(Tuple::point(-0.5, 0.75, 0.0));
-        let n3 = triangle.local_normal_at(Tuple::point(0.5, 0.25, 0.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let n1 = triangle.local_normal_at(Point::new(0.0, 0.5, 0.0));
+        let n2 = triangle.local_normal_at(Point::new(-0.5, 0.75, 0.0));
+        let n3 = triangle.local_normal_at(Point::new(0.5, 0.25, 0.0));
         assert_eq!(n1, triangle.normal);
         assert_eq!(n2, triangle.normal);
         assert_eq!(n3, triangle.normal);
@@ -138,10 +139,10 @@ mod tests {
     #[test]
     fn ray_parallel_to_triangle() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let ray = Ray::new(Tuple::point(0.0, -1.0, -2.0), Tuple::vector(0.0, 1.0, 0.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let ray = Ray::new(Point::new(0.0, -1.0, -2.0), Vector::new(0.0, 1.0, 0.0));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -149,10 +150,10 @@ mod tests {
     #[test]
     fn ray_misses_p1_p3_edge() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let ray = Ray::new(Tuple::point(1.0, 1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let ray = Ray::new(Point::new(1.0, 1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -160,10 +161,10 @@ mod tests {
     #[test]
     fn ray_misses_p1_p2_edge() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let ray = Ray::new(Tuple::point(-1.0, 1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let ray = Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -171,10 +172,10 @@ mod tests {
     #[test]
     fn ray_misses_p2_p3_edge() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let ray = Ray::new(Tuple::point(0.0, -1.0, -2.0), Tuple::vector(0.0, 0.0, 1.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let ray = Ray::new(Point::new(0.0, -1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
         let arc_triangle = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -182,10 +183,10 @@ mod tests {
     #[test]
     fn ray_strikes_triangle() {
         let triangle = Triangle::new(
-            Tuple::point(0.0, 1.0, 0.0),
-            Tuple::point(-1.0, 0.0, 0.0),
-            Tuple::point(1.0, 0.0, 0.0));
-        let ray = Ray::new(Tuple::point(0.0, 0.5, -2.0), Tuple::vector(0.0, 0.0, 1.0));
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0));
+        let ray = Ray::new(Point::new(0.0, 0.5, -2.0), Vector::new(0.0, 0.0, 1.0));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         let intersections = arc_triangle.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);

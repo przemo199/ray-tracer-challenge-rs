@@ -1,7 +1,8 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{BufWriter, Write};
 use std::path::Path;
-use image::ImageFormat;
+use image::codecs::png::*;
+use image::ImageEncoder;
 use crate::color::Color;
 
 pub struct Canvas {
@@ -67,14 +68,22 @@ impl Canvas {
         return content.join("\n");
     }
 
+    fn prepare_file<P: AsRef<Path>>(&self, file_name: &P) {
+        let path = Path::new(file_name.as_ref());
+        let prefix = path.parent().unwrap();
+        std::fs::create_dir_all(prefix).unwrap();
+    }
+
     pub fn to_ppm_file<P: AsRef<Path>>(&self, file_name: P) {
+        self.prepare_file(&file_name);
         let content = self.to_ppm();
         let mut file = File::create(file_name.as_ref()).unwrap();
         file.write_all(content.as_bytes()).unwrap();
     }
 
     pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) {
-        let mut buffer: Vec<u8> = Vec::new();
+        let mut buffer: Vec<u8> = Vec::with_capacity(self.pixels.len() * 3);
+        self.prepare_file(&file_name);
 
         for pixel in self.pixels.iter() {
             for color in pixel.get_colors() {
@@ -82,14 +91,9 @@ impl Canvas {
             }
         }
 
-        image::save_buffer_with_format(
-            file_name.as_ref(),
-            buffer.as_slice(),
-            self.width,
-            self.height,
-            image::ColorType::Rgb8,
-            ImageFormat::Png,
-        ).unwrap();
+        let buf_file_writer = BufWriter::new(File::create(file_name.as_ref()).unwrap());
+        let encoder = PngEncoder::new_with_quality(buf_file_writer, CompressionType::Best, FilterType::NoFilter);
+        encoder.write_image(buffer.as_slice(), self.width, self.height, image::ColorType::Rgb8).unwrap();
     }
 }
 

@@ -5,9 +5,10 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::Tuple;
+use crate::vector::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cube {
@@ -46,15 +47,15 @@ impl Cube {
 }
 
 impl Shape for Cube {
-    fn local_normal_at(&self, point: Tuple) -> Tuple {
+    fn local_normal_at(&self, point: Point) -> Vector {
         let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().to_owned()
             .copied().fold(f64::NEG_INFINITY, f64::max);
         if max_value == point.x.abs() {
-            return Tuple::vector(point.x, 0.0, 0.0)
+            return Vector::new(point.x, 0.0, 0.0)
         } else if max_value == point.y.abs() {
-            return Tuple::vector(0.0, point.y, 0.0)
+            return Vector::new(0.0, point.y, 0.0)
         }
-        return Tuple::vector(0.0, 0.0, point.z)
+        return Vector::new(0.0, 0.0, point.z)
     }
 
     fn material(&self) -> Material {
@@ -109,26 +110,25 @@ impl Display for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tuple::Tuple;
 
     #[test]
     fn ray_intersects_cube() {
         let origins = [
-            Tuple::point(5.0, 0.5, 0.0),
-            Tuple::point(-5.0, 0.5, 0.0),
-            Tuple::point(0.5, 5.0, 0.0),
-            Tuple::point(0.5, -5.0, 0.0),
-            Tuple::point(0.5, 0.0, 5.0),
-            Tuple::point(0.5, 0.0, -5.0),
-            Tuple::point(0.0, 0.5, 0.0)];
+            Point::new(5.0, 0.5, 0.0),
+            Point::new(-5.0, 0.5, 0.0),
+            Point::new(0.5, 5.0, 0.0),
+            Point::new(0.5, -5.0, 0.0),
+            Point::new(0.5, 0.0, 5.0),
+            Point::new(0.5, 0.0, -5.0),
+            Point::new(0.0, 0.5, 0.0)];
         let directions = [
-            Tuple::vector(-1.0, 0.0, 0.0),
-            Tuple::vector(1.0, 0.0, 0.0),
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, 0.0, -1.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, 1.0)];
+            Vector::new(-1.0, 0.0, 0.0),
+            Vector::new(1.0, 0.0, 0.0),
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 0.0, -1.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, 1.0)];
         let t1s = [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, -1.0];
         let t2s = [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 1.0];
 
@@ -146,19 +146,19 @@ mod tests {
     #[test]
     fn ray_misses_cube() {
         let origins = [
-            Tuple::point(-2.0, 0.0, 0.0),
-            Tuple::point(0.0, -2.0, 0.0),
-            Tuple::point(0.0, 0.0, -2.0),
-            Tuple::point(2.0, 0.0, 2.0),
-            Tuple::point(0.0, 2.0, 2.0),
-            Tuple::point(2.0, 2.0, 0.0)];
+            Point::new(-2.0, 0.0, 0.0),
+            Point::new(0.0, -2.0, 0.0),
+            Point::new(0.0, 0.0, -2.0),
+            Point::new(2.0, 0.0, 2.0),
+            Point::new(0.0, 2.0, 2.0),
+            Point::new(2.0, 2.0, 0.0)];
         let directions = [
-            Tuple::vector(0.2673, 0.5345, 0.8018),
-            Tuple::vector(0.8018, 0.2673, 0.5345),
-            Tuple::vector(0.5345, 0.8018, 0.2673),
-            Tuple::vector(0.0, 0.0, -1.0),
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(-1.0, 0.0, 0.0)];
+            Vector::new(0.2673, 0.5345, 0.8018),
+            Vector::new(0.8018, 0.2673, 0.5345),
+            Vector::new(0.5345, 0.8018, 0.2673),
+            Vector::new(0.0, 0.0, -1.0),
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(-1.0, 0.0, 0.0)];
         for (origin, direction) in origins.iter().zip(directions) {
             let cube = Cube::default();
             let arc_cube: Arc<dyn Shape> = Arc::new(cube);
@@ -171,24 +171,24 @@ mod tests {
     #[test]
     fn normal_on_surface_of_cube() {
         let points = [
-            Tuple::point(1.0, 0.5, -0.8),
-            Tuple::point(-1.0, -0.2, 0.9),
-            Tuple::point(-0.4, 1.0, -0.1),
-            Tuple::point(0.3, -1.0, -0.7),
-            Tuple::point(-0.6, 0.3, 1.0),
-            Tuple::point(0.4, 0.4, -1.0),
-            Tuple::point(1.0, 1.0, 1.0),
-            Tuple::point(-1.0, -1.0, -1.0),
+            Point::new(1.0, 0.5, -0.8),
+            Point::new(-1.0, -0.2, 0.9),
+            Point::new(-0.4, 1.0, -0.1),
+            Point::new(0.3, -1.0, -0.7),
+            Point::new(-0.6, 0.3, 1.0),
+            Point::new(0.4, 0.4, -1.0),
+            Point::new(1.0, 1.0, 1.0),
+            Point::new(-1.0, -1.0, -1.0),
         ];
         let normals = [
-            Tuple::vector(1.0, 0.0, 0.0),
-            Tuple::vector(-1.0, 0.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, -1.0, 0.0),
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(0.0, 0.0, -1.0),
-            Tuple::vector(1.0, 0.0, 0.0),
-            Tuple::vector(-1.0, 0.0, 0.0),
+            Vector::new(1.0, 0.0, 0.0),
+            Vector::new(-1.0, 0.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, -1.0, 0.0),
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(0.0, 0.0, -1.0),
+            Vector::new(1.0, 0.0, 0.0),
+            Vector::new(-1.0, 0.0, 0.0),
         ];
 
         for (point, normal) in points.iter().zip(normals) {

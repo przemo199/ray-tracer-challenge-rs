@@ -5,20 +5,21 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::Tuple;
+use crate::vector::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
     pub material: Material,
     pub transformation: Matrix<4>,
-    pub normal: Tuple,
+    pub normal: Vector,
 }
 
 impl Plane {
     pub fn new(material: Material, transformation: Matrix<4>) -> Plane {
-        let normal = Tuple::vector(0.0, 1.0, 0.0);
+        let normal = Vector::new(0.0, 1.0, 0.0);
         return Plane {
             material,
             transformation,
@@ -34,7 +35,7 @@ impl Default for Plane {
 }
 
 impl Shape for Plane {
-    fn local_normal_at(&self, _: Tuple) -> Tuple {
+    fn local_normal_at(&self, _: Point) -> Vector {
         return self.normal;
     }
 
@@ -83,10 +84,10 @@ mod tests {
     #[test]
     fn normal_is_constant() {
         let plane = Plane::default();
-        let normal1 = plane.normal_at(Tuple::point(0.0, 0.0, 0.0));
-        let normal2 = plane.normal_at(Tuple::point(10.0, 0.0, -10.0));
-        let normal3 = plane.normal_at(Tuple::point(-5.0, 0.0, 150.0));
-        let normal = Tuple::vector(0.0, 1.0, 0.0);
+        let normal1 = plane.normal_at(Point::new(0.0, 0.0, 0.0));
+        let normal2 = plane.normal_at(Point::new(10.0, 0.0, -10.0));
+        let normal3 = plane.normal_at(Point::new(-5.0, 0.0, 150.0));
+        let normal = Vector::new(0.0, 1.0, 0.0);
         assert_eq!(normal1, normal);
         assert_eq!(normal2, normal);
         assert_eq!(normal3, normal);
@@ -96,7 +97,7 @@ mod tests {
     fn ray_intersects_plane_in_parallel() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Tuple::point(0.0, 10.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 10.0, 0.0), Vector::new(0.0, 0.0, 1.0));
         let intersections = arc_plane.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -105,7 +106,7 @@ mod tests {
     fn ray_intersects_plane_from_above() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Tuple::point(0.0, 1.0, 0.0), Tuple::vector(0.0, -1.0, 0.0));
+        let ray = Ray::new(Point::new(0.0, 1.0, 0.0), Vector::new(0.0, -1.0, 0.0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].t, 1.0);
@@ -116,7 +117,7 @@ mod tests {
     fn ray_intersects_plane_from_below() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Tuple::point(0.0, -1.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        let ray = Ray::new(Point::new(0.0, -1.0, 0.0), Vector::new(0.0, 1.0, 0.0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].t, 1.0);

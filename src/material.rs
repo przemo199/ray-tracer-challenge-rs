@@ -1,9 +1,10 @@
 use crate::color::Color;
 use crate::light::Light;
 use crate::pattern::Pattern;
+use crate::point::Point;
 use crate::shape::Shape;
-use crate::tuple::{Tuple, TupleTrait};
 use crate::utils::CloseEnough;
+use crate::vector::Vector;
 
 #[derive(Clone, Debug)]
 pub struct Material {
@@ -33,7 +34,7 @@ impl Material {
         };
     }
 
-    pub fn lighting(&self, object: &dyn Shape, light: &Light, point: &Tuple, camera_vector: &Tuple, normal_vector: &Tuple, in_shadow: bool) -> Color {
+    pub fn lighting(&self, object: &dyn Shape, light: &Light, point: &Point, camera_vector: &Vector, normal_vector: &Vector, in_shadow: bool) -> Color {
         let diffuse: Color;
         let specular: Color;
         let color = match &self.pattern {
@@ -102,9 +103,7 @@ impl PartialEq for Material {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::light::Light;
     use crate::sphere::Sphere;
-    use crate::tuple::Tuple;
 
     #[test]
     fn default_material() {
@@ -123,10 +122,10 @@ mod tests {
     fn lighting_with_camera_between_light_and_surface() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Tuple::point(0.0, 0.0, 0.0);
-        let camera = Tuple::vector(0.0, 0.0, -1.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Color::white());
+        let position = Point::new(0.0, 0.0, 0.0);
+        let camera = Vector::new(0.0, 0.0, -1.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::white());
         let result = material.lighting(&object, &light, &position, &camera, &normal, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
@@ -135,10 +134,10 @@ mod tests {
     fn lighting_with_camera_between_light_and_surface_eye_offset_45_degree() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Tuple::point(0.0, 0.0, 0.0);
-        let camera = Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Color::white());
+        let position = Point::new(0.0, 0.0, 0.0);
+        let camera = Vector::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::white());
         let result = material.lighting(&object, &light, &position, &camera, &normal, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
@@ -147,10 +146,10 @@ mod tests {
     fn lighting_with_camera_opposite_surface_light_offset_45_degree() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Tuple::point(0.0, 0.0, 0.0);
-        let camera = Tuple::point(0.0, 0.0, -1.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Color::white());
+        let position = Point::new(0.0, 0.0, 0.0);
+        let camera = Vector::new(0.0, 0.0, -1.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::white());
         let result = material.lighting(&object, &light, &position, &camera, &normal, false);
         assert_eq!(result, Color::new(0.7363961030678927, 0.7363961030678927, 0.7363961030678927));
     }
@@ -159,10 +158,10 @@ mod tests {
     fn lighting_with_camera_in_path_of_reflection_vector() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Tuple::point(0.0, 0.0, 0.0);
-        let camera = Tuple::point(0.0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Color::white());
+        let position = Point::new(0.0, 0.0, 0.0);
+        let camera = Vector::new(0.0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::white());
         let result = material.lighting(&object, &light, &position, &camera, &normal, false);
         assert_eq!(result, Color::new(1.6363961030678928, 1.6363961030678928, 1.6363961030678928));
     }
@@ -171,10 +170,10 @@ mod tests {
     fn lighting_with_light_behind_surface() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Tuple::point(0.0, 0.0, 0.0);
-        let camera = Tuple::point(0.0, 0.0, -1.0);
-        let normal = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 0.0, 10.0), Color::white());
+        let position = Point::new(0.0, 0.0, 0.0);
+        let camera = Vector::new(0.0, 0.0, -1.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 0.0, 10.0), Color::white());
         let result = material.lighting(&object, &light, &position, &camera, &normal, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -183,11 +182,11 @@ mod tests {
     fn lighting_with_surface_in_shadow() {
         let object = Sphere::default();
         let material = Material::default();
-        let camera_vector = Tuple::vector(0.0, 0.0, -1.0);
-        let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
-        let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Color::white());
+        let camera_vector = Vector::new(0.0, 0.0, -1.0);
+        let normal_vector = Vector::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::white());
         let in_shadow = true;
-        let position = Tuple::point(0.0, 0.0, 0.0);
+        let position = Point::new(0.0, 0.0, 0.0);
         let result = material.lighting(&object, &light, &position, &camera_vector, &normal_vector, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }

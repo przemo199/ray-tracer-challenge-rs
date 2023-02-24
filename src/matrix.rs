@@ -2,7 +2,8 @@ use std::fmt::{Display, Formatter};
 use std::mem;
 use std::ops::Mul;
 use crate::consts::EPSILON;
-use crate::tuple::{Tuple, TupleTrait};
+use crate::point::Point;
+use crate::vector::Vector;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix<const SIDE_LENGTH: usize> {
@@ -251,20 +252,37 @@ impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
     }
 }
 
-impl Mul<Tuple> for Matrix<4> {
-    type Output = Tuple;
+impl Mul<Point> for Matrix<4> {
+    type Output = Point;
 
-    fn mul(self, rhs: Tuple) -> Self::Output {
+    fn mul(self, rhs: Point) -> Self::Output {
         let mut result = [0.0; 4];
-        let tuple_values = rhs.get_values();
+        let point_values = rhs.get_values();
         for (index, row) in self.elements.iter().enumerate() {
             let mut sum = 0.0;
-            for (matrix_value, tuple_value) in row.iter().zip(tuple_values) {
-                sum += matrix_value * tuple_value;
+            for (matrix_value, point_value) in row.iter().zip(point_values) {
+                sum += matrix_value * point_value;
             }
             result[index] = sum;
         }
-        return Tuple::new(result[0], result[1], result[2], result[3]);
+        return Point::new(result[0], result[1], result[2]);
+    }
+}
+
+impl Mul<Vector> for Matrix<4> {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        let mut result = [0.0; 4];
+        let vector_values = rhs.get_values();
+        for (index, row) in self.elements.iter().enumerate() {
+            let mut sum = 0.0;
+            for (matrix_value, vector_value) in row.iter().zip(vector_values) {
+                sum += matrix_value * vector_value;
+            }
+            result[index] = sum;
+        }
+        return Vector::new(result[0], result[1], result[2]);
     }
 }
 
@@ -352,15 +370,15 @@ mod tests {
     }
 
     #[test]
-    fn matrix_multiplication_by_tuple() {
+    fn matrix_multiplication_by_point() {
         let matrix = Matrix::<4>::new([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 4.0, 4.0, 2.0],
             [8.0, 6.0, 4.0, 1.0],
             [0.0, 0.0, 0.0, 1.0]
         ]);
-        let tuple = Tuple::new(1.0, 2.0, 3.0, 1.0);
-        assert_eq!(matrix * tuple, Tuple::new(18.0, 24.0, 33.0, 1.0));
+        let point = Point::new(1.0, 2.0, 3.0);
+        assert_eq!(matrix * point, Point::new(18.0, 24.0, 33.0));
     }
 
     #[test]

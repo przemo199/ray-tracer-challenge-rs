@@ -3,20 +3,20 @@ use std::sync::Arc;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
-use crate::tuple::{Tuple, TupleTrait};
+use crate::vector::Vector;
 
 pub trait Shape: Debug + Display + Send + Sync {
-    fn normal_at(&self, point: Tuple) -> Tuple {
+    fn normal_at(&self, point: Point) -> Vector {
         let transform_inverse = self.transformation().inverse();
         let local_point = transform_inverse * point;
         let local_normal = self.local_normal_at(local_point);
-        let mut world_normal = transform_inverse.transpose() * local_normal;
-        world_normal.w = 0.0;
+        let world_normal = transform_inverse.transpose() * local_normal;
         return world_normal.normalize();
     }
 
-    fn local_normal_at(&self, point: Tuple) -> Tuple;
+    fn local_normal_at(&self, point: Point) -> Vector;
 
     fn material(&self) -> Material;
 
@@ -52,7 +52,7 @@ mod tests {
     // }
     //
     // impl Shape for TestShape {
-    //     fn local_normal_at(&self, point: Tuple) -> Tuple {
+    //     fn local_normal_at(&self, point: Point) -> Vector {
     //         todo!()
     //     }
     //

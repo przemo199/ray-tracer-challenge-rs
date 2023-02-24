@@ -4,10 +4,11 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
 use crate::transformations::Transformations;
-use crate::tuple::{Tuple, TupleTrait};
+use crate::vector::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Sphere {
@@ -37,8 +38,8 @@ impl Sphere {
 }
 
 impl Shape for Sphere {
-    fn local_normal_at(&self, point: Tuple) -> Tuple {
-        return point;
+    fn local_normal_at(&self, point: Point) -> Vector {
+        return Vector::new(point.x, point.y, point.z);
     }
 
     fn material(&self) -> Material {
@@ -58,7 +59,7 @@ impl Shape for Sphere {
     }
 
     fn local_intersect(self: Arc<Self>, local_ray: &Ray) -> Intersections {
-        let sphere_to_ray_distance = Tuple::vector(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
+        let sphere_to_ray_distance = Vector::new(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
@@ -113,23 +114,23 @@ mod tests {
     #[test]
     fn sphere_normal() {
         let sphere = Sphere::default();
-        let normal = sphere.normal_at(Tuple::point(1.0, 0.0, 0.0));
-        assert_eq!(normal, Tuple::vector(1.0, 0.0, 0.0));
+        let normal = sphere.normal_at(Point::new(1.0, 0.0, 0.0));
+        assert_eq!(normal, Vector::new(1.0, 0.0, 0.0));
 
-        let normal = sphere.normal_at(Tuple::point(0.0, 1.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        let normal = sphere.normal_at(Point::new(0.0, 1.0, 0.0));
+        assert_eq!(normal, Vector::new(0.0, 1.0, 0.0));
 
-        let normal = sphere.normal_at(Tuple::point(0.0, 0.0, 1.0));
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, 1.0));
+        let normal = sphere.normal_at(Point::new(0.0, 0.0, 1.0));
+        assert_eq!(normal, Vector::new(0.0, 0.0, 1.0));
 
-        let normal = sphere.normal_at(Tuple::point(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
-        assert_eq!(normal, Tuple::vector(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
+        let normal = sphere.normal_at(Point::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
+        assert_eq!(normal, Vector::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
     }
 
     #[test]
     fn sphere_normal_is_normalized() {
         let sphere = Sphere::default();
-        let normal = sphere.normal_at(Tuple::point(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
+        let normal = sphere.normal_at(Point::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
         assert_eq!(normal, normal.normalize());
     }
 
@@ -137,8 +138,8 @@ mod tests {
     fn normal_on_translated_sphere() {
         let mut sphere = Sphere::default();
         sphere.transformation = Transformations::translation(0.0, 1.0, 0.0);
-        let normal = sphere.normal_at(Tuple::point(0.0, 1.70711, -0.70711));
-        assert_eq!(normal, Tuple::vector(0.0, 0.7071067811865475, -0.7071067811865476));
+        let normal = sphere.normal_at(Point::new(0.0, 1.70711, -0.70711));
+        assert_eq!(normal, Vector::new(0.0, 0.7071067811865475, -0.7071067811865476));
     }
 
     #[test]
@@ -146,8 +147,8 @@ mod tests {
         let mut sphere = Sphere::default();
         sphere.transformation = Transformations::scaling(1.0, 0.5, 1.0) *
             Transformations::rotation_z(PI / 5.0);
-        let normal = sphere.normal_at(Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
-        assert_eq!(normal, Tuple::vector(0.0, 0.9701425001453319, -0.24253562503633294));
+        let normal = sphere.normal_at(Point::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
+        assert_eq!(normal, Vector::new(0.0, 0.9701425001453319, -0.24253562503633294));
     }
 
     #[test]

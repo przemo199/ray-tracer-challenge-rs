@@ -5,10 +5,11 @@ use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::matrix::Matrix;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::Tuple;
 use crate::utils::CloseEnough;
+use crate::vector::Vector;
 
 #[derive(Clone, Debug)]
 pub struct Cone {
@@ -60,15 +61,15 @@ impl Cone {
 }
 
 impl Shape for Cone {
-    fn local_normal_at(&self, point: Tuple) -> Tuple {
+    fn local_normal_at(&self, point: Point) -> Vector {
         let distance = point.x * point.x + point.z * point.z;
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
-            return Tuple::vector(0.0, 1.0, 0.0);
+            return Vector::new(0.0, 1.0, 0.0);
         }
 
         if distance < 1.0 && point.y <= self.minimum + EPSILON {
-            return Tuple::vector(0.0, -1.0, 0.0);
+            return Vector::new(0.0, -1.0, 0.0);
         }
 
         let mut y = distance.sqrt();
@@ -76,7 +77,7 @@ impl Shape for Cone {
             y *= -1.0;
         }
 
-        return Tuple::vector(point.x, y, point.z);
+        return Vector::new(point.x, y, point.z);
     }
 
     fn material(&self) -> Material {
@@ -176,22 +177,19 @@ impl PartialEq for Cone {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::sync::Arc;
-    use crate::cone::Cone;
-    use crate::ray::Ray;
-    use crate::shape::Shape;
-    use crate::tuple::{Tuple, TupleTrait};
 
     #[test]
     fn intersecting_ray_with_cone() {
         let origins = [
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::point(1.0, 1.0, -5.0)];
+            Point::new(0.0, 0.0, -5.0),
+            Point::new(0.0, 0.0, -5.0),
+            Point::new(1.0, 1.0, -5.0)];
         let directions = [
-            Tuple::vector(0.0, 0.0, 1.0),
-            Tuple::vector(1.0, 1.0, 1.0),
-            Tuple::vector(-0.5, -1.0, 1.0)];
+            Vector::new(0.0, 0.0, 1.0),
+            Vector::new(1.0, 1.0, 1.0),
+            Vector::new(-0.5, -1.0, 1.0)];
         let t0s = [5.0, 8.660254037844386, 4.550055679356349];
         let t1s = [5.0, 8.660254037844386, 49.449944320643645];
 
@@ -210,7 +208,7 @@ mod tests {
     fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
         let cone = Cone::default();
         let arc_cone: Arc<dyn Shape> = Arc::new(cone);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -1.0), Tuple::vector(0.0, 1.0, 1.0).normalize());
+        let ray = Ray::new(Point::new(0.0, 0.0, -1.0), Vector::new(0.0, 1.0, 1.0).normalize());
         let intersections = arc_cone.local_intersect(&ray);
         assert_eq!(intersections.intersections.len(), 1);
         assert_eq!(intersections[0].t, 0.3535533905932738);
@@ -219,13 +217,13 @@ mod tests {
     #[test]
     fn intersecting_ray_with_cone_caps() {
         let origins = [
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::point(0.0, 0.0, -0.25),
-            Tuple::point(0.0, 0.0, -0.25)];
+            Point::new(0.0, 0.0, -5.0),
+            Point::new(0.0, 0.0, -0.25),
+            Point::new(0.0, 0.0, -0.25)];
         let directions = [
-            Tuple::vector(0.0, 1.0, 0.0),
-            Tuple::vector(0.0, 1.0, 1.0),
-            Tuple::vector(0.0, 1.0, 0.0)];
+            Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 1.0, 1.0),
+            Vector::new(0.0, 1.0, 0.0)];
         let count = [0, 2, 4];
 
         for i in 0..origins.len() {
@@ -240,13 +238,13 @@ mod tests {
     #[test]
     fn computing_normal_vector_on_cone() {
         let points = [
-            Tuple::point(0.0, 0.0, 0.0),
-            Tuple::point(1.0, 1.0, 1.0),
-            Tuple::point(-1.0, -1.0, 0.0)];
+            Point::new(0.0, 0.0, 0.0),
+            Point::new(1.0, 1.0, 1.0),
+            Point::new(-1.0, -1.0, 0.0)];
         let normals = [
-            Tuple::vector(0.0, 0.0, 0.0),
-            Tuple::vector(1.0, -(2.0_f64.sqrt()), 1.0),
-            Tuple::vector(-1.0, 1.0, 0.0)];
+            Vector::new(0.0, 0.0, 0.0),
+            Vector::new(1.0, -(2.0_f64.sqrt()), 1.0),
+            Vector::new(-1.0, 1.0, 0.0)];
 
         for i in 0..points.len() {
             let cone = Cone::default();

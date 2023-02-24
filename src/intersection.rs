@@ -4,7 +4,6 @@ use crate::computed_hit::ComputedHit;
 use crate::intersections::Intersections;
 use crate::ray::Ray;
 use crate::shape::Shape;
-use crate::tuple::TupleTrait;
 use crate::utils::CloseEnough;
 
 #[derive(Clone, Debug)]
@@ -83,9 +82,10 @@ mod tests {
     use super::*;
     use crate::consts::EPSILON;
     use crate::plane::Plane;
+    use crate::point::Point;
     use crate::sphere::Sphere;
     use crate::transformations::Transformations;
-    use crate::tuple::Tuple;
+    use crate::vector::Vector;
 
     #[test]
     fn new_intersection() {
@@ -98,21 +98,21 @@ mod tests {
 
     #[test]
     fn precomputing_intersection_state() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection = Intersection::new(4.0, arc_sphere.clone());
         let computed_hit = intersection.prepare_computations(&ray, &Intersections::new());
         assert_eq!(computed_hit.t, intersection.t);
         assert_eq!(&computed_hit.object, &arc_sphere);
-        assert_eq!(computed_hit.point, Tuple::point(0.0, 0.0, -1.0));
-        assert_eq!(computed_hit.camera_vector, Tuple::vector(0.0, 0.0, -1.0));
-        assert_eq!(computed_hit.normal_vector, Tuple::vector(0.0, 0.0, -1.0));
+        assert_eq!(computed_hit.point, Point::new(0.0, 0.0, -1.0));
+        assert_eq!(computed_hit.camera_vector, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(computed_hit.normal_vector, Vector::new(0.0, 0.0, -1.0));
     }
 
     #[test]
     fn hit_when_intersection_is_outside() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection1 = Intersection::new(4.0, arc_sphere);
@@ -122,19 +122,19 @@ mod tests {
 
     #[test]
     fn hit_when_intersection_is_inside() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection1 = Intersection::new(1.0, arc_sphere);
         let computations = intersection1.prepare_computations(&ray, &Intersections::new());
         assert!(computations.is_inside);
-        assert_eq!(computations.point, Tuple::point(0.0, 0.0, 1.0));
-        assert_eq!(computations.camera_vector, Tuple::vector(0.0, 0.0, -1.0));
+        assert_eq!(computations.point, Point::new(0.0, 0.0, 1.0));
+        assert_eq!(computations.camera_vector, Vector::new(0.0, 0.0, -1.0));
     }
 
     #[test]
     fn hit_offsets_point() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
         let sphere = Sphere { transformation: Transformations::translation(0.0, 0.0, 1.0), ..Default::default() };
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersection = Intersection::new(5.0, arc_sphere);
@@ -147,10 +147,10 @@ mod tests {
     fn precomputing_reflection_vector() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Tuple::point(0.0, 1.0, -1.0), Tuple::vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(Point::new(0.0, 1.0, -1.0), Vector::new(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
         let intersection = Intersection::new(2.0_f64.sqrt(), arc_plane);
         let prepared_computations = intersection.prepare_computations(&ray, &Intersections::new());
-        assert_eq!(prepared_computations.reflection_vector, Tuple::vector(0.0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(prepared_computations.reflection_vector, Vector::new(0.0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
     }
 
     #[test]
@@ -173,7 +173,7 @@ mod tests {
         material3.refractive_index = 2.5;
         sphere3.set_material(material3);
         let arc_sphere3: Arc<dyn Shape> = Arc::new(sphere3);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -4.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, -4.0), Vector::new(0.0, 0.0, 1.0));
 
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(2.0, arc_sphere1.clone()));
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn under_point_is_below_surface() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
         let mut sphere = Sphere::glass();
         sphere.set_transformation(Transformations::translation(0.0, 0.0, 1.0));
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
