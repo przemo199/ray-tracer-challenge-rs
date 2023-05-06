@@ -1,0 +1,74 @@
+use std::fmt::{Display, Formatter};
+
+use crate::consts::EPSILON;
+use crate::patterns::pattern::Pattern;
+use crate::primitives::{Color, Point};
+use crate::primitives::{Transformation, transformations};
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckerPattern {
+    color_a: Color,
+    color_b: Color,
+    transformation: Transformation,
+}
+
+impl CheckerPattern {
+    pub fn new(color_a: Color, color_b: Color) -> CheckerPattern {
+        return CheckerPattern { color_a, color_b, transformation: transformations::IDENTITY };
+    }
+}
+
+impl Pattern for CheckerPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        let distance =
+            ((point.x + EPSILON).floor() + (point.y + EPSILON).floor() + (point.z + EPSILON).floor()) as i64;
+        return if distance % 2 == 0 { self.color_a } else { self.color_b };
+    }
+
+    fn transformation(&self) -> Transformation {
+        return self.transformation;
+    }
+
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation = transformation;
+    }
+}
+
+impl Display for CheckerPattern {
+    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        return formatter.debug_struct("CheckerPattern")
+            .field("color_a", &self.color_a)
+            .field("color_b", &self.color_b)
+            .field("transformation", &self.transformation)
+            .finish();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn checker_pattern_repeats_in_x() {
+        let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.99, 0.0, 0.0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(1.01, 0.0, 0.0)), Color::BLACK);
+    }
+
+    #[test]
+    fn checker_pattern_repeats_in_y() {
+        let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.99, 0.0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 1.01, 0.0)), Color::BLACK);
+    }
+
+    #[test]
+    fn checker_pattern_repeats_in_z() {
+        let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.99)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.01)), Color::BLACK);
+    }
+}

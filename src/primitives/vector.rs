@@ -1,4 +1,6 @@
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};
+
 use crate::utils::CloseEnough;
 
 #[derive(Clone, Copy, Debug)]
@@ -9,6 +11,16 @@ pub struct Vector {
 }
 
 impl Vector {
+    /// Creates new instance of struct [Vector]
+    /// # Examples
+    /// ```
+    ///     use raytracer::primitives::Vector;
+    ///     let vector = Vector::new(1.0, 0.5, 0.0);
+    ///
+    ///     assert_eq!(vector.x, 1.0);
+    ///     assert_eq!(vector.y, 0.5);
+    ///     assert_eq!(vector.z, 0.0);
+    /// ```
     pub fn new(x: f64, y: f64, z: f64) -> Vector {
         return Vector { x, y, z };
     }
@@ -21,7 +33,7 @@ impl Vector {
         return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
     }
 
-    pub fn normalize(&self) -> Vector {
+    pub fn normalized(&self) -> Vector {
         let magnitude = self.magnitude();
         return Vector::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
     }
@@ -45,7 +57,17 @@ impl Vector {
 
 impl Default for Vector {
     fn default() -> Self {
-        return Vector::new(0.0, 0.0, 0.0)
+        return Vector::new(0.0, 0.0, 0.0);
+    }
+}
+
+impl Display for Vector {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        return formatter.debug_struct("Vector")
+            .field("x", &self.x)
+            .field("y", &self.y)
+            .field("z", &self.z)
+            .finish();
     }
 }
 
@@ -99,8 +121,11 @@ impl Neg for Vector {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use rstest::rstest;
+
     use crate::consts::EPSILON;
+
+    use super::*;
 
     #[test]
     fn new_vector() {
@@ -112,67 +137,61 @@ mod tests {
 
     #[test]
     fn eq_vector() {
-        let vector1 = Vector::new(4.0, -4.0, 3.0);
-        let vector2 = vector1;
-        let vector3 = Vector::new(4.0 + EPSILON, -4.0, 3.0);
-        let vector4 = Vector::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
-        assert_eq!(vector1, vector2);
-        assert_ne!(vector2, vector3);
-        assert_eq!(vector2, vector4);
+        let vector_1 = Vector::new(4.0, -4.0, 3.0);
+        let vector_2 = vector_1;
+        let vector_3 = Vector::new(4.0 + EPSILON, -4.0, 3.0);
+        let vector_4 = Vector::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
+        assert_eq!(vector_1, vector_2);
+        assert_ne!(vector_2, vector_3);
+        assert_eq!(vector_2, vector_4);
     }
 
     #[test]
     fn add_vector() {
-        let vector1 = Vector::new(3.0, -2.0, 5.0);
-        let vector2 = Vector::new(-2.0, 3.0, 1.0);
-        let vector3 = vector1 + vector2;
-        assert_eq!(vector3, Vector::new(1.0, 1.0, 6.0));
+        let vector_1 = Vector::new(3.0, -2.0, 5.0);
+        let vector_2 = Vector::new(-2.0, 3.0, 1.0);
+        assert_eq!(vector_1 + vector_2, Vector::new(1.0, 1.0, 6.0));
     }
 
     #[test]
     fn sub_vector() {
-        let vector1 = Vector::new(4.0, -4.0, 3.0);
-        let vector2 = vector1;
-        let vector3 = vector1 - vector2;
-        assert_eq!(vector3, Vector::new(0.0, 0.0, 0.0));
+        let vector_1 = Vector::new(4.0, -4.0, 3.0);
+        let vector_2 = vector_1;
+        assert_eq!(vector_1 - vector_2, Vector::new(0.0, 0.0, 0.0));
     }
 
     #[test]
     fn neg_vector() {
-        let vector1 = Vector::new(1.0, -2.0, 3.0);
-        let vector2 = Vector::new(4.0, -4.0, 3.0);
-        let vector3 = Vector::new(4.0, -4.0, 3.0);
-        assert_eq!(-vector1, Vector::new(-1.0, 2.0, -3.0));
-        assert_eq!(-vector2, Vector::new(-4.0, 4.0, -3.0));
-        assert_eq!(-vector3, Vector::new(-4.0, 4.0, -3.0));
+        let vector_1 = Vector::new(1.0, -2.0, 3.0);
+        let vector_2 = Vector::new(4.0, -4.0, 3.0);
+        let vector_3 = Vector::new(4.0, -4.0, 3.0);
+        assert_eq!(-vector_1, Vector::new(-1.0, 2.0, -3.0));
+        assert_eq!(-vector_2, Vector::new(-4.0, 4.0, -3.0));
+        assert_eq!(-vector_3, Vector::new(-4.0, 4.0, -3.0));
     }
 
     #[test]
     fn mul_vector() {
-        let vector1 = Vector::new(1.0, -2.0, 3.0) * 3.5;
-        let vector2 = Vector::new(1.0, -2.0, 3.0) * 0.5;
-        assert_eq!(vector1, Vector::new(3.5, -7.0, 10.5));
-        assert_eq!(vector2, Vector::new(0.5, -1.0, 1.5));
+        let vector_1 = Vector::new(1.0, -2.0, 3.0);
+        let vector_2 = Vector::new(1.0, -2.0, 3.0);
+        assert_eq!(vector_1 * 3.5, Vector::new(3.5, -7.0, 10.5));
+        assert_eq!(vector_2 * 0.5, Vector::new(0.5, -1.0, 1.5));
     }
 
     #[test]
     fn div_vector() {
-        let vector = Vector::new(1.0, -2.0, 3.0) / 2.0;
-        assert_eq!(vector, Vector::new(0.5, -1.0, 1.5));
+        let vector = Vector::new(1.0, -2.0, 3.0);
+        assert_eq!(vector / 2.0, Vector::new(0.5, -1.0, 1.5));
     }
 
-    #[test]
-    fn vector_magnitude() {
-        let vector1 = Vector::new(1.0, 0.0, 0.0);
-        let vector2 = Vector::new(0.0, 1.0, 0.0);
-        let vector3 = Vector::new(0.0, 0.0, 1.0);
-        let vector4 = Vector::new(1.0, 2.0, 3.0);
-        let vector5 = Vector::new(-1.0, -2.0, -3.0);
-        assert_eq!(vector1.magnitude(), 1.0);
-        assert_eq!(vector2.magnitude(), 1.0);
-        assert_eq!(vector3.magnitude(), 1.0);
-        assert_eq!(vector4.magnitude(), 14.0_f64.sqrt());
-        assert_eq!(vector5.magnitude(), 14.0_f64.sqrt());
+    #[rstest]
+    #[case(Vector::new(1.0, 0.0, 0.0), 1.0)]
+    #[case(Vector::new(0.0, 1.0, 0.0), 1.0)]
+    #[case(Vector::new(0.0, 0.0, 1.0), 1.0)]
+    #[case(Vector::new(1.0, 2.0, 3.0), 14.0_f64.sqrt())]
+    #[case(Vector::new(-1.0, -2.0, -3.0), 14.0_f64.sqrt())]
+    fn vector_magnitude(#[case] vector: Vector, #[case] magnitude: f64) {
+        assert_eq!(vector.magnitude(), magnitude);
     }
 
     #[test]
@@ -181,10 +200,10 @@ mod tests {
         let vector2 = Vector::new(0.0, 4.0, 0.0);
         let vector3 = Vector::new(0.0, 0.0, 4.0);
         let vector4 = Vector::new(1.0, 2.0, 3.0);
-        let normalised1 = vector1.normalize();
-        let normalised2 = vector2.normalize();
-        let normalised3 = vector3.normalize();
-        let normalised4 = vector4.normalize();
+        let normalised1 = vector1.normalized();
+        let normalised2 = vector2.normalized();
+        let normalised3 = vector3.normalized();
+        let normalised4 = vector4.normalized();
         assert_eq!(normalised1, Vector::new(1.0, 0.0, 0.0));
         assert_eq!(normalised1.magnitude(), 1.0);
         assert_eq!(normalised2, Vector::new(0.0, 1.0, 0.0));
@@ -197,7 +216,7 @@ mod tests {
     #[test]
     fn magnitude_of_normalized_vector() {
         let vector = Vector::new(1.0, 2.0, 3.0);
-        assert!(vector.normalize().magnitude().close_enough(1.0));
+        assert!(vector.normalized().magnitude().close_enough(1.0));
     }
 
     #[test]

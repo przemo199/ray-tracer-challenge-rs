@@ -1,11 +1,10 @@
 use std::fmt::{Debug, Display};
 use std::sync::Arc;
+
 use crate::intersections::Intersections;
 use crate::material::Material;
-use crate::matrix::Matrix;
-use crate::point::Point;
+use crate::primitives::{Matrix, Point, Vector};
 use crate::ray::Ray;
-use crate::vector::Vector;
 
 pub trait Shape: Debug + Display + Send + Sync {
     fn normal_at(&self, point: Point) -> Vector {
@@ -13,7 +12,7 @@ pub trait Shape: Debug + Display + Send + Sync {
         let local_point = transform_inverse * point;
         let local_normal = self.local_normal_at(local_point);
         let world_normal = transform_inverse.transpose() * local_normal;
-        return world_normal.normalize();
+        return world_normal.normalized();
     }
 
     fn local_normal_at(&self, point: Point) -> Vector;
@@ -41,11 +40,12 @@ impl PartialEq for dyn Shape {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::color::Color;
-    use crate::sphere::Sphere;
+    use crate::primitives::Color;
+    use crate::shapes::Sphere;
 
-    // #[derive(Clone, Debug)]
+    use super::*;
+
+// #[derive(Clone, Debug)]
     // pub struct TestShape {
     //     pub transformation: Matrix,
     //     pub material: Material,

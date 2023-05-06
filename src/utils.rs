@@ -1,17 +1,32 @@
-use std::ops::Sub;
-use crate::color::Color;
 use crate::consts::EPSILON;
-use crate::sphere::Sphere;
-use crate::transformations::Transformations;
+use crate::primitives::Color;
+use crate::primitives::transformations;
+use crate::shapes::Sphere;
 
+/// Trait for imprecise comparison between floats
 pub trait CloseEnough {
+    const EPSILON: Self;
+
+    fn close_enough(&self, rhs: Self) -> bool;
+}
+
+impl CloseEnough for f32 {
+    const EPSILON: f32 = EPSILON as f32;
+
     #[inline(always)]
-    fn close_enough(&self, rhs: Self) -> bool where Self: Copy + Sub<Self, Output=f64> {
-        return (*self - rhs).abs() < EPSILON;
+    fn close_enough(&self, rhs: Self) -> bool {
+        return (*self - rhs).abs() < CloseEnough::EPSILON;
     }
 }
 
-impl CloseEnough for f64 {}
+impl CloseEnough for f64 {
+    const EPSILON: f64 = EPSILON;
+
+    #[inline(always)]
+    fn close_enough(&self, rhs: Self) -> bool {
+        return (*self - rhs).abs() < CloseEnough::EPSILON;
+    }
+}
 
 pub fn world_default_sphere_1() -> Sphere {
     let mut sphere = Sphere::default();
@@ -23,6 +38,6 @@ pub fn world_default_sphere_1() -> Sphere {
 
 pub fn world_default_sphere_2() -> Sphere {
     let mut sphere = Sphere::default();
-    sphere.transformation = Transformations::scaling(0.5, 0.5, 0.5);
+    sphere.transformation = transformations::scaling(0.5, 0.5, 0.5);
     return sphere;
 }

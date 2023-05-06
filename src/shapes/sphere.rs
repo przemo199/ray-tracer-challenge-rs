@@ -1,25 +1,24 @@
 use std::fmt::{Display, Formatter};
+use std::str::Bytes;
 use std::sync::Arc;
+
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
-use crate::matrix::Matrix;
-use crate::point::Point;
+use crate::primitives::{Point, Vector};
+use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
-use crate::shape::Shape;
-use crate::transformations::Transformations;
-use crate::vector::Vector;
+
+use super::Shape;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Sphere {
     pub material: Material,
-    pub transformation: Matrix<4>,
+    pub transformation: Transformation,
 }
 
 impl Sphere {
-    pub fn new() -> Sphere {
-        let material = Material::default();
-        let transformation = Transformations::identity();
+    pub fn new(material: Material, transformation: Transformation) -> Sphere {
         return Sphere { material, transformation };
     }
 
@@ -50,11 +49,11 @@ impl Shape for Sphere {
         self.material = material
     }
 
-    fn transformation(&self) -> Matrix<4> {
+    fn transformation(&self) -> Transformation {
         return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix<4>) {
+    fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
     }
 
@@ -69,17 +68,20 @@ impl Shape for Sphere {
             return intersections;
         }
         let discriminant_root = discriminant.sqrt();
-        let t_1 = (-b - discriminant_root) / (2.0 * a);
-        let t_2 = (-b + discriminant_root) / (2.0 * a);
-        intersections.add(Intersection::new(t_1, self.clone()));
-        intersections.add(Intersection::new(t_2, self));
+        let distance_1 = (-b - discriminant_root) / (2.0 * a);
+        let distance_2 = (-b + discriminant_root) / (2.0 * a);
+
+        intersections.add(Intersection::new(distance_1, self.clone()));
+        intersections.add(Intersection::new(distance_2, self));
         return intersections;
     }
 }
 
 impl Default for Sphere {
     fn default() -> Sphere {
-        return Sphere::new();
+        let material = Material::default();
+        let transformation = transformations::IDENTITY;
+        return Sphere { material, transformation };
     }
 }
 
@@ -94,19 +96,20 @@ impl Display for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::consts::PI;
+
+    use super::*;
 
     #[test]
     fn default_transformation() {
         let sphere = Sphere::default();
-        assert_eq!(sphere.transformation, Transformations::identity());
+        assert_eq!(sphere.transformation, transformations::IDENTITY);
     }
 
     #[test]
     fn changing_transformation() {
         let mut sphere = Sphere::default();
-        let transformation = Transformations::translation(2.0, 3.0, 4.0);
+        let transformation = transformations::translation(2.0, 3.0, 4.0);
         sphere.transformation = transformation;
         assert_eq!(sphere.transformation, transformation);
     }
@@ -131,13 +134,13 @@ mod tests {
     fn sphere_normal_is_normalized() {
         let sphere = Sphere::default();
         let normal = sphere.normal_at(Point::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
-        assert_eq!(normal, normal.normalize());
+        assert_eq!(normal, normal.normalized());
     }
 
     #[test]
     fn normal_on_translated_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation = Transformations::translation(0.0, 1.0, 0.0);
+        sphere.transformation = transformations::translation(0.0, 1.0, 0.0);
         let normal = sphere.normal_at(Point::new(0.0, 1.70711, -0.70711));
         assert_eq!(normal, Vector::new(0.0, 0.7071067811865475, -0.7071067811865476));
     }
@@ -145,8 +148,8 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation = Transformations::scaling(1.0, 0.5, 1.0) *
-            Transformations::rotation_z(PI / 5.0);
+        sphere.transformation = transformations::scaling(1.0, 0.5, 1.0) *
+            transformations::rotation_z(PI / 5.0);
         let normal = sphere.normal_at(Point::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
         assert_eq!(normal, Vector::new(0.0, 0.9701425001453319, -0.24253562503633294));
     }

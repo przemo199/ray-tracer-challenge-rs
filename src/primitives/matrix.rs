@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::mem;
 use std::ops::Mul;
+
 use crate::consts::EPSILON;
-use crate::point::Point;
-use crate::vector::Vector;
+use crate::primitives::{Point, Vector};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix<const SIDE_LENGTH: usize> {
@@ -11,22 +11,24 @@ pub struct Matrix<const SIDE_LENGTH: usize> {
 }
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
+    pub const EMPTY: Matrix<SIDE_LENGTH> = Matrix {
+        elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH]
+    };
+
+    pub const IDENTITY: Matrix<SIDE_LENGTH> = {
+        let mut result = Self::EMPTY;
+        let mut index = 0;
+        while index < SIDE_LENGTH {
+            let mut tmp_row = [0.0; SIDE_LENGTH];
+            tmp_row[index] = 1.0;
+            result.elements[index] = tmp_row;
+            index += 1;
+        }
+        result
+    };
+
     pub fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
         return Matrix { elements };
-    }
-
-    pub fn empty() -> Matrix<SIDE_LENGTH> {
-        return Matrix {
-            elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH]
-        }
-    }
-
-    pub fn identity() -> Matrix<SIDE_LENGTH> {
-        let mut result = Self::empty();
-        for index in 0..SIDE_LENGTH {
-            result.elements[index][index] = 1.0;
-        }
-        return result;
     }
 
     pub fn get_index(&self, row: usize, column: usize) -> f64 {
@@ -59,8 +61,7 @@ impl Matrix<2> {
 
     #[inline(always)]
     fn determinant(&self) -> f64 {
-        return self.elements[0][0] * self.elements[1][1]
-            - self.elements[0][1] * self.elements[1][0];
+        return self.elements[0][0] * self.elements[1][1] - self.elements[0][1] * self.elements[1][0];
     }
 
     pub fn minor(&self, row: usize, column: usize) -> f64 {
@@ -78,7 +79,7 @@ impl Matrix<2> {
 
     #[inline(always)]
     pub fn inverse(&self) -> Matrix<2> {
-        let mut result = Matrix::<2>::empty();
+        let mut result = Matrix::<2>::EMPTY;
         let determinant = self.determinant();
 
         for row in 0..2 {
@@ -95,7 +96,7 @@ impl Matrix<2> {
 impl Matrix<3> {
     #[inline(always)]
     fn submatrix(&self, row: usize, column: usize) -> Matrix<2> {
-        let mut result = Matrix::<2>::empty();
+        let mut result = Matrix::<2>::EMPTY;
 
         for row_index in 0..self.elements.len() {
             if row_index != row {
@@ -135,7 +136,7 @@ impl Matrix<3> {
 
     #[inline(always)]
     pub fn inverse(&self) -> Matrix<3> {
-        let mut result = Matrix::<3>::empty();
+        let mut result = Matrix::<3>::EMPTY;
         let determinant = self.determinant();
 
         for row in 0..3 {
@@ -152,7 +153,7 @@ impl Matrix<3> {
 impl Matrix<4> {
     #[inline(always)]
     fn submatrix(&self, row: usize, column: usize) -> Matrix<3> {
-        let mut result = Matrix::<3>::empty();
+        let mut result = Matrix::<3>::EMPTY;
 
         for row_index in 0..self.elements.len() {
             if row_index != row {
@@ -192,7 +193,7 @@ impl Matrix<4> {
 
     #[inline(always)]
     pub fn inverse(&self) -> Matrix<4> {
-        let mut result = Matrix::<4>::empty();
+        let mut result = Matrix::<4>::EMPTY;
         let determinant = self.determinant();
 
         for row in 0..4 {
@@ -201,14 +202,39 @@ impl Matrix<4> {
                 result.set_index(column, row, cofactor / determinant);
             }
         }
-
         return result;
+        // the following caching approach causes performance regression
+        // thread_local! {
+        //     static CACHE: RefCell<HashMap<Matrix<4>, Matrix<4>>> = RefCell::new(HashMap::with_capacity(1024));
+        // }
+        // return CACHE.with(|cache| {
+        //     let mut cache = cache.borrow_mut();
+        //     let cached = cache.get(self);
+        //     match cached {
+        //         Some(value) => {
+        //             return value.clone();
+        //         }
+        //         None => {
+        //             let mut result = Matrix::<4>::empty();
+        //             let determinant = self.determinant();
+        //
+        //             for row in 0..4 {
+        //                 for column in 0..4 {
+        //                     let cofactor = self.cofactor(row, column);
+        //                     result.set_index(column, row, cofactor / determinant);
+        //                 }
+        //             }
+        //             cache.insert(*self, result);
+        //             return result;
+        //         }
+        //     }
+        // });
     }
 }
 
 impl<const SIDE_LENGTH: usize> Default for Matrix<SIDE_LENGTH> {
     fn default() -> Matrix<SIDE_LENGTH> {
-        return Matrix::<SIDE_LENGTH>::identity();
+        return Matrix::IDENTITY;
     }
 }
 
@@ -233,11 +259,21 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     }
 }
 
+// impl<const SIDE_LENGTH: usize> Hash for Matrix<SIDE_LENGTH> {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         for row in self.elements {
+//             for value in row {
+//                 unsafe { mem::transmute::<f64, u64>(value).hash(state) };
+//             }
+//         }
+//     }
+// }
+
 impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
     type Output = Matrix<SIDE_LENGTH>;
 
     fn mul(self, rhs: Matrix<SIDE_LENGTH>) -> Self::Output {
-        let mut result = Matrix::<SIDE_LENGTH>::empty();
+        let mut result = Matrix::<SIDE_LENGTH>::EMPTY;
         for (row_index, row) in result.elements.iter_mut().enumerate() {
             for (column_index, value) in row.iter_mut().enumerate() {
                 let mut sum = 0.0;
@@ -282,6 +318,7 @@ impl Mul<Vector> for Matrix<4> {
             }
             result[index] = sum;
         }
+
         return Vector::new(result[0], result[1], result[2]);
     }
 }
@@ -292,69 +329,69 @@ mod tests {
 
     #[test]
     fn matrix_indices() {
-        let matrix2 = Matrix::<2>::new([
+        let matrix_2 = Matrix::<2>::new([
             [1.0, 2.0],
             [5.5, 6.5]
         ]);
-        assert_eq!(matrix2.get_index(0, 0), 1.0);
-        assert_eq!(matrix2.get_index(0, 1), 2.0);
-        assert_eq!(matrix2.get_index(1, 0), 5.5);
-        assert_eq!(matrix2.get_index(1, 1), 6.5);
+        assert_eq!(matrix_2.get_index(0, 0), 1.0);
+        assert_eq!(matrix_2.get_index(0, 1), 2.0);
+        assert_eq!(matrix_2.get_index(1, 0), 5.5);
+        assert_eq!(matrix_2.get_index(1, 1), 6.5);
 
-        let matrix3 = Matrix::<3>::new([
+        let matrix_3 = Matrix::<3>::new([
             [1.0, 2.0, 3.0],
             [5.5, 6.5, 7.5],
             [9.0, 10.0, 11.0]
         ]);
-        assert_eq!(matrix3.get_index(0, 0), 1.0);
-        assert_eq!(matrix3.get_index(0, 1), 2.0);
-        assert_eq!(matrix3.get_index(1, 0), 5.5);
-        assert_eq!(matrix3.get_index(1, 1), 6.5);
-        assert_eq!(matrix3.get_index(2, 2), 11.0);
+        assert_eq!(matrix_3.get_index(0, 0), 1.0);
+        assert_eq!(matrix_3.get_index(0, 1), 2.0);
+        assert_eq!(matrix_3.get_index(1, 0), 5.5);
+        assert_eq!(matrix_3.get_index(1, 1), 6.5);
+        assert_eq!(matrix_3.get_index(2, 2), 11.0);
 
-        let matrix4 = Matrix::<4>::new([
+        let matrix_4 = Matrix::<4>::new([
             [1.0, 2.0, 3.0, 4.0],
             [5.5, 6.5, 7.5, 8.5],
             [9.0, 10.0, 11.0, 12.0],
             [13.5, 14.5, 15.5, 16.5]
         ]);
-        assert_eq!(matrix4.get_index(0, 0), 1.0);
-        assert_eq!(matrix4.get_index(0, 3), 4.0);
-        assert_eq!(matrix4.get_index(1, 0), 5.5);
-        assert_eq!(matrix4.get_index(1, 2), 7.5);
-        assert_eq!(matrix4.get_index(2, 2), 11.0);
-        assert_eq!(matrix4.get_index(3, 0), 13.5);
-        assert_eq!(matrix4.get_index(3, 2), 15.5);
+        assert_eq!(matrix_4.get_index(0, 0), 1.0);
+        assert_eq!(matrix_4.get_index(0, 3), 4.0);
+        assert_eq!(matrix_4.get_index(1, 0), 5.5);
+        assert_eq!(matrix_4.get_index(1, 2), 7.5);
+        assert_eq!(matrix_4.get_index(2, 2), 11.0);
+        assert_eq!(matrix_4.get_index(3, 0), 13.5);
+        assert_eq!(matrix_4.get_index(3, 2), 15.5);
     }
 
     #[test]
     fn matrix_comparison() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix_1 = Matrix::<4>::new([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0]
         ]);
-        let matrix2 = matrix1;
-        let matrix3 = Matrix::<4>::new([
+        let matrix_2 = matrix_1;
+        let matrix_3 = Matrix::<4>::new([
             [2.0, 3.0, 4.0, 5.0],
             [6.0, 7.0, 8.0, 9.0],
             [8.0, 7.0, 6.0, 5.0],
             [4.0, 3.0, 2.0, 1.0]
         ]);
-        assert_eq!(matrix1, matrix2);
-        assert_ne!(matrix2, matrix3);
+        assert_eq!(matrix_1, matrix_2);
+        assert_ne!(matrix_2, matrix_3);
     }
 
     #[test]
     fn matrix_multiplication_by_matrix() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix_1 = Matrix::<4>::new([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0]
         ]);
-        let matrix2 = Matrix::<4>::new([
+        let matrix_2 = Matrix::<4>::new([
             [-2.0, 1.0, 2.0, 3.0],
             [3.0, 2.0, 1.0, -1.0],
             [4.0, 3.0, 6.0, 5.0],
@@ -366,7 +403,7 @@ mod tests {
             [40.0, 58.0, 110.0, 102.0],
             [16.0, 26.0, 46.0, 42.0]
         ]);
-        assert_eq!(matrix1 * matrix2, result_matrix);
+        assert_eq!(matrix_1 * matrix_2, result_matrix);
     }
 
     #[test]
@@ -383,68 +420,68 @@ mod tests {
 
     #[test]
     fn identity_matrix() {
-        let matrix2 = Matrix::<2>::new([
+        let matrix_2 = Matrix::<2>::new([
             [0.0, 1.0],
             [1.0, 2.0]
         ]);
-        let matrix3 = Matrix::<3>::new([
+        let matrix_3 = Matrix::<3>::new([
             [0.0, 1.0, 2.0],
             [1.0, 2.0, 4.0],
             [2.0, 4.0, 8.0]
         ]);
-        let matrix4 = Matrix::<4>::new([
+        let matrix_4 = Matrix::<4>::new([
             [0.0, 1.0, 2.0, 4.0],
             [1.0, 2.0, 4.0, 8.0],
             [2.0, 4.0, 8.0, 16.0],
             [4.0, 8.0, 16.0, 32.0]
         ]);
-        assert_eq!((matrix2 * Matrix::<2>::identity()), matrix2);
-        assert_eq!((matrix3 * Matrix::<3>::identity()), matrix3);
-        assert_eq!((matrix4 * Matrix::<4>::identity()), matrix4);
+        assert_eq!((matrix_2 * Matrix::<2>::IDENTITY), matrix_2);
+        assert_eq!((matrix_3 * Matrix::<3>::IDENTITY), matrix_3);
+        assert_eq!((matrix_4 * Matrix::<4>::IDENTITY), matrix_4);
     }
 
     #[test]
     fn transpose_matrix() {
-        let matrix2 = Matrix::<2>::new([
+        let matrix_2 = Matrix::<2>::new([
             [1.0, 2.0],
             [5.5, 6.5]
         ]);
-        let matrix2_transposed = Matrix::<2>::new([
+        let matrix_2_transposed = Matrix::<2>::new([
             [1.0, 5.5],
             [2.0, 6.5]
         ]);
-        let matrix3 = Matrix::<3>::new([
+        let matrix_3 = Matrix::<3>::new([
             [0.0, 9.0, 3.0],
             [9.0, 8.0, 0.0],
             [1.0, 8.0, 5.0]
         ]);
-        let matrix3_transposed = Matrix::<3>::new([
+        let matrix_3_transposed = Matrix::<3>::new([
             [0.0, 9.0, 1.0],
             [9.0, 8.0, 8.0],
             [3.0, 0.0, 5.0]
         ]);
-        let matrix4 = Matrix::<4>::new([
+        let matrix_4 = Matrix::<4>::new([
             [0.0, 9.0, 3.0, 0.0],
             [9.0, 8.0, 0.0, 8.0],
             [1.0, 8.0, 5.0, 3.0],
             [0.0, 0.0, 5.0, 8.0]
         ]);
-        let matrix4_transposed = Matrix::<4>::new([
+        let matrix_4_transposed = Matrix::<4>::new([
             [0.0, 9.0, 1.0, 0.0],
             [9.0, 8.0, 8.0, 0.0],
             [3.0, 0.0, 5.0, 5.0],
             [0.0, 8.0, 3.0, 8.0]
         ]);
-        assert_eq!(matrix2.transpose(), matrix2_transposed);
-        assert_eq!(matrix3.transpose(), matrix3_transposed);
-        assert_eq!(matrix4.transpose(), matrix4_transposed);
+        assert_eq!(matrix_2.transpose(), matrix_2_transposed);
+        assert_eq!(matrix_3.transpose(), matrix_3_transposed);
+        assert_eq!(matrix_4.transpose(), matrix_4_transposed);
     }
 
     #[test]
     fn transpose_identity_matrix() {
-        assert_eq!(Matrix::<2>::identity().transpose(), Matrix::<2>::identity());
-        assert_eq!(Matrix::<3>::identity().transpose(), Matrix::<3>::identity());
-        assert_eq!(Matrix::<4>::identity().transpose(), Matrix::<4>::identity());
+        assert_eq!(Matrix::<2>::IDENTITY.transpose(), Matrix::<2>::IDENTITY);
+        assert_eq!(Matrix::<3>::IDENTITY.transpose(), Matrix::<3>::IDENTITY);
+        assert_eq!(Matrix::<4>::IDENTITY.transpose(), Matrix::<4>::IDENTITY);
     }
 
     #[test]
@@ -458,126 +495,126 @@ mod tests {
 
     #[test]
     fn matrix_determinant_3x3() {
-        let matrix1 = Matrix::<3>::new([
+        let matrix = Matrix::<3>::new([
             [1.0, 2.0, 6.0],
             [-5.0, 8.0, -4.0],
             [2.0, 6.0, 4.0]
         ]);
-        assert_eq!(matrix1.cofactor(0, 0), 56.0);
-        assert_eq!(matrix1.cofactor(0, 1), 12.0);
-        assert_eq!(matrix1.cofactor(0, 2), -46.0);
-        assert_eq!(matrix1.determinant(), -196.0);
+        assert_eq!(matrix.cofactor(0, 0), 56.0);
+        assert_eq!(matrix.cofactor(0, 1), 12.0);
+        assert_eq!(matrix.cofactor(0, 2), -46.0);
+        assert_eq!(matrix.determinant(), -196.0);
     }
 
     #[test]
     fn matrix_determinant_4x4() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix = Matrix::<4>::new([
             [-2.0, -8.0, 3.0, 5.0],
             [-3.0, 1.0, 7.0, 3.0],
             [1.0, 2.0, -9.0, 6.0],
             [-6.0, 7.0, 7.0, -9.0]
         ]);
-        assert_eq!(matrix1.cofactor(0, 0), 690.0);
-        assert_eq!(matrix1.cofactor(0, 1), 447.0);
-        assert_eq!(matrix1.cofactor(0, 2), 210.0);
-        assert_eq!(matrix1.cofactor(0, 3), 51.0);
-        assert_eq!(matrix1.determinant(), -4071.0);
+        assert_eq!(matrix.cofactor(0, 0), 690.0);
+        assert_eq!(matrix.cofactor(0, 1), 447.0);
+        assert_eq!(matrix.cofactor(0, 2), 210.0);
+        assert_eq!(matrix.cofactor(0, 3), 51.0);
+        assert_eq!(matrix.determinant(), -4071.0);
     }
 
     #[test]
     fn submatrix_3x3() {
-        let matrix1 = Matrix::<3>::new([
+        let matrix_1 = Matrix::<3>::new([
             [1.0, 5.0, 0.],
             [-3.0, 2.0, 7.0],
             [0.0, 6.0, -3.0]
         ]);
-        let matrix2 = Matrix::<2>::new([
+        let matrix_2 = Matrix::<2>::new([
             [-3.0, 2.0],
             [0.0, 6.0],
         ]);
-        assert_eq!(matrix1.submatrix(0, 2), matrix2);
+        assert_eq!(matrix_1.submatrix(0, 2), matrix_2);
     }
 
     #[test]
     fn submatrix_4x4() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix_1 = Matrix::<4>::new([
             [-6.0, 1.0, 1.0, 6.0],
             [-8.0, 5.0, 8.0, 6.0],
             [-1.0, 0.0, 8.0, 2.],
             [-7.0, 1.0, -1.0, 1.0]
         ]);
-        let matrix2 = Matrix::<3>::new([
+        let matrix_2 = Matrix::<3>::new([
             [-6.0, 1.0, 6.0],
             [-8.0, 8.0, 6.0],
             [-7.0, -1.0, 1.0]
         ]);
-        assert_eq!(matrix1.submatrix(2, 1), matrix2);
+        assert_eq!(matrix_1.submatrix(2, 1), matrix_2);
     }
 
     #[test]
     fn matrix_minor_and_cofactor() {
-        let matrix1 = Matrix::<3>::new([
+        let matrix = Matrix::<3>::new([
             [3.0, 5.0, 0.0],
             [2.0, -1.0, -7.0],
             [6.0, -1.0, 5.0]
         ]);
-        assert_eq!(matrix1.minor(0, 0), -12.0);
-        assert_eq!(matrix1.cofactor(0, 0), -12.0);
-        assert_eq!(matrix1.minor(1, 0), 25.0);
-        assert_eq!(matrix1.cofactor(1, 0), -25.0);
+        assert_eq!(matrix.minor(0, 0), -12.0);
+        assert_eq!(matrix.cofactor(0, 0), -12.0);
+        assert_eq!(matrix.minor(1, 0), 25.0);
+        assert_eq!(matrix.cofactor(1, 0), -25.0);
     }
 
     #[test]
     fn matrix_inverse() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix_1 = Matrix::<4>::new([
             [-5.0, 2.0, 6.0, -8.0],
             [1.0, -5.0, 1.0, 8.0],
             [7.0, 7.0, -6.0, -7.0],
             [1.0, -3.0, 7.0, 4.0]
         ]);
-        let matrix2 = Matrix::<4>::new([
+        let matrix_2 = Matrix::<4>::new([
             [0.21804511278195488, 0.45112781954887216, 0.24060150375939848, -0.045112781954887216],
             [-0.8082706766917294, -1.4567669172932332, -0.44360902255639095, 0.5206766917293233],
             [-0.07894736842105263, -0.2236842105263158, -0.05263157894736842, 0.19736842105263158],
             [-0.5225563909774437, -0.8139097744360902, -0.3007518796992481, 0.30639097744360905]
         ]);
-        let matrix3 = Matrix::<4>::new([
+        let matrix_3 = Matrix::<4>::new([
             [9.0, 3.0, 0.0, 9.0],
             [-5.0, -2.0, 6.0, -3.0],
             [-4.0, 9.0, 6.0, 4.0],
             [-7.0, 6.0, 6.0, 2.0]
         ]);
-        let matrix4 = Matrix::<4>::new([
+        let matrix_4 = Matrix::<4>::new([
             [-0.004901960784313725, 0.10294117647058823, 0.27941176470588236, -0.38235294117647056],
             [-0.09313725490196079, -0.04411764705882353, 0.3088235294117647, -0.2647058823529412],
             [0.03839869281045752, 0.19362745098039216, 0.14460784313725492, -0.1715686274509804],
             [0.14705882352941177, -0.08823529411764706, -0.38235294117647056, 0.47058823529411764]
         ]);
-        let matrix5 = matrix1.inverse();
-        assert_eq!(matrix1.determinant(), 532.0);
-        assert_eq!(matrix1.cofactor(2, 3), -160.0);
-        assert_eq!(matrix5.get_index(3, 2), -160.0 / 532.0);
-        assert_eq!(matrix1.cofactor(3, 2), 105.0);
-        assert_eq!(matrix5.get_index(2, 3), 105.0 / 532.0);
-        assert_eq!(matrix5, matrix2);
-        assert_eq!(matrix3.inverse(), matrix4);
+        let matrix_5 = matrix_1.inverse();
+        assert_eq!(matrix_1.determinant(), 532.0);
+        assert_eq!(matrix_1.cofactor(2, 3), -160.0);
+        assert_eq!(matrix_5.get_index(3, 2), -160.0 / 532.0);
+        assert_eq!(matrix_1.cofactor(3, 2), 105.0);
+        assert_eq!(matrix_5.get_index(2, 3), 105.0 / 532.0);
+        assert_eq!(matrix_5, matrix_2);
+        assert_eq!(matrix_3.inverse(), matrix_4);
     }
 
     #[test]
     fn matrix_product_mul_by_inverse() {
-        let matrix1 = Matrix::<4>::new([
+        let matrix_1 = Matrix::<4>::new([
             [3.0, -9.0, 7.0, 3.0],
             [3.0, -8.0, 2.0, -9.0],
             [-4.0, 4.0, 4.0, 1.0],
             [-6.0, 5.0, -1.0, 1.0]
         ]);
-        let matrix2 = Matrix::<4>::new([
+        let matrix_2 = Matrix::<4>::new([
             [8.0, 2.0, 2.0, 2.0],
             [3.0, -1.0, 7.0, 0.0],
             [7.0, 0.0, 5.0, 4.0],
             [6.0, -2.0, 0.0, 5.0]
         ]);
-        let matrix3 = matrix1 * matrix2;
-        assert_eq!(matrix3 * matrix2.inverse(), matrix1);
+        let matrix_3 = matrix_1 * matrix_2;
+        assert_eq!(matrix_3 * matrix_2.inverse(), matrix_1);
     }
 }

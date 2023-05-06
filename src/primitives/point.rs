@@ -1,7 +1,10 @@
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use crate::utils::CloseEnough;
-use crate::vector::Vector;
 
+use crate::primitives::Vector;
+use crate::utils::CloseEnough;
+
+/// Struct representing point in three dimensional space
 #[derive(Clone, Copy, Debug)]
 pub struct Point {
     pub x: f64,
@@ -10,6 +13,16 @@ pub struct Point {
 }
 
 impl Point {
+    /// Creates new instance of struct [Point]
+    /// # Examples
+    /// ```
+    ///     use raytracer::primitives::Point;
+    ///     let point = Point::new(1.0, 0.5, 0.0);
+    ///
+    ///     assert_eq!(point.x, 1.0);
+    ///     assert_eq!(point.y, 0.5);
+    ///     assert_eq!(point.z, 0.0);
+    /// ```
     pub fn new(x: f64, y: f64, z: f64) -> Point {
         return Point { x, y, z };
     }
@@ -30,6 +43,16 @@ impl Point {
 impl Default for Point {
     fn default() -> Self {
         return Point::new(0.0, 0.0, 0.0)
+    }
+}
+
+impl Display for Point {
+    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        return formatter.debug_struct("Point")
+            .field("x", &self.x)
+            .field("y", &self.y)
+            .field("z", &self.z)
+            .finish();
     }
 }
 
@@ -91,8 +114,9 @@ impl Neg for Point {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::consts::EPSILON;
+
+    use super::*;
 
     #[test]
     fn new_point() {
@@ -104,47 +128,45 @@ mod tests {
 
     #[test]
     fn eq_point() {
-        let point1 = Point::new(4.0, -4.0, 3.0);
-        let point2 = point1;
-        let point3 = Point::new(4.1 + EPSILON, -4.0, 3.0);
-        let point4 = Point::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
-        assert_eq!(point1, point2);
-        assert_ne!(point2, point3);
-        assert_eq!(point2, point4);
+        let point_1 = Point::new(4.0, -4.0, 3.0);
+        let point_2 = point_1;
+        let point_3 = Point::new(4.1 + EPSILON, -4.0, 3.0);
+        let point_4 = Point::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
+        assert_eq!(point_1, point_2);
+        assert_ne!(point_2, point_3);
+        assert_eq!(point_2, point_4);
     }
 
     #[test]
     fn add_point_and_vector() {
-        let point1 = Point::new(3.0, -2.0, 5.0);
+        let point = Point::new(3.0, -2.0, 5.0);
         let vector = Vector::new(-2.0, 3.0, 1.0);
-        let point2 = point1 + vector;
-        assert_eq!(point2, Point::new(1.0, 1.0, 6.0));
+        assert_eq!(point + vector, Point::new(1.0, 1.0, 6.0));
     }
 
     #[test]
     fn sub_point() {
-        let point1 = Point::new(3.0, 2.0, 1.0);
-        let point2 = Point::new(5.0, 6.0, 7.0);
-        let vector = point1 - point2;
-        assert_eq!(vector, Vector::new(-2.0, -4.0, -6.0));
+        let point_1 = Point::new(3.0, 2.0, 1.0);
+        let point_2 = Point::new(5.0, 6.0, 7.0);
+        assert_eq!(point_1 - point_2, Vector::new(-2.0, -4.0, -6.0));
     }
 
     #[test]
     fn neg_point() {
-        let point1 = Point::new(1.0, -2.0, 3.0);
-        let point2 = Point::new(4.0, -4.0, 3.0);
-        let point3 = Point::new(4.0, -4.0, 3.0);
-        assert_eq!(-point1, Point::new(-1.0, 2.0, -3.0));
-        assert_eq!(-point2, Point::new(-4.0, 4.0, -3.0));
-        assert_eq!(-point3, Point::new(-4.0, 4.0, -3.0));
+        let point_1 = Point::new(1.0, -2.0, 3.0);
+        let point_2 = Point::new(4.0, -4.0, 3.0);
+        let point_3 = Point::new(4.0, -4.0, 3.0);
+        assert_eq!(-point_1, Point::new(-1.0, 2.0, -3.0));
+        assert_eq!(-point_2, Point::new(-4.0, 4.0, -3.0));
+        assert_eq!(-point_3, Point::new(-4.0, 4.0, -3.0));
     }
 
     #[test]
     fn mul_point() {
-        let point1 = Point::new(1.0, -2.0, 3.0) * 3.5;
-        let point2 = Point::new(1.0, -2.0, 3.0) * 0.5;
-        assert_eq!(point1, Point::new(3.5, -7.0, 10.5));
-        assert_eq!(point2, Point::new(0.5, -1.0, 1.5));
+        let point_1 = Point::new(1.0, -2.0, 3.0) * 3.5;
+        let point_2 = Point::new(1.0, -2.0, 3.0) * 0.5;
+        assert_eq!(point_1, Point::new(3.5, -7.0, 10.5));
+        assert_eq!(point_2, Point::new(0.5, -1.0, 1.5));
     }
 
     #[test]

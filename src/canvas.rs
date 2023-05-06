@@ -1,9 +1,11 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
+
 use image::codecs::png::*;
 use image::ImageEncoder;
-use crate::color::Color;
+
+use crate::primitives::Color;
 
 pub struct Canvas {
     pub width: u32,
@@ -12,9 +14,10 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    /// Creates new instance of struct Canvas
     pub fn new(width: u32, height: u32) -> Canvas {
         let pixel_count = (width * height) as usize;
-        let pixels = vec![Color::black(); pixel_count];
+        let pixels = vec![Color::BLACK; pixel_count];
         return Canvas {
             width,
             height,
@@ -49,7 +52,7 @@ impl Canvas {
         for line in self.pixels.chunks(self.width as usize) {
             let mut line_content: Vec<String> = Vec::new();
             for pixel in line {
-                for mut color_value in pixel.get_colors() {
+                for mut color_value in pixel.get_channels() {
                     if color_value < 0.0 {
                         color_value = 0.0;
                     }
@@ -86,7 +89,7 @@ impl Canvas {
         self.prepare_file(&file_name);
 
         for pixel in self.pixels.iter() {
-            for color in pixel.get_colors() {
+            for color in pixel.get_channels() {
                 buffer.push((color * 255.0).round() as u8);
             }
         }
@@ -107,7 +110,7 @@ mod tests {
         assert_eq!(canvas.width, 10);
         assert_eq!(canvas.height, 20);
         assert_eq!(canvas.pixels.len(), 200);
-        let black = Color::black();
+        let black = Color::BLACK;
         for pixel in canvas.pixels.iter() {
             assert_eq!(pixel, &black);
         }
@@ -116,7 +119,7 @@ mod tests {
     #[test]
     fn set_pixel() {
         let mut canvas = Canvas::new(10, 20);
-        canvas.set_pixel(2, 3, Color::red());
+        canvas.set_pixel(2, 3, Color::RED);
         assert_eq!(canvas.get_pixel(2, 3), &Color::new(1.0, 0.0, 0.0));
     }
 
@@ -132,12 +135,12 @@ mod tests {
     #[test]
     fn to_ppm() {
         let mut canvas = Canvas::new(5, 3);
-        let color1 = Color::new(1.5, 0.0, 0.0);
-        let color2 = Color::new(0.0, 0.5, 0.0);
-        let color3 = Color::new(-0.5, 0.0, 1.0);
-        canvas.set_pixel(0, 0, color1);
-        canvas.set_pixel(2, 1, color2);
-        canvas.set_pixel(4, 2, color3);
+        let color_1 = Color::new(1.5, 0.0, 0.0);
+        let color_2 = Color::new(0.0, 0.5, 0.0);
+        let color_3 = Color::new(-0.5, 0.0, 1.0);
+        canvas.set_pixel(0, 0, color_1);
+        canvas.set_pixel(2, 1, color_2);
+        canvas.set_pixel(4, 2, color_3);
         let ppm: Vec<String> = canvas.to_ppm().lines().map(|x| x.to_string()).collect();
         assert_eq!(ppm[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
         assert_eq!(ppm[4], "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0");

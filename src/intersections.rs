@@ -1,4 +1,5 @@
 use std::ops::Index;
+
 use crate::intersection::Intersection;
 
 #[derive(Clone, Debug)]
@@ -27,9 +28,9 @@ impl Intersections {
         let mut maybe_hit = None;
         let mut hit_t = f64::MAX;
         for intersection in self.intersections.iter() {
-            if intersection.t < hit_t && intersection.t >= 0.0 {
+            if intersection.distance < hit_t && intersection.distance >= 0.0 {
                 maybe_hit = Some(intersection);
-                hit_t = intersection.t;
+                hit_t = intersection.distance;
             }
         }
         return maybe_hit;
@@ -46,10 +47,11 @@ impl Index<usize> for Intersections {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::sync::Arc;
-    use crate::shape::Shape;
-    use crate::sphere::Sphere;
+
+    use crate::shapes::{Shape, Sphere};
+
+    use super::*;
 
     #[test]
     fn hit_when_all_intersections_positive() {

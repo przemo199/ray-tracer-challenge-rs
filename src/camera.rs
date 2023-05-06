@@ -1,9 +1,11 @@
+use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
+use rayon::iter::ParallelIterator;
 use rayon::prelude::*;
+
 use crate::canvas::Canvas;
-use crate::matrix::Matrix;
-use crate::point::Point;
+use crate::primitives::{Transformation, transformations};
+use crate::primitives::Point;
 use crate::ray::Ray;
-use crate::transformations::Transformations;
 use crate::utils::CloseEnough;
 use crate::world::World;
 
@@ -15,10 +17,12 @@ pub struct Camera {
     pub half_width: f64,
     pub half_height: f64,
     pub pixel_size: f64,
-    pub transformation: Matrix<4>,
+    pub transformation: Transformation,
 }
 
 impl Camera {
+    const PROGRESS_TEMPLATE: &'static str = "[{elapsed_precise}] {bar:50.white/gray}{percent}% {human_pos}/{human_len}";
+
     pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: f64) -> Camera {
         let half_view = (field_of_view / 2.0).tan();
         let aspect = horizontal_size as f64 / vertical_size as f64;
@@ -39,7 +43,7 @@ impl Camera {
             half_width,
             half_height,
             pixel_size,
-            transformation: Transformations::identity(),
+            transformation: transformations::IDENTITY,
         };
     }
 
@@ -58,13 +62,15 @@ impl Camera {
         // (remember that the canvas is at z = -1)
         let pixel = self.transformation.inverse() * Point::new(world_x, world_y, -1.0);
         let origin = self.transformation.inverse() * Point::new(0.0, 0.0, 0.0);
-        let direction = (pixel - origin).normalize();
+        let direction = (pixel - origin).normalized();
         return Ray::new(origin, direction);
     }
 
     pub fn render(&self, world: &World) -> Canvas {
+        assert!(!world.lights.is_empty());
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        canvas.pixels.iter_mut().enumerate().for_each(|(index, pixel)| {
+        let style = ProgressStyle::with_template(Camera::PROGRESS_TEMPLATE).unwrap();
+        canvas.pixels.iter_mut().progress_with_style(style).enumerate().for_each(|(index, pixel)| {
             let x: u32 = index as u32 % canvas.width;
             let y: u32 = index as u32 / canvas.width;
             let ray = self.ray_for_pixel(x, y);
@@ -75,7 +81,8 @@ impl Camera {
 
     pub fn render_parallel(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
+        let style = ProgressStyle::with_template(Camera::PROGRESS_TEMPLATE).unwrap();
+        canvas.pixels.par_iter_mut().progress_with_style(style).enumerate().for_each(|(index, pixel)| {
             let x: u32 = index as u32 % canvas.width;
             let y: u32 = index as u32 / canvas.width;
             let ray = self.ray_for_pixel(x, y);
@@ -99,10 +106,10 @@ impl PartialEq for Camera {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::color::Color;
     use crate::consts::PI;
-    use crate::vector::Vector;
+    use crate::primitives::{Color, Vector};
+
+    use super::*;
 
     #[test]
     fn constructing_camera() {
@@ -113,7 +120,7 @@ mod tests {
         assert_eq!(camera.horizontal_size, horizontal_size);
         assert_eq!(camera.vertical_size, vertical_size);
         assert_eq!(camera.field_of_view, field_of_view);
-        assert_eq!(camera.transformation, Transformations::identity());
+        assert_eq!(camera.transformation, transformations::IDENTITY);
     }
 
     #[test]
@@ -147,7 +154,7 @@ mod tests {
     #[test]
     fn ray_through_canvas_with_transformed_camera() {
         let mut camera = Camera::new(201, 101, PI / 2.0);
-        camera.transformation = Transformations::rotation_y(PI / 4.0) * Transformations::translation(0.0, -2.0, 5.0);
+        camera.transformation = transformations::rotation_y(PI / 4.0) * transformations::translation(0.0, -2.0, 5.0);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Point::new(0.0, 2.0, -5.0));
         assert_eq!(ray.direction, Vector::new(2.0_f64.sqrt() / 2.0, 0.0, -(2.0_f64.sqrt()) / 2.0));
@@ -160,7 +167,7 @@ mod tests {
         let from = Point::new(0.0, 0.0, -5.0);
         let to = Point::new(0.0, 0.0, 0.0);
         let up = Vector::new(0.0, 1.0, 0.0);
-        camera.transformation = Transformations::view_transform(from, to, up);
+        camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
     }
@@ -172,7 +179,7 @@ mod tests {
         let from = Point::new(0.0, 0.0, -5.0);
         let to = Point::new(0.0, 0.0, 0.0);
         let up = Vector::new(0.0, 1.0, 0.0);
-        camera.transformation = Transformations::view_transform(from, to, up);
+        camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render_parallel(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
     }

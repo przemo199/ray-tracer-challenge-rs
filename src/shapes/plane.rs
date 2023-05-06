@@ -1,19 +1,20 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
+
 use crate::consts::EPSILON;
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
-use crate::matrix::Matrix;
-use crate::point::Point;
+use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
-use crate::shape::Shape;
-use crate::vector::Vector;
+
+use super::Shape;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
     pub material: Material,
-    pub transformation: Matrix<4>,
+    pub transformation: Transformation,
     pub normal: Vector,
 }
 
@@ -30,7 +31,7 @@ impl Plane {
 
 impl Default for Plane {
     fn default() -> Plane {
-        return Plane::new(Material::default(), Matrix::identity());
+        return Plane::new(Material::default(), transformations::IDENTITY);
     }
 }
 
@@ -47,11 +48,11 @@ impl Shape for Plane {
         self.material = material;
     }
 
-    fn transformation(&self) -> Matrix<4> {
+    fn transformation(&self) -> Transformation {
         return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Matrix<4>) {
+    fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
     }
 
@@ -60,9 +61,9 @@ impl Shape for Plane {
             return Intersections::new();
         }
 
-        let t = -ray.origin.y / ray.direction.y;
+        let distance = -ray.origin.y / ray.direction.y;
         let mut result = Intersections::new();
-        result.add(Intersection::new(t, self));
+        result.add(Intersection::new(distance, self));
         return result;
     }
 }
@@ -109,7 +110,7 @@ mod tests {
         let ray = Ray::new(Point::new(0.0, 1.0, 0.0), Vector::new(0.0, -1.0, 0.0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
-        assert_eq!(intersections[0].t, 1.0);
+        assert_eq!(intersections[0].distance, 1.0);
         assert_eq!(&intersections[0].object, &arc_plane);
     }
 
@@ -120,7 +121,7 @@ mod tests {
         let ray = Ray::new(Point::new(0.0, -1.0, 0.0), Vector::new(0.0, 1.0, 0.0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
-        assert_eq!(intersections[0].t, 1.0);
+        assert_eq!(intersections[0].distance, 1.0);
         assert_eq!(&intersections[0].object, &arc_plane);
     }
 }

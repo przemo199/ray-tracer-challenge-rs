@@ -1,12 +1,12 @@
 use std::sync::Arc;
+
 use crate::consts::EPSILON;
-use crate::point::Point;
-use crate::shape::Shape;
-use crate::vector::Vector;
+use crate::primitives::{Point, Vector};
+use crate::shapes::Shape;
 
 #[derive(Clone, Debug)]
 pub struct ComputedHit {
-    pub t: f64,
+    pub distance: f64,
     pub object: Arc<dyn Shape>,
     pub point: Point,
     pub over_point: Point,
@@ -21,7 +21,7 @@ pub struct ComputedHit {
 
 impl ComputedHit {
     pub fn new(
-        t: f64,
+        distance: f64,
         object: Arc<dyn Shape>,
         point: Point,
         camera_vector: Vector,
@@ -29,11 +29,12 @@ impl ComputedHit {
         reflection_vector: Vector,
         is_inside: bool,
         n1: f64,
-        n2: f64) -> ComputedHit {
+        n2: f64
+    ) -> ComputedHit {
         let over_point = point + normal_vector * EPSILON;
         let under_point = point - normal_vector * EPSILON;
         return ComputedHit {
-            t,
+            distance,
             object,
             point,
             over_point,
@@ -48,31 +49,32 @@ impl ComputedHit {
     }
 
     pub fn schlick(&self) -> f64 {
-        let mut camera_dot_normal = self.camera_vector.dot(&self.normal_vector);
+        let mut cos = self.camera_vector.dot(&self.normal_vector);
 
         if self.n1 > self.n2 {
             let n = self.n1 / self.n2;
-            let sin2_t = n * n * (1.0 - camera_dot_normal * camera_dot_normal);
+            let sin2_t = n * n * (1.0 - cos * cos);
 
             if sin2_t > 1.0 {
                 return 1.0;
             }
 
-            camera_dot_normal = (1.0 - sin2_t).sqrt();
+            cos = (1.0 - sin2_t).sqrt();
         }
 
         let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powi(2);
-        return r0 + (1.0 - r0) * (1.0 - camera_dot_normal).powf(5.0);
+        return r0 + (1.0 - r0) * (1.0 - cos).powf(5.0);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::intersection::Intersection;
     use crate::intersections::Intersections;
     use crate::ray::Ray;
-    use crate::sphere::Sphere;
+    use crate::shapes::Sphere;
+
+    use super::*;
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
