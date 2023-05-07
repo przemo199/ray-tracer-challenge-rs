@@ -20,9 +20,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
     - name: Run tests
       uses: actions-rs/cargo@v1
       with:
