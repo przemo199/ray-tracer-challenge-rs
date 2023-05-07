@@ -120,7 +120,7 @@ mod tests {
     fn set_pixel() {
         let mut canvas = Canvas::new(10, 20);
         canvas.set_pixel(2, 3, Color::RED);
-        assert_eq!(canvas.get_pixel(2, 3), &Color::new(1.0, 0.0, 0.0));
+        assert_eq!(canvas.get_pixel(2, 3), &Color::new(1, 0, 0));
     }
 
     #[test]
@@ -135,9 +135,9 @@ mod tests {
     #[test]
     fn to_ppm() {
         let mut canvas = Canvas::new(5, 3);
-        let color_1 = Color::new(1.5, 0.0, 0.0);
-        let color_2 = Color::new(0.0, 0.5, 0.0);
-        let color_3 = Color::new(-0.5, 0.0, 1.0);
+        let color_1 = Color::new(1.5, 0, 0);
+        let color_2 = Color::new(0, 0.5, 0);
+        let color_3 = Color::new(-0.5, 0, 1);
         canvas.set_pixel(0, 0, color_1);
         canvas.set_pixel(2, 1, color_2);
         canvas.set_pixel(4, 2, color_3);

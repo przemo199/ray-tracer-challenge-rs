@@ -49,9 +49,9 @@ mod tests {
     #[test]
     fn ring_pattern_extends_in_x_and_z() {
         let pattern = RingPattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(1.0, 0.0, 0.0)), Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.0)), Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.708, 0.0, 0.708)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(1.0, 0, 0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 1.0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0.708, 0, 0.708)), Color::BLACK);
     }
 }

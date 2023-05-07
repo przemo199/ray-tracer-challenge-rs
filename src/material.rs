@@ -21,22 +21,32 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new(color: Color, pattern: Option<Arc<dyn Pattern>>, ambient: f64, diffuse: f64, specular: f64, shininess: f64, reflectiveness: f64, transparency: f64, refractive_index: f64) -> Material {
+    pub fn new(
+        color: Color,
+        pattern: Option<Arc<dyn Pattern>>,
+        ambient: impl Into<f64>,
+        diffuse: impl Into<f64>,
+        specular: impl Into<f64>,
+        shininess: impl Into<f64>,
+        reflectiveness: impl Into<f64>,
+        transparency: impl Into<f64>,
+        refractive_index: impl Into<f64>
+    ) -> Material {
         return Material {
             color,
             pattern,
-            ambient,
-            diffuse,
-            specular,
-            shininess,
-            reflectiveness,
-            transparency,
-            refractive_index,
+            ambient: ambient.into(),
+            diffuse: diffuse.into(),
+            specular: specular.into(),
+            shininess: shininess.into(),
+            reflectiveness: reflectiveness.into(),
+            transparency: transparency.into(),
+            refractive_index: refractive_index.into(),
         };
     }
 
     pub fn empty() -> Self {
-        return Material::new(Color::BLACK, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        return Material::new(Color::BLACK, None, 0, 0, 0, 0, 0, 0, 1);
     }
 
     pub fn lighting(&self, object: &dyn Shape, light: &Light, point: &Point, camera_vector: &Vector, normal_vector: &Vector, is_shadowed: &bool) -> Color {
@@ -82,15 +92,15 @@ impl Material {
 impl Default for Material {
     fn default() -> Material {
         return Material::new(
-            Color::new(1.0, 1.0, 1.0),
+            Color::new(1, 1, 1),
             None,
             0.1,
             0.9,
             0.9,
-            200.0,
-            0.0,
-            0.0,
-            1.0
+            200,
+            0,
+            0,
+            1
         );
     }
 }
@@ -149,10 +159,10 @@ mod tests {
     fn lighting_with_camera_between_light_and_surface() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Point::new(0.0, 0.0, 0.0);
-        let camera = Vector::new(0.0, 0.0, -1.0);
-        let normal = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::WHITE);
+        let position = Point::new(0, 0, 0);
+        let camera = Vector::new(0, 0, -1);
+        let normal = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
         let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
@@ -161,22 +171,22 @@ mod tests {
     fn lighting_with_camera_between_light_and_surface_eye_offset_45_degree() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Point::new(0.0, 0.0, 0.0);
-        let camera = Vector::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
-        let normal = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::WHITE);
+        let position = Point::new(0, 0, 0);
+        let camera = Vector::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
+        let normal = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
         let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
-        assert_eq!(result, Color::new(1.0, 1.0, 1.0));
+        assert_eq!(result, Color::new(1, 1, 1));
     }
 
     #[test]
     fn lighting_with_camera_opposite_surface_light_offset_45_degree() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Point::new(0.0, 0.0, 0.0);
-        let camera = Vector::new(0.0, 0.0, -1.0);
-        let normal = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::WHITE);
+        let position = Point::new(0, 0, 0);
+        let camera = Vector::new(0, 0, -1);
+        let normal = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
         let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(0.7363961030678927, 0.7363961030678927, 0.7363961030678927));
     }
@@ -185,10 +195,10 @@ mod tests {
     fn lighting_with_camera_in_path_of_reflection_vector() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Point::new(0.0, 0.0, 0.0);
-        let camera = Vector::new(0.0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
-        let normal = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::WHITE);
+        let position = Point::new(0, 0, 0);
+        let camera = Vector::new(0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
+        let normal = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
         let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1.6363961030678928, 1.6363961030678928, 1.6363961030678928));
     }
@@ -197,10 +207,10 @@ mod tests {
     fn lighting_with_light_behind_surface() {
         let object = Sphere::default();
         let material = Material::default();
-        let position = Point::new(0.0, 0.0, 0.0);
-        let camera = Vector::new(0.0, 0.0, -1.0);
-        let normal = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 0.0, 10.0), Color::WHITE);
+        let position = Point::new(0, 0, 0);
+        let camera = Vector::new(0, 0, -1);
+        let normal = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 0, 10), Color::WHITE);
         let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -209,11 +219,11 @@ mod tests {
     fn lighting_with_surface_in_shadow() {
         let object = Sphere::default();
         let material = Material::default();
-        let camera_vector = Vector::new(0.0, 0.0, -1.0);
-        let normal_vector = Vector::new(0.0, 0.0, -1.0);
-        let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::WHITE);
+        let camera_vector = Vector::new(0, 0, -1);
+        let normal_vector = Vector::new(0, 0, -1);
+        let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
         let in_shadow = true;
-        let position = Point::new(0.0, 0.0, 0.0);
+        let position = Point::new(0, 0, 0);
         let result = material.lighting(&object, &light, &position, &camera_vector, &normal_vector, &in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }

@@ -17,14 +17,14 @@ impl Point {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Point;
-    ///     let point = Point::new(1.0, 0.5, 0.0);
+    ///     let point = Point::new(1, 0.5, 0);
     ///
     ///     assert_eq!(point.x, 1.0);
     ///     assert_eq!(point.y, 0.5);
     ///     assert_eq!(point.z, 0.0);
     /// ```
-    pub fn new(x: f64, y: f64, z: f64) -> Point {
-        return Point { x, y, z };
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Point {
+        return Point { x: x.into(), y: y.into(), z: z.into() };
     }
 
     pub fn get_values(&self) -> [f64; 4] {
@@ -42,7 +42,7 @@ impl Point {
 
 impl Default for Point {
     fn default() -> Self {
-        return Point::new(0.0, 0.0, 0.0)
+        return Point::new(0, 0, 0);
     }
 }
 
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn new_point() {
-        let point = Point::new(4.0, -4.0, 3.0);
+        let point = Point::new(4, -4, 3);
         assert_eq!(point.x, 4.0);
         assert_eq!(point.y, -4.0);
         assert_eq!(point.z, 3.0);
@@ -128,10 +128,10 @@ mod tests {
 
     #[test]
     fn eq_point() {
-        let point_1 = Point::new(4.0, -4.0, 3.0);
+        let point_1 = Point::new(4, -4, 3);
         let point_2 = point_1;
-        let point_3 = Point::new(4.1 + EPSILON, -4.0, 3.0);
-        let point_4 = Point::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
+        let point_3 = Point::new(4.1 + EPSILON, -4, 3);
+        let point_4 = Point::new(4.0 + EPSILON - (EPSILON / 2.0), -4, 3);
         assert_eq!(point_1, point_2);
         assert_ne!(point_2, point_3);
         assert_eq!(point_2, point_4);
@@ -139,39 +139,39 @@ mod tests {
 
     #[test]
     fn add_point_and_vector() {
-        let point = Point::new(3.0, -2.0, 5.0);
-        let vector = Vector::new(-2.0, 3.0, 1.0);
-        assert_eq!(point + vector, Point::new(1.0, 1.0, 6.0));
+        let point = Point::new(3, -2, 5);
+        let vector = Vector::new(-2, 3, 1);
+        assert_eq!(point + vector, Point::new(1, 1, 6));
     }
 
     #[test]
     fn sub_point() {
-        let point_1 = Point::new(3.0, 2.0, 1.0);
-        let point_2 = Point::new(5.0, 6.0, 7.0);
-        assert_eq!(point_1 - point_2, Vector::new(-2.0, -4.0, -6.0));
+        let point_1 = Point::new(3, 2, 1);
+        let point_2 = Point::new(5, 6, 7);
+        assert_eq!(point_1 - point_2, Vector::new(-2, -4, -6));
     }
 
     #[test]
     fn neg_point() {
-        let point_1 = Point::new(1.0, -2.0, 3.0);
-        let point_2 = Point::new(4.0, -4.0, 3.0);
-        let point_3 = Point::new(4.0, -4.0, 3.0);
-        assert_eq!(-point_1, Point::new(-1.0, 2.0, -3.0));
-        assert_eq!(-point_2, Point::new(-4.0, 4.0, -3.0));
-        assert_eq!(-point_3, Point::new(-4.0, 4.0, -3.0));
+        let point_1 = Point::new(1, -2, 3);
+        let point_2 = Point::new(4, -4, 3);
+        let point_3 = Point::new(4, -4, 3);
+        assert_eq!(-point_1, Point::new(-1, 2, -3));
+        assert_eq!(-point_2, Point::new(-4, 4, -3));
+        assert_eq!(-point_3, Point::new(-4, 4, -3));
     }
 
     #[test]
     fn mul_point() {
-        let point_1 = Point::new(1.0, -2.0, 3.0) * 3.5;
-        let point_2 = Point::new(1.0, -2.0, 3.0) * 0.5;
-        assert_eq!(point_1, Point::new(3.5, -7.0, 10.5));
-        assert_eq!(point_2, Point::new(0.5, -1.0, 1.5));
+        let point_1 = Point::new(1, -2, 3) * 3.5;
+        let point_2 = Point::new(1, -2, 3) * 0.5;
+        assert_eq!(point_1, Point::new(3.5, -7, 10.5));
+        assert_eq!(point_2, Point::new(0.5, -1, 1.5));
     }
 
     #[test]
     fn div_point() {
-        let point = Point::new(1.0, -2.0, 3.0) / 2.0;
-        assert_eq!(point, Point::new(0.5, -1.0, 1.5));
+        let point = Point::new(1, -2, 3) / 2.0;
+        assert_eq!(point, Point::new(0.5, -1, 1.5));
     }
 }

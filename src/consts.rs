@@ -1,4 +1,4 @@
-/// Smallest value signifying difference during rendering
+/// Value for calculating smallest difference between floats
 pub const EPSILON: f64 = 0.00000008;
 
 pub const PI: f64 = std::f64::consts::PI;

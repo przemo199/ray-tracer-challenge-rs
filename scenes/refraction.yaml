@@ -6,7 +6,7 @@
 
 - add: camera
   width: 3840
-  height: 2560
+  height: 3840
   field-of-view: 0.45
   from: [ 0, 0, -5 ]
   to: [ 0, 0, 0 ]

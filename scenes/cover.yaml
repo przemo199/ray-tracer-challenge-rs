@@ -2,8 +2,8 @@
 # the camera
 # ======================================================
 - add: camera
-  width: 1920
-  height: 1080
+  width: 3840
+  height: 2560
   field-of-view: 0.85
   from: [-6, 6, -10]
   to: [6, 0, 6]

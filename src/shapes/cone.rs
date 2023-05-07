@@ -22,11 +22,17 @@ pub struct Cone {
 }
 
 impl Cone {
-    pub fn new(minimum: f64, maximum: f64, closed: bool, transformation: Transformation, material: Material) -> Cone {
-        return Cone { minimum, maximum, closed, transformation, material };
+    pub fn new(
+        minimum: impl Into<f64>,
+        maximum: impl Into<f64>,
+        closed: bool, transformation: Transformation,
+        material: Material
+    ) -> Cone {
+        return Cone { minimum: minimum.into(), maximum: maximum.into(), closed, transformation, material };
     }
 
-    fn check_cap(ray: &Ray, distance: f64) -> bool {
+    fn check_cap(ray: &Ray, distance: impl Into<f64>) -> bool {
+        let distance = distance.into();
         let x = ray.origin.x + ray.direction.x * distance;
         let z = ray.origin.z + ray.direction.z * distance;
         return x * x + z * z <= (ray.origin.y + distance * ray.direction.y).abs();
@@ -54,11 +60,11 @@ impl Shape for Cone {
         let distance = point.x * point.x + point.z * point.z;
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
-            return Vector::new(0.0, 1.0, 0.0);
+            return Vector::new(0, 1, 0);
         }
 
         if distance < 1.0 && point.y <= self.minimum + EPSILON {
-            return Vector::new(0.0, -1.0, 0.0);
+            return Vector::new(0, -1, 0);
         }
 
         let mut y = distance.sqrt();
@@ -169,10 +175,15 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0), 5.0, 5.0)]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(1.0, 1.0, 1.0), 8.660254037844386, 8.660254037844386)]
-    #[case(Point::new(1.0, 1.0, -5.0), Vector::new(-0.5, -1.0, 1.0), 4.550055679356349, 49.449944320643645)]
-    fn intersecting_ray_with_cone(#[case] origin: Point, #[case] direction: Vector, #[case] distance_1: f64, #[case] distance_2: f64) {
+    #[case(Point::new(0, 0, -5), Vector::new(0, 0, 1), 5.0, 5.0)]
+    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254037844386, 8.660254037844386)]
+    #[case(Point::new(1, 1, -5), Vector::new(-0.5, -1, 1), 4.550055679356349, 49.449944320643645)]
+    fn intersecting_ray_with_cone(
+        #[case] origin: Point,
+        #[case] direction: Vector,
+        #[case] distance_1: f64,
+        #[case] distance_2: f64
+    ) {
         let cone = Cone::default();
         let arc_cone: Arc<dyn Shape> = Arc::new(cone);
         let ray = Ray::new(origin, direction.normalized());
@@ -186,16 +197,16 @@ mod tests {
     fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
         let cone = Cone::default();
         let arc_cone: Arc<dyn Shape> = Arc::new(cone);
-        let ray = Ray::new(Point::new(0.0, 0.0, -1.0), Vector::new(0.0, 1.0, 1.0).normalized());
+        let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
         let intersections = arc_cone.local_intersect(&ray);
         assert_eq!(intersections.intersections.len(), 1);
         assert_eq!(intersections[0].distance, 0.3535533905932738);
     }
 
     #[rstest]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 1.0, 0.0), 0)]
-    #[case(Point::new(0.0, 0.0, -0.25), Vector::new(0.0, 1.0, 1.0), 2)]
-    #[case(Point::new(0.0, 0.0, -0.25), Vector::new(0.0, 1.0, 0.0), 4)]
+    #[case(Point::new(0, 0, -5), Vector::new(0, 1, 0), 0)]
+    #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 1), 2)]
+    #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 0), 4)]
     fn intersecting_ray_with_cone_caps(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
         let cone = Cone { minimum: -0.5, maximum: 0.5, closed: true, ..Default::default() };
         let arc_cone: Arc<dyn Shape> = Arc::new(cone);
@@ -205,9 +216,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 0.0))]
-    #[case(Point::new(1.0, 1.0, 1.0), Vector::new(1.0, -(2.0_f64.sqrt()), 1.0))]
-    #[case(Point::new(-1.0, -1.0, 0.0), Vector::new(-1.0, 1.0, 0.0))]
+    #[case(Point::new(0, 0, 0), Vector::new(0, 0, 0))]
+    #[case(Point::new(1, 1, 1), Vector::new(1, -(2.0_f64.sqrt()), 1))]
+    #[case(Point::new(-1, -1, 0), Vector::new(-1, 1, 0))]
     fn computing_normal_vector_on_cone(#[case] point: Point, #[case] expected_normal: Vector) {
         let cone = Cone::default();
         let normal = cone.local_normal_at(point);

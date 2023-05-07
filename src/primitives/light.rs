@@ -25,7 +25,7 @@ impl Light {
 
 impl Default for Light {
     fn default() -> Self {
-        return Light::new(Point::new(-10.0, 10.0, -10.0), Color::WHITE);
+        return Light::new(Point::new(-10, 10, -10), Color::WHITE);
     }
 }
 
@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn light_has_position_and_intensity() {
-        let position = Point::new(0.0, 0.0, 0.0);
+        let position = Point::new(0, 0, 0);
         let intensity = Color::WHITE;
         let light = Light::new(position, intensity);
         assert_eq!(light.position, position);

@@ -16,8 +16,8 @@ impl Ray {
         return Ray { origin, direction };
     }
 
-    pub fn position(&self, distance: f64) -> Point {
-        return self.origin + self.direction * distance;
+    pub fn position(&self, distance: impl Into<f64>) -> Point {
+        return self.origin + self.direction * distance.into();
     }
 
     pub fn intersect(&self, shape: &Arc<dyn Shape>) -> Intersections {
@@ -50,8 +50,8 @@ mod tests {
 
     #[test]
     fn new_ray() {
-        let origin = Point::new(1.0, 2.0, 3.0);
-        let direction = Vector::new(4.0, 5.0, 6.0);
+        let origin = Point::new(1, 2, 3);
+        let direction = Vector::new(4, 5, 6);
         let ray = Ray::new(origin, direction);
         assert_eq!(ray.origin, origin);
         assert_eq!(ray.direction, direction);
@@ -59,16 +59,16 @@ mod tests {
 
     #[test]
     fn compute_point_from_distance() {
-        let ray = Ray::new(Point::new(2.0, 3.0, 4.0), Vector::new(1.0, 0.0, 0.0));
-        assert_eq!(ray.position(0.0), Point::new(2.0, 3.0, 4.0));
-        assert_eq!(ray.position(1.0), Point::new(3.0, 3.0, 4.0));
-        assert_eq!(ray.position(-1.0), Point::new(1.0, 3.0, 4.0));
-        assert_eq!(ray.position(2.5), Point::new(4.5, 3.0, 4.0));
+        let ray = Ray::new(Point::new(2, 3, 4), Vector::new(1, 0, 0));
+        assert_eq!(ray.position(0), Point::new(2, 3, 4));
+        assert_eq!(ray.position(1), Point::new(3, 3, 4));
+        assert_eq!(ray.position(-1), Point::new(1, 3, 4));
+        assert_eq!(ray.position(2.5), Point::new(4.5, 3, 4));
     }
 
     #[test]
     fn intersections_in_the_middle_of_sphere() {
-        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn intersections_on_the_edge_of_sphere() {
-        let ray = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 1, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn no_intersections() {
-        let ray = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 2, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn ray_begins_inside_sphere() {
-        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn ray_begins_behind_sphere() {
-        let ray = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0, 5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
@@ -129,27 +129,27 @@ mod tests {
 
     #[test]
     fn ray_translation() {
-        let ray = Ray::new(Point::new(1.0, 2.0, 3.0), Vector::new(0.0, 1.0, 0.0));
-        let matrix = transformations::translation(3.0, 4.0, 5.0);
+        let ray = Ray::new(Point::new(1, 2, 3), Vector::new(0, 1, 0));
+        let matrix = transformations::translation(3, 4, 5);
         let transformed_ray = ray.transform(matrix);
-        assert_eq!(transformed_ray.origin, Point::new(4.0, 6.0, 8.0));
-        assert_eq!(transformed_ray.direction, Vector::new(0.0, 1.0, 0.0));
+        assert_eq!(transformed_ray.origin, Point::new(4, 6, 8));
+        assert_eq!(transformed_ray.direction, Vector::new(0, 1, 0));
     }
 
     #[test]
     fn ray_scaling() {
-        let ray = Ray::new(Point::new(1.0, 2.0, 3.0), Vector::new(0.0, 1.0, 0.0));
-        let matrix = transformations::scaling(2.0, 3.0, 4.0);
+        let ray = Ray::new(Point::new(1, 2, 3), Vector::new(0, 1, 0));
+        let matrix = transformations::scaling(2, 3, 4);
         let transformed_ray = ray.transform(matrix);
-        assert_eq!(transformed_ray.origin, Point::new(2.0, 6.0, 12.0));
-        assert_eq!(transformed_ray.direction, Vector::new(0.0, 3.0, 0.0));
+        assert_eq!(transformed_ray.origin, Point::new(2, 6, 12));
+        assert_eq!(transformed_ray.direction, Vector::new(0, 3, 0));
     }
 
     #[test]
     fn intersecting_scaled_sphere() {
-        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2.0, 2.0, 2.0);
+        sphere.transformation = transformations::scaling(2, 2, 2);
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
         assert_eq!(intersections.len(), 2);
@@ -159,9 +159,9 @@ mod tests {
 
     #[test]
     fn intersecting_translated_sphere() {
-        let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::translation(5.0, 0.0, 0.0);
+        sphere.transformation = transformations::translation(5, 0, 0);
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let intersections = ray.intersect(&arc_sphere);
         assert_eq!(intersections.len(), 0);

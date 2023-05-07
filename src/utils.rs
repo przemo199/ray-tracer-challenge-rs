@@ -1,3 +1,5 @@
+use std::arch::asm;
+use std::cell::RefCell;
 use crate::consts::EPSILON;
 use crate::primitives::Color;
 use crate::primitives::transformations;
@@ -7,15 +9,15 @@ use crate::shapes::Sphere;
 pub trait CloseEnough {
     const EPSILON: Self;
 
-    fn close_enough(&self, rhs: Self) -> bool;
+    fn close_enough(&self, rhs: impl Into<Self>) -> bool where Self: Sized;
 }
 
 impl CloseEnough for f32 {
     const EPSILON: f32 = EPSILON as f32;
 
     #[inline(always)]
-    fn close_enough(&self, rhs: Self) -> bool {
-        return (*self - rhs).abs() < CloseEnough::EPSILON;
+    fn close_enough(&self, rhs: impl Into<Self>) -> bool {
+        return (*self - rhs.into()).abs() < CloseEnough::EPSILON;
     }
 }
 
@@ -23,8 +25,8 @@ impl CloseEnough for f64 {
     const EPSILON: f64 = EPSILON;
 
     #[inline(always)]
-    fn close_enough(&self, rhs: Self) -> bool {
-        return (*self - rhs).abs() < CloseEnough::EPSILON;
+    fn close_enough(&self, rhs: impl Into<Self>) -> bool {
+        return (*self - rhs.into()).abs() < CloseEnough::EPSILON;
     }
 }
 

@@ -409,15 +409,15 @@ mod tests {
     }
 
     #[rstest]
-    #[case("1", 1.0)]
-    #[case("1.0", 1.0)]
-    #[case(".0", 0.0)]
-    #[case("0.", 0.0)]
-    #[case("0", 0.0)]
-    fn parse_f64_from_yaml(#[case] string: &str, #[case] expected: f64) {
+    #[case("1", 1)]
+    #[case("1.0", 1)]
+    #[case(".0", 0)]
+    #[case("0.", 0)]
+    #[case("0", 0)]
+    fn parse_f64_from_yaml(#[case] string: &str, #[case] expected: impl Into<f64>) {
         let yaml = parse_yaml(string);
         let value = parse_f64(&yaml);
-        assert_eq!(value, expected);
+        assert_eq!(value, expected.into());
     }
 
     #[rstest]

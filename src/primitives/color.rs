@@ -26,14 +26,14 @@ impl Color {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Color;
-    ///     let color = Color::new(1.0, 0.5, 0.0);
+    ///     let color = Color::new(1, 0.5, 0);
     ///
     ///     assert_eq!(color.red, 1.0);
     ///     assert_eq!(color.green, 0.5);
     ///     assert_eq!(color.blue, 0.0);
     /// ```
-    pub fn new(red: f64, green: f64, blue: f64) -> Color {
-        return Color { red, green, blue };
+    pub fn new(red: impl Into<f64>, green: impl Into<f64>, blue: impl Into<f64>) -> Color {
+        return Color { red: red.into(), green: green.into(), blue: blue.into() };
     }
 
     /// Returns array of RGB values representing color
@@ -111,11 +111,11 @@ mod tests {
 
     #[test]
     fn colors_exist() {
-        assert_eq!(Color::WHITE, Color::new(1.0, 1.0, 1.0));
-        assert_eq!(Color::BLACK, Color::new(0.0, 0.0, 0.0));
-        assert_eq!(Color::RED, Color::new(1.0, 0.0, 0.0));
-        assert_eq!(Color::GREEN, Color::new(0.0, 1.0, 0.0));
-        assert_eq!(Color::BLUE, Color::new(0.0, 0.0, 1.0));
+        assert_eq!(Color::WHITE, Color::new(1, 1, 1));
+        assert_eq!(Color::BLACK, Color::new(0, 0, 0));
+        assert_eq!(Color::RED, Color::new(1, 0, 0));
+        assert_eq!(Color::GREEN, Color::new(0, 1, 0));
+        assert_eq!(Color::BLUE, Color::new(0, 0, 1));
     }
 
     #[test]
@@ -130,7 +130,7 @@ mod tests {
     fn add_color() {
         let color_1 = Color::new(0.9, 0.6, 0.75);
         let color_2 = Color::new(0.7, 0.1, 0.25);
-        assert_eq!(color_1 + color_2, Color::new(1.6, 0.7, 1.0));
+        assert_eq!(color_1 + color_2, Color::new(1.6, 0.7, 1));
     }
 
     #[test]
@@ -148,8 +148,8 @@ mod tests {
 
     #[test]
     fn mul_color_by_color() {
-        let color_1 = Color::new(1.0, 0.2, 0.4);
-        let color_2 = Color::new(0.9, 1.0, 0.1);
+        let color_1 = Color::new(1, 0.2, 0.4);
+        let color_2 = Color::new(0.9, 1, 0.1);
         assert_eq!(color_1 * color_2, Color::new(0.9, 0.2, 0.04));
     }
 }

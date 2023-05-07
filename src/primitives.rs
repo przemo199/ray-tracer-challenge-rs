@@ -1,5 +1,3 @@
-///! Basic building blocks for the ray tracer
-
 pub use color::Color;
 pub use light::Light;
 pub use matrix::Matrix;

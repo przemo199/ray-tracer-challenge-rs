@@ -53,10 +53,10 @@ mod tests {
     #[test]
     fn gradient_interpolates_between_colors() {
         let pattern = GradientPattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.25, 0.0, 0.0)), Color::new(0.75, 0.75, 0.75));
-        assert_eq!(pattern.color_at(&Point::new(0.5, 0.0, 0.0)), Color::new(0.5, 0.5, 0.5));
-        assert_eq!(pattern.color_at(&Point::new(0.75, 0.0, 0.0)), Color::new(0.25, 0.25, 0.25));
-        assert_eq!(pattern.color_at(&Point::new(1.0, 0.0, 0.0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.25, 0, 0)), Color::new(0.75, 0.75, 0.75));
+        assert_eq!(pattern.color_at(&Point::new(0.5, 0, 0)), Color::new(0.5, 0.5, 0.5));
+        assert_eq!(pattern.color_at(&Point::new(0.75, 0, 0)), Color::new(0.25, 0.25, 0.25));
+        assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
     }
 }

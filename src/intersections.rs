@@ -58,8 +58,8 @@ mod tests {
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(1.0, arc_sphere.clone());
-        let intersection2 = Intersection::new(2.0, arc_sphere);
+        let intersection1 = Intersection::new(1, arc_sphere.clone());
+        let intersection2 = Intersection::new(2, arc_sphere);
         intersections.add(intersection1.clone());
         intersections.add(intersection2);
         assert_eq!(intersections.hit().unwrap(), &intersection1);
@@ -70,8 +70,8 @@ mod tests {
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-1.0, arc_sphere.clone());
-        let intersection2 = Intersection::new(1.0, arc_sphere);
+        let intersection1 = Intersection::new(-1, arc_sphere.clone());
+        let intersection2 = Intersection::new(1, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2.clone());
         assert_eq!(intersections.hit().unwrap(), &intersection2);
@@ -82,8 +82,8 @@ mod tests {
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-2.0, arc_sphere.clone());
-        let intersection2 = Intersection::new(-1.0, arc_sphere);
+        let intersection1 = Intersection::new(-2, arc_sphere.clone());
+        let intersection2 = Intersection::new(-1, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2);
         assert_eq!(intersections.hit(), None);
@@ -94,10 +94,10 @@ mod tests {
         let sphere = Sphere::default();
         let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(5.0, arc_sphere.clone());
-        let intersection2 = Intersection::new(7.0, arc_sphere.clone());
-        let intersection3 = Intersection::new(-3.0, arc_sphere.clone());
-        let intersection4 = Intersection::new(2.0, arc_sphere);
+        let intersection1 = Intersection::new(5, arc_sphere.clone());
+        let intersection2 = Intersection::new(7, arc_sphere.clone());
+        let intersection3 = Intersection::new(-3, arc_sphere.clone());
+        let intersection4 = Intersection::new(2, arc_sphere);
         intersections.add(intersection1);
         intersections.add(intersection2);
         intersections.add(intersection3);

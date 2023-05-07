@@ -64,14 +64,14 @@ impl Shape for Cylinder {
         let distance = point.x * point.x + point.z * point.z;
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
-            return Vector::new(0.0, 1.0, 0.0);
+            return Vector::new(0, 1, 0);
         }
 
         if distance < 1.0 && point.y <= self.minimum + EPSILON {
-            return Vector::new(0.0, -1.0, 0.0);
+            return Vector::new(0, -1, 0);
         }
 
-        return Vector::new(point.x, 0.0, point.z);
+        return Vector::new(point.x, 0, point.z);
     }
 
     fn material(&self) -> Material {
@@ -168,9 +168,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(1.0, 0.0, 0.0), Vector::new(0.0, 1.0, 0.0))]
-    #[case(Point::new(0.0, 1.0, 0.0), Vector::new(0.0, 1.0, 0.0))]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(1.0, 1.0, 1.0))]
+    #[case(Point::new(1, 0, 0), Vector::new(0, 1, 0))]
+    #[case(Point::new(0, 1, 0), Vector::new(0, 1, 0))]
+    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1))]
     fn ray_misses_cylinder(#[case] origin: Point, #[case] direction: Vector) {
         let cylinder = Cylinder::default();
         let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
@@ -180,9 +180,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(1.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0), 5.0, 5.0)]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0), 4.0, 6.0)]
-    #[case(Point::new(0.5, 0.0, -5.0), Vector::new(0.1, 1.0, 1.0), 6.80798191702732, 7.088723439378861)]
+    #[case(Point::new(1, 0, -5), Vector::new(0, 0, 1), 5.0, 5.0)]
+    #[case(Point::new(0, 0, -5), Vector::new(0, 0, 1), 4.0, 6.0)]
+    #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.80798191702732, 7.088723439378861)]
     fn ray_intersects_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] distance_1: f64, #[case] distance_2: f64) {
             let cylinder = Cylinder::default();
             let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
@@ -194,10 +194,10 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(1.0, 0.0, 0.0), Vector::new(1.0, 0.0, 0.0))]
-    #[case(Point::new(0.0, 5.0, -1.0), Vector::new(0.0, 0.0, -1.0))]
-    #[case(Point::new(0.0, -2.0, 1.0), Vector::new(0.0, 0.0, 1.0))]
-    #[case(Point::new(-1.0, 1.0, 0.0), Vector::new(-1.0, 0.0, 0.0))]
+    #[case(Point::new(1, 0, 0), Vector::new(1, 0, 0))]
+    #[case(Point::new(0, 5, -1), Vector::new(0, 0, -1))]
+    #[case(Point::new(0, -2, 1), Vector::new(0, 0, 1))]
+    #[case(Point::new(-1, 1, 0), Vector::new(-1, 0, 0))]
     fn normal_vector_on_cylinder(#[case] point: Point, #[case] normal: Vector) {
         let cylinder = Cylinder::default();
         let local_normal = cylinder.local_normal_at(point);
@@ -205,12 +205,12 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0.0, 1.5, 0.0), Vector::new(0.1, 1.0, 0.0), 0)]
-    #[case(Point::new(0.0, 3.0, -5.0), Vector::new(0.0, 0.0, 1.0), 0)]
-    #[case(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0), 0)]
-    #[case(Point::new(0.0, 2.0, -5.0), Vector::new(0.0, 0.0, 1.0), 0)]
-    #[case(Point::new(0.0, 1.0, -5.0), Vector::new(0.0, 0.0, 1.0), 0)]
-    #[case(Point::new(0.0, 1.5, -2.0), Vector::new(0.0, 0.0, 1.0), 2)]
+    #[case(Point::new(0, 1.5, 0), Vector::new(0.1, 1, 0), 0)]
+    #[case(Point::new(0, 3, -5), Vector::new(0, 0, 1), 0)]
+    #[case(Point::new(0, 0, -5), Vector::new(0, 0, 1), 0)]
+    #[case(Point::new(0, 2, -5), Vector::new(0, 0, 1), 0)]
+    #[case(Point::new(0, 1, -5), Vector::new(0, 0, 1), 0)]
+    #[case(Point::new(0, 1.5, -2), Vector::new(0, 0, 1), 2)]
     fn intersecting_constrained_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
         let cylinder = Cylinder {
             minimum: 1.0,
@@ -224,11 +224,11 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0.0, 3.0, 0.0), Vector::new(0.0, -1.0, 0.0), 2)]
-    #[case(Point::new(0.0, 3.0, -2.0), Vector::new(0.0, -1.0, 2.0), 2)]
-    #[case(Point::new(0.0, 4.0, -2.0), Vector::new(0.0, -1.0, 1.0), 2)]
-    #[case(Point::new(0.0, 0.0, -2.0), Vector::new(0.0, 1.0, 2.0), 2)]
-    #[case(Point::new(0.0, -1.0, -2.0), Vector::new(0.0, 1.0, 1.0), 2)]
+    #[case(Point::new(0, 3, 0), Vector::new(0, -1, 0), 2)]
+    #[case(Point::new(0, 3, -2), Vector::new(0, -1, 2), 2)]
+    #[case(Point::new(0, 4, -2), Vector::new(0, -1, 1), 2)]
+    #[case(Point::new(0, 0, -2), Vector::new(0, 1, 2), 2)]
+    #[case(Point::new(0, -1, -2), Vector::new(0, 1, 1), 2)]
     fn intersecting_caps_of_closed_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
         let mut cylinder = Cylinder::default();
         cylinder.minimum = 1.0;
@@ -241,12 +241,12 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0.0, 1.0, 0.0), Vector::new(0.0, -1.0, 0.0))]
-    #[case(Point::new(0.5, 1.0, 0.0), Vector::new(0.0, -1.0, 0.0))]
-    #[case(Point::new(0.0, 1.0, 0.5), Vector::new(0.0, -1.0, 0.0))]
-    #[case(Point::new(0.0, 2.0, 0.0), Vector::new(0.0, 1.0, 0.0))]
-    #[case(Point::new(0.5, 2.0, 0.0), Vector::new(0.0, 1.0, 0.0))]
-    #[case(Point::new(0.0, 2.0, 0.5), Vector::new(0.0, 1.0, 0.0))]
+    #[case(Point::new(0, 1, 0), Vector::new(0, -1, 0))]
+    #[case(Point::new(0.5, 1, 0), Vector::new(0, -1, 0))]
+    #[case(Point::new(0, 1, 0.5), Vector::new(0, -1, 0))]
+    #[case(Point::new(0, 2, 0), Vector::new(0, 1, 0))]
+    #[case(Point::new(0.5, 2, 0), Vector::new(0, 1, 0))]
+    #[case(Point::new(0, 2, 0.5), Vector::new(0, 1, 0))]
     fn normal_vector_on_cylinder_caps(#[case] point: Point, #[case] normal: Vector) {
         let mut cylinder = Cylinder::default();
         cylinder.minimum = 1.0;

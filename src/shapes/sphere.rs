@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::str::Bytes;
 use std::sync::Arc;
 
 use crate::intersection::Intersection;
@@ -109,7 +108,7 @@ mod tests {
     #[test]
     fn changing_transformation() {
         let mut sphere = Sphere::default();
-        let transformation = transformations::translation(2.0, 3.0, 4.0);
+        let transformation = transformations::translation(2, 3, 4);
         sphere.transformation = transformation;
         assert_eq!(sphere.transformation, transformation);
     }
@@ -117,14 +116,14 @@ mod tests {
     #[test]
     fn sphere_normal() {
         let sphere = Sphere::default();
-        let normal = sphere.normal_at(Point::new(1.0, 0.0, 0.0));
-        assert_eq!(normal, Vector::new(1.0, 0.0, 0.0));
+        let normal = sphere.normal_at(Point::new(1, 0, 0));
+        assert_eq!(normal, Vector::new(1, 0, 0));
 
-        let normal = sphere.normal_at(Point::new(0.0, 1.0, 0.0));
-        assert_eq!(normal, Vector::new(0.0, 1.0, 0.0));
+        let normal = sphere.normal_at(Point::new(0, 1, 0));
+        assert_eq!(normal, Vector::new(0, 1, 0));
 
-        let normal = sphere.normal_at(Point::new(0.0, 0.0, 1.0));
-        assert_eq!(normal, Vector::new(0.0, 0.0, 1.0));
+        let normal = sphere.normal_at(Point::new(0, 0, 1));
+        assert_eq!(normal, Vector::new(0, 0, 1));
 
         let normal = sphere.normal_at(Point::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
         assert_eq!(normal, Vector::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
@@ -140,18 +139,18 @@ mod tests {
     #[test]
     fn normal_on_translated_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::translation(0.0, 1.0, 0.0);
+        sphere.transformation = transformations::translation(0, 1, 0);
         let normal = sphere.normal_at(Point::new(0.0, 1.70711, -0.70711));
-        assert_eq!(normal, Vector::new(0.0, 0.7071067811865475, -0.7071067811865476));
+        assert_eq!(normal, Vector::new(0, 0.7071067811865475, -0.7071067811865476));
     }
 
     #[test]
     fn normal_on_transformed_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(1.0, 0.5, 1.0) *
+        sphere.transformation = transformations::scaling(1, 0.5, 1) *
             transformations::rotation_z(PI / 5.0);
-        let normal = sphere.normal_at(Point::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
-        assert_eq!(normal, Vector::new(0.0, 0.9701425001453319, -0.24253562503633294));
+        let normal = sphere.normal_at(Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
+        assert_eq!(normal, Vector::new(0, 0.9701425001453319, -0.24253562503633294));
     }
 
     #[test]

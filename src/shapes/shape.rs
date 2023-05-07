@@ -79,7 +79,7 @@ mod tests {
     fn assigning_material() {
         let mut shape = Sphere::default();
         let mut material = Material::default();
-        material.color = Color::new(0.8, 1.0, 0.6);
+        material.color = Color::new(0.8, 1, 0.6);
         shape.set_material(material.clone());
         assert_eq!(shape.material(), material);
     }

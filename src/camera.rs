@@ -23,7 +23,8 @@ pub struct Camera {
 impl Camera {
     const PROGRESS_TEMPLATE: &'static str = "[{elapsed_precise}] {bar:50.white/gray}{percent}% {human_pos}/{human_len}";
 
-    pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: f64) -> Camera {
+    pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: impl Into<f64>) -> Camera {
+        let field_of_view = field_of_view.into();
         let half_view = (field_of_view / 2.0).tan();
         let aspect = horizontal_size as f64 / vertical_size as f64;
         let half_width: f64;
@@ -139,34 +140,34 @@ mod tests {
     fn ray_through_canvas_center() {
         let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(100, 50);
-        assert_eq!(ray.origin, Point::new(0.0, 0.0, 0.0));
-        assert_eq!(ray.direction, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(ray.origin, Point::new(0, 0, 0));
+        assert_eq!(ray.direction, Vector::new(0, 0, -1));
     }
 
     #[test]
     fn ray_through_canvas_corner() {
         let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(0, 0);
-        assert_eq!(ray.origin, Point::new(0.0, 0.0, 0.0));
+        assert_eq!(ray.origin, Point::new(0, 0, 0));
         assert_eq!(ray.direction, Vector::new(0.6651864261194508, 0.3325932130597254, -0.6685123582500481));
     }
 
     #[test]
     fn ray_through_canvas_with_transformed_camera() {
         let mut camera = Camera::new(201, 101, PI / 2.0);
-        camera.transformation = transformations::rotation_y(PI / 4.0) * transformations::translation(0.0, -2.0, 5.0);
+        camera.transformation = transformations::rotation_y(PI / 4.0) * transformations::translation(0, -2, 5);
         let ray = camera.ray_for_pixel(100, 50);
-        assert_eq!(ray.origin, Point::new(0.0, 2.0, -5.0));
-        assert_eq!(ray.direction, Vector::new(2.0_f64.sqrt() / 2.0, 0.0, -(2.0_f64.sqrt()) / 2.0));
+        assert_eq!(ray.origin, Point::new(0, 2, -5));
+        assert_eq!(ray.direction, Vector::new(2.0_f64.sqrt() / 2.0, 0, -(2.0_f64.sqrt()) / 2.0));
     }
 
     #[test]
     fn rendering_world_with_camera() {
         let world = World::default();
         let mut camera = Camera::new(11, 11, PI / 2.0);
-        let from = Point::new(0.0, 0.0, -5.0);
-        let to = Point::new(0.0, 0.0, 0.0);
-        let up = Vector::new(0.0, 1.0, 0.0);
+        let from = Point::new(0, 0, -5);
+        let to = Point::new(0, 0, 0);
+        let up = Vector::new(0, 1, 0);
         camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
@@ -176,9 +177,9 @@ mod tests {
     fn rendering_world_in_parallel_with_camera() {
         let world = World::default();
         let mut camera = Camera::new(11, 11, PI / 2.0);
-        let from = Point::new(0.0, 0.0, -5.0);
-        let to = Point::new(0.0, 0.0, 0.0);
-        let up = Vector::new(0.0, 1.0, 0.0);
+        let from = Point::new(0, 0, -5);
+        let to = Point::new(0, 0, 0);
+        let up = Vector::new(0, 1, 0);
         camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render_parallel(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));

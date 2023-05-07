@@ -15,14 +15,14 @@ impl Vector {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Vector;
-    ///     let vector = Vector::new(1.0, 0.5, 0.0);
+    ///     let vector = Vector::new(1, 0.5, 0);
     ///
     ///     assert_eq!(vector.x, 1.0);
     ///     assert_eq!(vector.y, 0.5);
     ///     assert_eq!(vector.z, 0.0);
     /// ```
-    pub fn new(x: f64, y: f64, z: f64) -> Vector {
-        return Vector { x, y, z };
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Vector {
+        return Vector { x: x.into(), y: y.into(), z: z.into() };
     }
 
     pub fn get_values(&self) -> [f64; 4] {
@@ -57,7 +57,7 @@ impl Vector {
 
 impl Default for Vector {
     fn default() -> Self {
-        return Vector::new(0.0, 0.0, 0.0);
+        return Vector::new(0, 0, 0);
     }
 }
 
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn new_vector() {
-        let point = Vector::new(4.0, -4.0, 3.0);
+        let point = Vector::new(4, -4, 3);
         assert_eq!(point.x, 4.0);
         assert_eq!(point.y, -4.0);
         assert_eq!(point.z, 3.0);
@@ -137,10 +137,10 @@ mod tests {
 
     #[test]
     fn eq_vector() {
-        let vector_1 = Vector::new(4.0, -4.0, 3.0);
+        let vector_1 = Vector::new(4, -4, 3);
         let vector_2 = vector_1;
-        let vector_3 = Vector::new(4.0 + EPSILON, -4.0, 3.0);
-        let vector_4 = Vector::new(4.0 + EPSILON - (EPSILON / 2.0), -4.0, 3.0);
+        let vector_3 = Vector::new(4.0 + EPSILON, -4, 3);
+        let vector_4 = Vector::new(4.0 + EPSILON - (EPSILON / 2.0), -4, 3);
         assert_eq!(vector_1, vector_2);
         assert_ne!(vector_2, vector_3);
         assert_eq!(vector_2, vector_4);
@@ -148,105 +148,105 @@ mod tests {
 
     #[test]
     fn add_vector() {
-        let vector_1 = Vector::new(3.0, -2.0, 5.0);
-        let vector_2 = Vector::new(-2.0, 3.0, 1.0);
-        assert_eq!(vector_1 + vector_2, Vector::new(1.0, 1.0, 6.0));
+        let vector_1 = Vector::new(3, -2, 5);
+        let vector_2 = Vector::new(-2, 3, 1);
+        assert_eq!(vector_1 + vector_2, Vector::new(1, 1, 6));
     }
 
     #[test]
     fn sub_vector() {
-        let vector_1 = Vector::new(4.0, -4.0, 3.0);
+        let vector_1 = Vector::new(4, -4, 3);
         let vector_2 = vector_1;
-        assert_eq!(vector_1 - vector_2, Vector::new(0.0, 0.0, 0.0));
+        assert_eq!(vector_1 - vector_2, Vector::new(0, 0, 0));
     }
 
     #[test]
     fn neg_vector() {
-        let vector_1 = Vector::new(1.0, -2.0, 3.0);
-        let vector_2 = Vector::new(4.0, -4.0, 3.0);
-        let vector_3 = Vector::new(4.0, -4.0, 3.0);
-        assert_eq!(-vector_1, Vector::new(-1.0, 2.0, -3.0));
-        assert_eq!(-vector_2, Vector::new(-4.0, 4.0, -3.0));
-        assert_eq!(-vector_3, Vector::new(-4.0, 4.0, -3.0));
+        let vector_1 = Vector::new(1, -2, 3);
+        let vector_2 = Vector::new(4, -4, 3);
+        let vector_3 = Vector::new(4, -4, 3);
+        assert_eq!(-vector_1, Vector::new(-1, 2, -3));
+        assert_eq!(-vector_2, Vector::new(-4, 4, -3));
+        assert_eq!(-vector_3, Vector::new(-4, 4, -3));
     }
 
     #[test]
     fn mul_vector() {
-        let vector_1 = Vector::new(1.0, -2.0, 3.0);
-        let vector_2 = Vector::new(1.0, -2.0, 3.0);
-        assert_eq!(vector_1 * 3.5, Vector::new(3.5, -7.0, 10.5));
-        assert_eq!(vector_2 * 0.5, Vector::new(0.5, -1.0, 1.5));
+        let vector_1 = Vector::new(1, -2, 3);
+        let vector_2 = Vector::new(1, -2, 3);
+        assert_eq!(vector_1 * 3.5, Vector::new(3.5, -7, 10.5));
+        assert_eq!(vector_2 * 0.5, Vector::new(0.5, -1, 1.5));
     }
 
     #[test]
     fn div_vector() {
-        let vector = Vector::new(1.0, -2.0, 3.0);
-        assert_eq!(vector / 2.0, Vector::new(0.5, -1.0, 1.5));
+        let vector = Vector::new(1, -2, 3);
+        assert_eq!(vector / 2.0, Vector::new(0.5, -1, 1.5));
     }
 
     #[rstest]
-    #[case(Vector::new(1.0, 0.0, 0.0), 1.0)]
-    #[case(Vector::new(0.0, 1.0, 0.0), 1.0)]
-    #[case(Vector::new(0.0, 0.0, 1.0), 1.0)]
-    #[case(Vector::new(1.0, 2.0, 3.0), 14.0_f64.sqrt())]
-    #[case(Vector::new(-1.0, -2.0, -3.0), 14.0_f64.sqrt())]
+    #[case(Vector::new(1, 0, 0), 1.0)]
+    #[case(Vector::new(0, 1, 0), 1.0)]
+    #[case(Vector::new(0, 0, 1), 1.0)]
+    #[case(Vector::new(1, 2, 3), 14.0_f64.sqrt())]
+    #[case(Vector::new(-1, -2, -3), 14.0_f64.sqrt())]
     fn vector_magnitude(#[case] vector: Vector, #[case] magnitude: f64) {
         assert_eq!(vector.magnitude(), magnitude);
     }
 
     #[test]
     fn normalize_vector() {
-        let vector1 = Vector::new(4.0, 0.0, 0.0);
-        let vector2 = Vector::new(0.0, 4.0, 0.0);
-        let vector3 = Vector::new(0.0, 0.0, 4.0);
-        let vector4 = Vector::new(1.0, 2.0, 3.0);
+        let vector1 = Vector::new(4, 0, 0);
+        let vector2 = Vector::new(0, 4, 0);
+        let vector3 = Vector::new(0, 0, 4);
+        let vector4 = Vector::new(1, 2, 3);
         let normalised1 = vector1.normalized();
         let normalised2 = vector2.normalized();
         let normalised3 = vector3.normalized();
         let normalised4 = vector4.normalized();
-        assert_eq!(normalised1, Vector::new(1.0, 0.0, 0.0));
+        assert_eq!(normalised1, Vector::new(1, 0, 0));
         assert_eq!(normalised1.magnitude(), 1.0);
-        assert_eq!(normalised2, Vector::new(0.0, 1.0, 0.0));
+        assert_eq!(normalised2, Vector::new(0, 1, 0));
         assert_eq!(normalised2.magnitude(), 1.0);
-        assert_eq!(normalised3, Vector::new(0.0, 0.0, 1.0));
+        assert_eq!(normalised3, Vector::new(0, 0, 1));
         assert_eq!(normalised3.magnitude(), 1.0);
         assert_eq!(normalised4, Vector::new(0.2672612419124244, 0.5345224838248488, 0.8017837257372732));
     }
 
     #[test]
     fn magnitude_of_normalized_vector() {
-        let vector = Vector::new(1.0, 2.0, 3.0);
+        let vector = Vector::new(1, 2, 3);
         assert!(vector.normalized().magnitude().close_enough(1.0));
     }
 
     #[test]
     fn vector_dot_product() {
-        let vector1 = Vector::new(1.0, 2.0, 3.0);
-        let vector2 = Vector::new(2.0, 3.0, 4.0);
+        let vector1 = Vector::new(1, 2, 3);
+        let vector2 = Vector::new(2, 3, 4);
         assert_eq!(vector1.dot(&vector2), 20.0);
     }
 
     #[test]
     fn cross_product() {
-        let vector1 = Vector::new(1.0, 2.0, 3.0);
-        let vector2 = Vector::new(2.0, 3.0, 4.0);
-        assert_eq!(vector1.cross(&vector2), Vector::new(-1.0, 2.0, -1.0));
-        assert_eq!(vector2.cross(&vector1), Vector::new(1.0, -2.0, 1.0));
+        let vector1 = Vector::new(1, 2, 3);
+        let vector2 = Vector::new(2, 3, 4);
+        assert_eq!(vector1.cross(&vector2), Vector::new(-1, 2, -1));
+        assert_eq!(vector2.cross(&vector1), Vector::new(1, -2, 1));
     }
 
     #[test]
     fn reflect_vector() {
-        let vector = Vector::new(1.0, -1.0, 0.0);
-        let normal = Vector::new(0.0, 1.0, 0.0);
+        let vector = Vector::new(1, -1, 0);
+        let normal = Vector::new(0, 1, 0);
         let reflected = vector.reflect(&normal);
-        assert_eq!(reflected, Vector::new(1.0, 1.0, 0.0));
+        assert_eq!(reflected, Vector::new(1, 1, 0));
     }
 
     #[test]
     fn reflect_vector_on_slanted_surface() {
-        let vector = Vector::new(0.0, -1.0, 0.0);
-        let normal = Vector::new(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0.0);
+        let vector = Vector::new(0, -1, 0);
+        let normal = Vector::new(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0);
         let reflected = vector.reflect(&normal);
-        assert_eq!(reflected, Vector::new(1.0, 0.0, 0.0));
+        assert_eq!(reflected, Vector::new(1, 0, 0));
     }
 }

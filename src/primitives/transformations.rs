@@ -4,23 +4,24 @@ pub type Transformation = Matrix<4>;
 
 pub const IDENTITY: Transformation = Matrix::IDENTITY;
 
-pub fn translation(x: f64, y: f64, z: f64) -> Transformation {
+pub fn translation(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 3, x);
-    result.set_index(1, 3, y);
-    result.set_index(2, 3, z);
+    result.set_index(0, 3, x.into());
+    result.set_index(1, 3, y.into());
+    result.set_index(2, 3, z.into());
     return result;
 }
 
-pub fn scaling(x: f64, y: f64, z: f64) -> Transformation {
+pub fn scaling(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 0, x);
-    result.set_index(1, 1, y);
-    result.set_index(2, 2, z);
+    result.set_index(0, 0, x.into());
+    result.set_index(1, 1, y.into());
+    result.set_index(2, 2, z.into());
     return result;
 }
 
-pub fn rotation_x(theta: f64) -> Transformation {
+pub fn rotation_x(theta: impl Into<f64>) -> Transformation {
+    let theta = theta.into();
     let mut result = IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
@@ -31,7 +32,8 @@ pub fn rotation_x(theta: f64) -> Transformation {
     return result;
 }
 
-pub fn rotation_y(theta: f64) -> Transformation {
+pub fn rotation_y(theta: impl Into<f64>) -> Transformation {
+    let theta = theta.into();
     let mut result = IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
@@ -42,7 +44,8 @@ pub fn rotation_y(theta: f64) -> Transformation {
     return result;
 }
 
-pub fn rotation_z(theta: f64) -> Transformation {
+pub fn rotation_z(theta: impl Into<f64>) -> Transformation {
+    let theta = theta.into();
     let mut result = IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
@@ -53,14 +56,21 @@ pub fn rotation_z(theta: f64) -> Transformation {
     return result;
 }
 
-pub fn shearing_matrix(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Transformation {
+pub fn shearing_matrix(
+    xy: impl Into<f64>,
+    xz: impl Into<f64>,
+    yx: impl Into<f64>,
+    yz: impl Into<f64>,
+    zx: impl Into<f64>,
+    zy: impl Into<f64>
+) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 1, xy);
-    result.set_index(0, 2, xz);
-    result.set_index(1, 0, yx);
-    result.set_index(1, 2, yz);
-    result.set_index(2, 0, zx);
-    result.set_index(2, 1, zy);
+    result.set_index(0, 1, xy.into());
+    result.set_index(0, 2, xz.into());
+    result.set_index(1, 0, yx.into());
+    result.set_index(1, 2, yz.into());
+    result.set_index(2, 0, zx.into());
+    result.set_index(2, 1, zy.into());
     return result;
 }
 
@@ -86,164 +96,164 @@ mod tests {
 
     #[test]
     fn point_translation() {
-        let translation = translation(5.0, -3.0, 2.0);
-        let point = Point::new(-3.0, 4.0, 5.0);
-        assert_eq!(translation * point, Point::new(2.0, 1.0, 7.0));
+        let translation = translation(5, -3, 2);
+        let point = Point::new(-3, 4, 5);
+        assert_eq!(translation * point, Point::new(2, 1, 7));
     }
 
     #[test]
     fn point_translation_by_inverse() {
-        let translation = translation(5.0, -3.0, 2.0).inverse();
-        let point = Point::new(-3.0, 4.0, 5.0);
-        assert_eq!(translation * point, Point::new(-8.0, 7.0, 3.0));
+        let translation = translation(5, -3, 2).inverse();
+        let point = Point::new(-3, 4, 5);
+        assert_eq!(translation * point, Point::new(-8, 7, 3));
     }
 
     #[test]
     fn vector_translation() {
-        let translation = translation(5.0, -3.0, 2.0);
-        let vector = Vector::new(-3.0, 4.0, 5.0);
+        let translation = translation(5, -3, 2);
+        let vector = Vector::new(-3, 4, 5);
         assert_eq!(translation * vector, vector);
     }
 
     #[test]
     fn point_scaling() {
-        let scaling = scaling(2.0, 3.0, 4.0);
-        let point = Point::new(-4.0, 6.0, 8.0);
-        assert_eq!(scaling * point, Point::new(-8.0, 18.0, 32.0));
+        let scaling = scaling(2, 3, 4);
+        let point = Point::new(-4, 6, 8);
+        assert_eq!(scaling * point, Point::new(-8, 18, 32));
     }
 
     #[test]
     fn vector_scaling() {
-        let scaling = scaling(2.0, 3.0, 4.0);
-        let vector = Vector::new(-4.0, 6.0, 8.0);
-        assert_eq!(scaling * vector, Vector::new(-8.0, 18.0, 32.0));
+        let scaling = scaling(2, 3, 4);
+        let vector = Vector::new(-4, 6, 8);
+        assert_eq!(scaling * vector, Vector::new(-8, 18, 32));
     }
 
     #[test]
     fn vector_scaling_by_inverse() {
-        let scaling = scaling(2.0, 3.0, 4.0).inverse();
-        let vector = Vector::new(-4.0, 6.0, 8.0);
-        assert_eq!(scaling * vector, Vector::new(-2.0, 2.0, 2.0));
+        let scaling = scaling(2, 3, 4).inverse();
+        let vector = Vector::new(-4, 6, 8);
+        assert_eq!(scaling * vector, Vector::new(-2, 2, 2));
     }
 
     #[test]
     fn point_reflection() {
-        let reflection = scaling(-1.0, 1.0, 1.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(reflection * point, Point::new(-2.0, 3.0, 4.0));
+        let reflection = scaling(-1, 1, 1);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(reflection * point, Point::new(-2, 3, 4));
     }
 
     #[test]
     fn point_rotation_around_x() {
-        let point = Point::new(0.0, 1.0, 0.0);
+        let point = Point::new(0, 1, 0);
         let half_quarter_rotation = rotation_x(PI / 4.0);
         let full_quarter_rotation = rotation_x(PI / 2.0);
-        assert_eq!(half_quarter_rotation * point, Point::new(0.0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
-        assert_eq!(full_quarter_rotation * point, Point::new(0.0, 0.0, 1.0));
+        assert_eq!(half_quarter_rotation * point, Point::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(full_quarter_rotation * point, Point::new(0, 0, 1));
     }
 
     #[test]
     fn point_rotation_inverse_around_x() {
-        let point = Point::new(0.0, 1.0, 0.0);
+        let point = Point::new(0, 1, 0);
         let full_quarter_rotation_inverse = rotation_x(PI / 4.0).inverse();
-        assert_eq!(full_quarter_rotation_inverse * point, Point::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
+        assert_eq!(full_quarter_rotation_inverse * point, Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
     }
 
     #[test]
     fn point_rotation_around_y() {
-        let point = Point::new(0.0, 0.0, 1.0);
+        let point = Point::new(0, 0, 1);
         let half_quarter_rotation1 = rotation_y(PI / 4.0);
         let full_quarter_rotation1 = rotation_y(PI / 2.0);
-        assert_eq!(half_quarter_rotation1 * point, Point::new(2.0_f64.sqrt() / 2.0, 0.0, 2.0_f64.sqrt() / 2.0));
-        assert_eq!(full_quarter_rotation1 * point, Point::new(1.0, 0.0, 0.0));
+        assert_eq!(half_quarter_rotation1 * point, Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(full_quarter_rotation1 * point, Point::new(1, 0, 0));
     }
 
     #[test]
     fn point_rotation_around_z() {
-        let point = Point::new(0.0, 1.0, 0.0);
+        let point = Point::new(0, 1, 0);
         let half_quarter_rotation1 = rotation_z(PI / 4.0);
         let full_quarter_rotation1 = rotation_z(PI / 2.0);
-        assert_eq!(half_quarter_rotation1 * point, Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0.0));
-        assert_eq!(full_quarter_rotation1 * point, Point::new(-1.0, 0.0, 0.0));
+        assert_eq!(half_quarter_rotation1 * point, Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0));
+        assert_eq!(full_quarter_rotation1 * point, Point::new(-1, 0, 0));
     }
 
     #[test]
     fn point_shearing() {
-        let shearing = shearing_matrix(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(5.0, 3.0, 4.0));
+        let shearing = shearing_matrix(1, 0, 0, 0, 0, 0);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(5, 3, 4));
 
-        let shearing = shearing_matrix(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(6.0, 3.0, 4.0));
+        let shearing = shearing_matrix(0, 1, 0, 0, 0, 0);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(6, 3, 4));
 
-        let shearing = shearing_matrix(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(2.0, 5.0, 4.0));
+        let shearing = shearing_matrix(0, 0, 1, 0, 0, 0);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(2, 5, 4));
 
-        let shearing = shearing_matrix(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(2.0, 7.0, 4.0));
+        let shearing = shearing_matrix(0, 0, 0, 1, 0, 0);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(2, 7, 4));
 
-        let shearing = shearing_matrix(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(2.0, 3.0, 6.0));
+        let shearing = shearing_matrix(0, 0, 0, 0, 1, 0);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(2, 3, 6));
 
-        let shearing = shearing_matrix(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-        let point = Point::new(2.0, 3.0, 4.0);
-        assert_eq!(shearing * point, Point::new(2.0, 3.0, 7.0));
+        let shearing = shearing_matrix(0, 0, 0, 0, 0, 1);
+        let point = Point::new(2, 3, 4);
+        assert_eq!(shearing * point, Point::new(2, 3, 7));
     }
 
     #[test]
     fn transformation_order() {
-        let point_1 = Point::new(1.0, 0.0, 1.0);
+        let point_1 = Point::new(1, 0, 1);
         let rotation = rotation_x(PI / 2.0);
-        let scaling = scaling(5.0, 5.0, 5.0);
-        let translation = translation(10.0, 5.0, 7.0);
+        let scaling = scaling(5, 5, 5);
+        let translation = translation(10, 5, 7);
         let point_2 = rotation * point_1;
-        assert_eq!(point_2, Point::new(1.0, -1.0, 0.0));
+        assert_eq!(point_2, Point::new(1, -1, 0));
         let point_3 = scaling * point_2;
-        assert_eq!(point_3, Point::new(5.0, -5.0, 0.0));
+        assert_eq!(point_3, Point::new(5, -5, 0));
         let point_4 = translation * point_3;
-        assert_eq!(point_4, Point::new(15.0, 0.0, 7.0));
+        assert_eq!(point_4, Point::new(15, 0, 7));
 
         let total_transform = translation * scaling * rotation;
         let point_5 = total_transform * point_1;
-        assert_eq!(point_5, Point::new(15.0, 0.0, 7.0));
+        assert_eq!(point_5, Point::new(15, 0, 7));
     }
 
     #[test]
     fn transformation_matrix_for_default_orientation() {
-        let from = Point::new(0.0, 0.0, 0.0);
-        let to = Point::new(0.0, 0.0, -1.0);
-        let up = Vector::new(0.0, 1.0, 0.0);
+        let from = Point::new(0, 0, 0);
+        let to = Point::new(0, 0, -1);
+        let up = Vector::new(0, 1, 0);
         let orientation = view_transform(from, to, up);
         assert_eq!(orientation, IDENTITY);
     }
 
     #[test]
     fn transformation_matrix_with_positive_z_direction() {
-        let from = Point::new(0.0, 0.0, 0.0);
-        let to = Point::new(0.0, 0.0, 1.0);
-        let up = Vector::new(0.0, 1.0, 0.0);
+        let from = Point::new(0, 0, 0);
+        let to = Point::new(0, 0, 1);
+        let up = Vector::new(0, 1, 0);
         let orientation = view_transform(from, to, up);
-        assert_eq!(orientation, scaling(-1.0, 1.0, -1.0));
+        assert_eq!(orientation, scaling(-1, 1, -1));
     }
 
     #[test]
     fn view_transformation_moves_world() {
-        let from = Point::new(0.0, 0.0, 8.0);
-        let to = Point::new(0.0, 0.0, 0.0);
-        let up = Vector::new(0.0, 1.0, 0.0);
+        let from = Point::new(0, 0, 8);
+        let to = Point::new(0, 0, 0);
+        let up = Vector::new(0, 1, 0);
         let orientation = view_transform(from, to, up);
-        assert_eq!(orientation, translation(0.0, 0.0, -8.0));
+        assert_eq!(orientation, translation(0, 0, -8));
     }
 
     #[test]
     fn complex_view_transformation() {
-        let from = Point::new(1.0, 3.0, 2.0);
-        let to = Point::new(4.0, -2.0, 8.0);
-        let up = Vector::new(1.0, 1.0, 0.0);
+        let from = Point::new(1, 3, 2);
+        let to = Point::new(4, -2, 8);
+        let up = Vector::new(1, 1, 0);
         let orientation = view_transform(from, to, up);
         let result = Transformation::new([
             [-0.5070925528371099, 0.5070925528371099, 0.6761234037828132, -2.366431913239846],

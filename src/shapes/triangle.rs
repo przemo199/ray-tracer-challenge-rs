@@ -107,27 +107,27 @@ mod tests {
 
     #[test]
     fn creating_triangle() {
-        let p_1 = Point::new(0.0, 1.0, 0.0);
-        let p_2 = Point::new(-1.0, 0.0, 0.0);
-        let p_3 = Point::new(1.0, 0.0, 0.0);
+        let p_1 = Point::new(0, 1, 0);
+        let p_2 = Point::new(-1, 0, 0);
+        let p_3 = Point::new(1, 0, 0);
         let triangle = Triangle::new(p_1, p_2, p_3);
         assert_eq!(triangle.vertex_1, p_1);
         assert_eq!(triangle.vertex_2, p_2);
         assert_eq!(triangle.vertex_3, p_3);
-        assert_eq!(triangle.edge_1, Vector::new(-1.0, -1.0, 0.0));
-        assert_eq!(triangle.edge_2, Vector::new(1.0, -1.0, 0.0));
-        assert_eq!(triangle.normal, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(triangle.edge_1, Vector::new(-1, -1, 0));
+        assert_eq!(triangle.edge_2, Vector::new(1, -1, 0));
+        assert_eq!(triangle.normal, Vector::new(0, 0, -1));
     }
 
     #[test]
     fn normal_on_triangle() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let n_1 = triangle.local_normal_at(Point::new(0.0, 0.5, 0.0));
-        let n_2 = triangle.local_normal_at(Point::new(-0.5, 0.75, 0.0));
-        let n_3 = triangle.local_normal_at(Point::new(0.5, 0.25, 0.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let n_1 = triangle.local_normal_at(Point::new(0, 0.5, 0));
+        let n_2 = triangle.local_normal_at(Point::new(-0.5, 0.75, 0));
+        let n_3 = triangle.local_normal_at(Point::new(0.5, 0.25, 0));
         assert_eq!(n_1, triangle.normal);
         assert_eq!(n_2, triangle.normal);
         assert_eq!(n_3, triangle.normal);
@@ -136,10 +136,10 @@ mod tests {
     #[test]
     fn ray_parallel_to_triangle() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let ray = Ray::new(Point::new(0.0, -1.0, -2.0), Vector::new(0.0, 1.0, 0.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 1, 0));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -147,10 +147,10 @@ mod tests {
     #[test]
     fn ray_misses_p1_p3_edge() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let ray = Ray::new(Point::new(1.0, 1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let ray = Ray::new(Point::new(1, 1, -2), Vector::new(0, 0, 1));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -158,10 +158,10 @@ mod tests {
     #[test]
     fn ray_misses_p1_p2_edge() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let ray = Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let ray = Ray::new(Point::new(-1, 1, -2), Vector::new(0, 0, 1));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -169,10 +169,10 @@ mod tests {
     #[test]
     fn ray_misses_p2_p3_edge() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let ray = Ray::new(Point::new(0.0, -1.0, -2.0), Vector::new(0.0, 0.0, 1.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 0, 1));
         let arc_triangle = Arc::new(triangle);
         assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
     }
@@ -180,10 +180,10 @@ mod tests {
     #[test]
     fn ray_strikes_triangle() {
         let triangle = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0));
-        let ray = Ray::new(Point::new(0.0, 0.5, -2.0), Vector::new(0.0, 0.0, 1.0));
+            Point::new(0, 1, 0),
+            Point::new(-1, 0, 0),
+            Point::new(1, 0, 0));
+        let ray = Ray::new(Point::new(0, 0.5, -2), Vector::new(0, 0, 1));
         let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
         let intersections = arc_triangle.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);

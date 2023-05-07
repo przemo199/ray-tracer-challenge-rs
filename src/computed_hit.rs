@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0.0, 0.0, 2.0_f64.sqrt() / 2.0), Vector::new(0.0, 1.0, 0.0));
+        let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::new(0, 1, 0));
         let mut intersections = Intersections::new();
         let arc_shape = Arc::new(shape);
         intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, arc_shape.clone()));
@@ -91,11 +91,11 @@ mod tests {
     #[test]
     fn schlick_approximation_perpendicular_to_viewing_angle() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 1.0, 0.0));
+        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 1, 0));
         let mut intersections = Intersections::new();
         let arc_shape = Arc::new(shape);
-        intersections.add(Intersection::new(-1.0, arc_shape.clone()));
-        intersections.add(Intersection::new(1.0, arc_shape));
+        intersections.add(Intersection::new(-1, arc_shape.clone()));
+        intersections.add(Intersection::new(1, arc_shape));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 0.04000000000000001);
     }
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn schlick_approximation_with_small_angle() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0.0, 0.99, -2.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 0.99, -2), Vector::new(0, 0, 1));
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(1.8589, Arc::new(shape)));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);

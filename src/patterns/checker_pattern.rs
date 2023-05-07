@@ -51,24 +51,24 @@ mod tests {
     #[test]
     fn checker_pattern_repeats_in_x() {
         let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.99, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(1.01, 0.0, 0.0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.99, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(1.01, 0, 0)), Color::BLACK);
     }
 
     #[test]
     fn checker_pattern_repeats_in_y() {
         let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.99, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 1.01, 0.0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0, 0.99, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0, 1.01, 0)), Color::BLACK);
     }
 
     #[test]
     fn checker_pattern_repeats_in_z() {
         let pattern = CheckerPattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 0.99)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.0, 0.0, 1.01)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0.99)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 1.01)), Color::BLACK);
     }
 }

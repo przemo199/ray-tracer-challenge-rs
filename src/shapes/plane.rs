@@ -20,7 +20,7 @@ pub struct Plane {
 
 impl Plane {
     pub fn new(material: Material, transformation: Matrix<4>) -> Plane {
-        let normal = Vector::new(0.0, 1.0, 0.0);
+        let normal = Vector::new(0, 1, 0);
         return Plane {
             material,
             transformation,
@@ -85,10 +85,10 @@ mod tests {
     #[test]
     fn normal_is_constant() {
         let plane = Plane::default();
-        let normal1 = plane.normal_at(Point::new(0.0, 0.0, 0.0));
-        let normal2 = plane.normal_at(Point::new(10.0, 0.0, -10.0));
-        let normal3 = plane.normal_at(Point::new(-5.0, 0.0, 150.0));
-        let normal = Vector::new(0.0, 1.0, 0.0);
+        let normal1 = plane.normal_at(Point::new(0, 0, 0));
+        let normal2 = plane.normal_at(Point::new(10, 0, -10));
+        let normal3 = plane.normal_at(Point::new(-5, 0, 150));
+        let normal = Vector::new(0, 1, 0);
         assert_eq!(normal1, normal);
         assert_eq!(normal2, normal);
         assert_eq!(normal3, normal);
@@ -98,7 +98,7 @@ mod tests {
     fn ray_intersects_plane_in_parallel() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Point::new(0.0, 10.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(Point::new(0, 10, 0), Vector::new(0, 0, 1));
         let intersections = arc_plane.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -107,7 +107,7 @@ mod tests {
     fn ray_intersects_plane_from_above() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Point::new(0.0, 1.0, 0.0), Vector::new(0.0, -1.0, 0.0));
+        let ray = Ray::new(Point::new(0, 1, 0), Vector::new(0, -1, 0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
@@ -118,7 +118,7 @@ mod tests {
     fn ray_intersects_plane_from_below() {
         let plane = Plane::default();
         let arc_plane: Arc<dyn Shape> = Arc::new(plane);
-        let ray = Ray::new(Point::new(0.0, -1.0, 0.0), Vector::new(0.0, 1.0, 0.0));
+        let ray = Ray::new(Point::new(0, -1, 0), Vector::new(0, 1, 0));
         let intersections = arc_plane.clone().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
