@@ -15,6 +15,8 @@ pub struct RingPattern {
 }
 
 impl RingPattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "RingPattern".as_bytes();
+
     pub fn new(color_a: Color, color_b: Color) -> RingPattern {
         return RingPattern { color_a, color_b, transformation: transformations::IDENTITY };
     }
@@ -35,8 +37,8 @@ impl Pattern for RingPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
-        encoded.extend_from_slice("RingPattern".as_bytes());
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }
 }

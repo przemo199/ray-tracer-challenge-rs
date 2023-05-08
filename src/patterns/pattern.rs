@@ -44,6 +44,8 @@ pub struct TestPattern {
 }
 
 impl TestPattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "TestPattern".as_bytes();
+
     pub fn new() -> TestPattern {
         return TestPattern { transformation: transformations::IDENTITY };
     }
@@ -63,7 +65,9 @@ impl Pattern for TestPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
+        return encoded;
     }
 }
 

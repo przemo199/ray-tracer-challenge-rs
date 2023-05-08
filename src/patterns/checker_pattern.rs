@@ -1,3 +1,4 @@
+use std::convert::AsRef;
 use std::fmt::{Display, Formatter};
 
 use bincode::Encode;
@@ -15,6 +16,8 @@ pub struct CheckerPattern {
 }
 
 impl CheckerPattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "CheckerPattern".as_bytes();
+
     pub fn new(color_a: Color, color_b: Color) -> CheckerPattern {
         return CheckerPattern { color_a, color_b, transformation: transformations::IDENTITY };
     }
@@ -36,8 +39,8 @@ impl Pattern for CheckerPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
-        encoded.extend_from_slice("CheckerPattern".as_bytes());
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }
 }

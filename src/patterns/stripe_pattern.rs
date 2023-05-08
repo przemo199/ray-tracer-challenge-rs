@@ -15,6 +15,8 @@ pub struct StripePattern {
 }
 
 impl StripePattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "StripePattern".as_bytes();
+
     pub fn new(color_a: Color, color_b: Color) -> StripePattern {
         return StripePattern { color_a, color_b, transformation: transformations::IDENTITY };
     }
@@ -35,8 +37,8 @@ impl Pattern for StripePattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
-        encoded.extend_from_slice("StripePattern".as_bytes());
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }
 }

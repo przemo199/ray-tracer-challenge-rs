@@ -15,6 +15,8 @@ pub struct GradientPattern {
 }
 
 impl GradientPattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "GradientPattern".as_bytes();
+
     pub fn new(color_a: Color, color_b: Color) -> GradientPattern {
         return GradientPattern { color_a, color_b, transformation: transformations::IDENTITY };
     }
@@ -39,8 +41,8 @@ impl Pattern for GradientPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
-        encoded.extend_from_slice("GradientPattern".as_bytes());
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }
 }

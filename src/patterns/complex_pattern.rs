@@ -16,6 +16,8 @@ pub struct ComplexPattern {
 }
 
 impl ComplexPattern {
+    const PATTERN_IDENTIFIER: &'static [u8] = "ComplexPattern".as_bytes();
+
     pub fn new(pattern_a: Arc<dyn Pattern>, pattern_b: Arc<dyn Pattern>) -> ComplexPattern {
         return ComplexPattern { pattern_a, pattern_b, transformation: transformations::IDENTITY };
     }
@@ -36,8 +38,8 @@ impl Pattern for ComplexPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
-        encoded.extend_from_slice("ComplexPattern".as_bytes());
+        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }
 }
