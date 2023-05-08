@@ -10,7 +10,6 @@ use crate::material::Material;
 use crate::primitives::{Point, Vector};
 use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
-use crate::utils::any_as_u8_slice;
 
 use super::Shape;
 
