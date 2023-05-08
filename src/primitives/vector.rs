@@ -1,9 +1,11 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use bincode::Encode;
+
 use crate::utils::CloseEnough;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,

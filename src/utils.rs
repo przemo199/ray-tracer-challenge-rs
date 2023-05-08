@@ -1,5 +1,3 @@
-use std::arch::asm;
-use std::cell::RefCell;
 use crate::consts::EPSILON;
 use crate::primitives::Color;
 use crate::primitives::transformations;
@@ -28,6 +26,16 @@ impl CloseEnough for f64 {
     fn close_enough(&self, rhs: impl Into<Self>) -> bool {
         return (*self - rhs.into()).abs() < CloseEnough::EPSILON;
     }
+}
+
+#[inline(always)]
+pub fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
+    return unsafe {
+        core::slice::from_raw_parts(
+            (value as *const T) as *const u8,
+            core::mem::size_of::<T>(),
+        )
+    };
 }
 
 pub fn world_default_sphere_1() -> Sphere {

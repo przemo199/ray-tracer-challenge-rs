@@ -1,7 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::consts::EPSILON;
+use bincode::Encode;
+
+use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
@@ -11,7 +13,7 @@ use crate::ray::Ray;
 
 use super::Shape;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Plane {
     pub material: Material,
     pub transformation: Transformation,
@@ -65,6 +67,10 @@ impl Shape for Plane {
         let mut result = Intersections::new();
         result.add(Intersection::new(distance, self));
         return result;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
     }
 }
 

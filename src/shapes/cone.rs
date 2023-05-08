@@ -1,7 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::consts::EPSILON;
+use bincode::Encode;
+
+use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
@@ -12,7 +14,7 @@ use crate::utils::CloseEnough;
 
 use super::Shape;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct Cone {
     pub minimum: f64,
     pub maximum: f64,
@@ -26,7 +28,7 @@ impl Cone {
         minimum: impl Into<f64>,
         maximum: impl Into<f64>,
         closed: bool, transformation: Transformation,
-        material: Material
+        material: Material,
     ) -> Cone {
         return Cone { minimum: minimum.into(), maximum: maximum.into(), closed, transformation, material };
     }
@@ -134,6 +136,10 @@ impl Shape for Cone {
         self.intersect_caps(ray, &mut intersections);
         return intersections;
     }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+    }
 }
 
 impl Default for Cone {
@@ -167,6 +173,7 @@ impl PartialEq for Cone {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+
     use rstest::rstest;
 
     use crate::primitives::{Point, Vector};

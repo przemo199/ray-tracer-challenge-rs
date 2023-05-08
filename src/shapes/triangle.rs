@@ -1,17 +1,20 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 
-use crate::consts::EPSILON;
+use bincode::Encode;
+
+use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
 use crate::primitives::{Point, Vector};
 use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
+use crate::utils::any_as_u8_slice;
 
 use super::Shape;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
     pub vertex_1: Point,
     pub vertex_2: Point,
@@ -83,6 +86,10 @@ impl Shape for Triangle {
         let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
         intersections.add(Intersection::new(distance, self));
         return intersections;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
     }
 }
 

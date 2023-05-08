@@ -1,10 +1,13 @@
 use std::fmt::{Display, Formatter};
 
+use bincode::Encode;
+
+use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point};
 use crate::primitives::{Transformation, transformations};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct StripePattern {
     color_a: Color,
     color_b: Color,
@@ -29,6 +32,12 @@ impl Pattern for StripePattern {
 
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        encoded.extend_from_slice("StripePattern".as_bytes());
+        return encoded;
     }
 }
 

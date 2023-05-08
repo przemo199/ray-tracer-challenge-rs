@@ -1,6 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
+use bincode::Encode;
+
+use crate::consts::BINCODE_CONFIG;
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
@@ -10,7 +13,7 @@ use crate::ray::Ray;
 
 use super::Shape;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Sphere {
     pub material: Material,
     pub transformation: Transformation,
@@ -73,6 +76,10 @@ impl Shape for Sphere {
         intersections.add(Intersection::new(distance_1, self.clone()));
         intersections.add(Intersection::new(distance_2, self));
         return intersections;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
     }
 }
 
@@ -140,8 +147,8 @@ mod tests {
     fn normal_on_translated_sphere() {
         let mut sphere = Sphere::default();
         sphere.transformation = transformations::translation(0, 1, 0);
-        let normal = sphere.normal_at(Point::new(0.0, 1.70711, -0.70711));
-        assert_eq!(normal, Vector::new(0, 0.7071067811865475, -0.7071067811865476));
+        let normal = sphere.normal_at(Point::new(0.0, 1.0 + std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2));
+        assert_eq!(normal, Vector::new(0, std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2));
     }
 
     #[test]

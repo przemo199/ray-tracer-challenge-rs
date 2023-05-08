@@ -1,11 +1,13 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use bincode::Encode;
+
 use crate::primitives::Vector;
 use crate::utils::CloseEnough;
 
 /// Struct representing point in three dimensional space
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Encode)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

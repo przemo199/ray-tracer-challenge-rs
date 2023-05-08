@@ -1,11 +1,14 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
+use bincode::Encode;
+
+use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point};
 use crate::primitives::{Transformation, transformations};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct ComplexPattern {
     pattern_a: Arc<dyn Pattern>,
     pattern_b: Arc<dyn Pattern>,
@@ -30,6 +33,12 @@ impl Pattern for ComplexPattern {
 
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        encoded.extend_from_slice("ComplexPattern".as_bytes());
+        return encoded;
     }
 }
 

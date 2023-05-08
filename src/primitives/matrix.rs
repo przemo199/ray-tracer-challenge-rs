@@ -2,10 +2,12 @@ use std::fmt::{Display, Formatter};
 use std::mem;
 use std::ops::Mul;
 
+use bincode::Encode;
+
 use crate::consts::EPSILON;
 use crate::primitives::{Point, Vector};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Encode)]
 pub struct Matrix<const SIDE_LENGTH: usize> {
     elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH],
 }

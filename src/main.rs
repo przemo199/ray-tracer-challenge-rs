@@ -1,10 +1,13 @@
+use std::time::Instant;
+
+use clap::Parser;
+
+use raytracer::scene_loader::load_scene_description;
+
+use crate::args::Args;
+
 mod args;
 mod scenes;
-
-use std::time::Instant;
-use clap::Parser;
-use raytracer::scene_loader::load_scene_description;
-use crate::args::Args;
 
 fn main() {
     let args = Args::parse();

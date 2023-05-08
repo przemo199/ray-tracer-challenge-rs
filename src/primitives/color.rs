@@ -1,10 +1,12 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Mul, Sub};
 
+use bincode::Encode;
+
 use crate::utils::CloseEnough;
 
 /// Struct representing RGB values of a color
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Encode)]
 pub struct Color {
     pub red: f64,
     pub green: f64,

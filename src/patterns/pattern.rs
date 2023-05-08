@@ -1,5 +1,11 @@
 use std::fmt::{Debug, Display, Formatter};
 
+use bincode::enc::Encoder;
+use bincode::enc::write::Writer;
+use bincode::Encode;
+use bincode::error::EncodeError;
+
+use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Color, Point};
 use crate::primitives::{Transformation, transformations};
 use crate::shapes::Shape;
@@ -16,18 +22,33 @@ pub trait Pattern: Debug + Display + Sync + Send {
     fn transformation(&self) -> Transformation;
 
     fn set_transformation(&mut self, transformation: Transformation);
+
+    fn encoded(&self) -> Vec<u8>;
 }
 
 impl PartialEq for dyn Pattern {
     fn eq(&self, rhs: &dyn Pattern) -> bool {
-        return self.to_string() == rhs.to_string();
+        return self.encoded() == rhs.encoded();
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+impl Encode for dyn Pattern {
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        return encoder.writer().write(&*self.encoded());
+    }
+}
+
+trait A: Encode {
+    fn as_bytes(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct TestPattern {
     transformation: Transformation,
 }
+
 
 impl TestPattern {
     pub fn new() -> TestPattern {
@@ -46,6 +67,10 @@ impl Pattern for TestPattern {
 
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
     }
 }
 

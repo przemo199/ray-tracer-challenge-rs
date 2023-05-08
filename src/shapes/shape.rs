@@ -30,22 +30,25 @@ pub trait Shape: Debug + Display + Send + Sync {
     fn local_ray(&self, ray: &Ray) -> Ray {
         return ray.transform(self.transformation().inverse());
     }
+
+    fn encoded(&self) -> Vec<u8>;
 }
 
 impl PartialEq for dyn Shape {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.to_string() == rhs.to_string();
+        return self.encoded() == rhs.encoded();
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::patterns::{ComplexPattern, GradientPattern, RingPattern};
     use crate::primitives::Color;
     use crate::shapes::Sphere;
 
     use super::*;
 
-// #[derive(Clone, Debug)]
+    // #[derive(Clone, Debug)]
     // pub struct TestShape {
     //     pub transformation: Matrix,
     //     pub material: Material,
@@ -82,5 +85,24 @@ mod tests {
         material.color = Color::new(0.8, 1, 0.6);
         shape.set_material(material.clone());
         assert_eq!(shape.material(), material);
+    }
+
+    #[test]
+    fn compare_dyn_shapes() {
+        let mut sphere_1 = Sphere::default();
+        let mut sphere_2 = Sphere::default();
+        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
+        sphere_2.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
+        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
+        let arc_sphere_2: Arc<dyn Shape> = Arc::new(sphere_2);
+        assert_eq!(*arc_sphere_1, *arc_sphere_2);
+        let mut sphere_1 = Sphere::default();
+        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::BLACK, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
+        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
+        assert_ne!(*arc_sphere_1, *arc_sphere_2);
+        let mut sphere_1 = Sphere::default();
+        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)))));
+        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
+        assert_ne!(*arc_sphere_1, *arc_sphere_2);
     }
 }

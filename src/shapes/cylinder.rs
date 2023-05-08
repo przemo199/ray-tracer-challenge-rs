@@ -1,7 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::consts::EPSILON;
+use bincode::Encode;
+
+use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::intersection::Intersection;
 use crate::intersections::Intersections;
 use crate::material::Material;
@@ -10,7 +12,7 @@ use crate::primitives::Transformation;
 use crate::ray::Ray;
 use crate::shapes::Shape;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
     pub minimum: f64,
     pub maximum: f64,
@@ -128,6 +130,10 @@ impl Shape for Cylinder {
         self.intersect_caps(ray, &mut intersections);
         return intersections;
     }
+
+    fn encoded(&self) -> Vec<u8> {
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+    }
 }
 
 impl Default for Cylinder {
@@ -157,6 +163,7 @@ impl Display for Cylinder {
 #[cfg(test)]
 mod tests {
     use rstest::rstest;
+
     use super::*;
 
     #[test]

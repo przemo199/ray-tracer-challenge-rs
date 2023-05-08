@@ -1,13 +1,15 @@
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
+use bincode::Encode;
+
 use crate::computed_hit::ComputedHit;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use crate::utils::CloseEnough;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct Material {
     pub color: Color,
     pub pattern: Option<Arc<dyn Pattern>>,

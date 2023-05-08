@@ -1,11 +1,13 @@
 use std::fmt::{Display, Formatter};
 
-use crate::consts::EPSILON;
+use bincode::Encode;
+
+use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::patterns::pattern::Pattern;
 use crate::primitives::{Color, Point};
 use crate::primitives::{Transformation, transformations};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct CheckerPattern {
     color_a: Color,
     color_b: Color,
@@ -31,6 +33,12 @@ impl Pattern for CheckerPattern {
 
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation = transformation;
+    }
+
+    fn encoded(&self) -> Vec<u8> {
+        let mut encoded = bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        encoded.extend_from_slice("CheckerPattern".as_bytes());
+        return encoded;
     }
 }
 
