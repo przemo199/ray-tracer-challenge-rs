@@ -34,13 +34,7 @@ impl PartialEq for dyn Pattern {
 
 impl Encode for dyn Pattern {
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        return encoder.writer().write(&*self.encoded());
-    }
-}
-
-trait A: Encode {
-    fn as_bytes(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        return encoder.writer().write(&self.encoded());
     }
 }
 
@@ -48,7 +42,6 @@ trait A: Encode {
 pub struct TestPattern {
     transformation: Transformation,
 }
-
 
 impl TestPattern {
     pub fn new() -> TestPattern {
