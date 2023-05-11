@@ -1,4 +1,3 @@
-use std::convert::AsRef;
 use std::fmt::{Display, Formatter};
 
 use bincode::Encode;
