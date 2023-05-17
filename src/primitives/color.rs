@@ -28,6 +28,7 @@ impl Color {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Color;
+    ///
     ///     let color = Color::new(1, 0.5, 0);
     ///
     ///     assert_eq!(color.red, 1.0);
@@ -42,6 +43,7 @@ impl Color {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Color;
+    ///
     ///     let color = Color::new(1.0, 0.5, 0.0);
     ///
     ///     assert_eq!(color.get_channels(), [1.0, 0.5, 0.0]);
@@ -149,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn mul_color_by_color() {
+    fn mul_colors() {
         let color_1 = Color::new(1, 0.2, 0.4);
         let color_2 = Color::new(0.9, 1, 0.1);
         assert_eq!(color_1 * color_2, Color::new(0.9, 0.2, 0.04));

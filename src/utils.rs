@@ -40,7 +40,7 @@ pub fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
 
 pub fn world_default_sphere_1() -> Sphere {
     let mut sphere = Sphere::default();
-    sphere.material.color = Color::new(0.8, 1.0, 0.6);
+    sphere.material.color = Color::new(0.8, 1, 0.6);
     sphere.material.diffuse = 0.7;
     sphere.material.specular = 0.2;
     return sphere;

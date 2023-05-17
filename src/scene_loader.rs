@@ -378,17 +378,17 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
                 "plane" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.objects.push(Arc::new(Plane::new(material, transformation)));
+                    world.shapes.push(Box::new(Plane::new(material, transformation)));
                 }
                 "sphere" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.objects.push(Arc::new(Sphere::new(material, transformation)));
+                    world.shapes.push(Box::new(Sphere::new(material, transformation)));
                 }
                 "cube" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.objects.push(Arc::new(Cube::new(material, transformation)));
+                    world.shapes.push(Box::new(Cube::new(material, transformation)));
                 }
                 _ => ()
             }

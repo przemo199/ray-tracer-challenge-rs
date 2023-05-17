@@ -64,6 +64,17 @@ mod tests {
     use super::*;
 
     #[test]
+    fn stripe_pattern_alternates_in_x() {
+        let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(0.9, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(-0.1, 0, 0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(-1, 0, 0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(-1.1, 0, 0)), Color::WHITE);
+    }
+
+    #[test]
     fn stripe_pattern_is_constant_in_y() {
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
@@ -80,18 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn stripe_pattern_alternates_in_x() {
-        let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.9, 0, 0)), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(-0.1, 0, 0)), Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(-1, 0, 0)), Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(-1.1, 0, 0)), Color::WHITE);
-    }
-
-    #[test]
-    fn lighting_with_pattern_applied() {
+    fn lighting_with_stripe_pattern_applied() {
         let object = Sphere::default();
         let mut material = Material::default();
         material.pattern = Option::from(Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn Pattern>);
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn stripes_with_object_transformation() {
+    fn stripe_pattern_with_object_transformation() {
         let mut sphere = Sphere::default();
         sphere.set_transformation(transformations::scaling(2, 2, 2));
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn stripes_with_pattern_transformation() {
+    fn stripe_pattern_with_pattern_transformation() {
         let sphere = Sphere::default();
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         pattern.transformation = transformations::scaling(2, 2, 2);
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn stripes_with_pattern_and_object_transformations() {
+    fn stripe_pattern_with_pattern_and_object_transformations() {
         let mut sphere = Sphere::default();
         sphere.set_transformation(transformations::scaling(2, 2, 2));
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);

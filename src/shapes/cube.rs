@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -75,7 +74,7 @@ impl Shape for Cube {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
         let (x_distance_min, x_distance_max) = Cube::check_axis(ray.origin.x, ray.direction.x);
         let (y_distance_min, y_distance_max) = Cube::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Cube::check_axis(ray.origin.z, ray.direction.z);
@@ -87,7 +86,7 @@ impl Shape for Cube {
         if distance_min > distance_max {
             return result;
         }
-        result.add(Intersection::new(distance_min, self.clone()));
+        result.add(Intersection::new(distance_min, self));
         result.add(Intersection::new(distance_max, self));
         return result;
     }
@@ -133,9 +132,9 @@ mod tests {
         #[case] t_2: impl Into<f64>
     ) {
         let cube = Cube::default();
-        let arc_cube: Arc<dyn Shape> = Arc::new(cube);
+        let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
-        let intersections = arc_cube.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, t_1.into());
         assert_eq!(intersections[1].distance, t_2.into());
@@ -150,9 +149,9 @@ mod tests {
     #[case(Point::new(2, 2, 0), Vector::new(-1, 0, 0))]
     fn ray_misses_cube(#[case] origin: Point, #[case] direction: Vector) {
         let cube = Cube::default();
-        let arc_cube: Arc<dyn Shape> = Arc::new(cube);
+        let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
-        let intersections = arc_cube.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 

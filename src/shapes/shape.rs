@@ -1,9 +1,8 @@
 use std::fmt::{Debug, Display};
-use std::sync::Arc;
 
 use crate::intersections::Intersections;
 use crate::material::Material;
-use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use crate::ray::Ray;
 
 pub trait Shape: Debug + Display + Send + Sync {
@@ -21,11 +20,11 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn set_material(&mut self, material: Material);
 
-    fn transformation(&self) -> Matrix<4>;
+    fn transformation(&self) -> Transformation;
 
-    fn set_transformation(&mut self, transformation: Matrix<4>);
+    fn set_transformation(&mut self, transformation: Transformation);
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections;
+    fn local_intersect(&self, ray: &Ray) -> Intersections;
 
     fn local_ray(&self, ray: &Ray) -> Ray {
         return ray.transform(self.transformation().inverse());
@@ -34,7 +33,13 @@ pub trait Shape: Debug + Display + Send + Sync {
     fn encoded(&self) -> Vec<u8>;
 }
 
-impl PartialEq for dyn Shape {
+impl<'a> PartialEq for &'a dyn Shape {
+    fn eq(&self, rhs: &Self) -> bool {
+        return self.encoded() == rhs.encoded();
+    }
+}
+
+impl PartialEq for Box<dyn Shape> {
     fn eq(&self, rhs: &Self) -> bool {
         return self.encoded() == rhs.encoded();
     }
@@ -42,6 +47,7 @@ impl PartialEq for dyn Shape {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use crate::patterns::{ComplexPattern, GradientPattern, RingPattern};
     use crate::primitives::Color;
     use crate::shapes::Sphere;
@@ -93,16 +99,16 @@ mod tests {
         let mut sphere_2 = Sphere::default();
         sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
         sphere_2.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
-        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
-        let arc_sphere_2: Arc<dyn Shape> = Arc::new(sphere_2);
-        assert_eq!(*arc_sphere_1, *arc_sphere_2);
+        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
+        let arc_sphere_2: Box<dyn Shape> = Box::new(sphere_2);
+        assert_eq!(arc_sphere_1.as_ref(), arc_sphere_2.as_ref());
         let mut sphere_1 = Sphere::default();
         sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::BLACK, Color::BLACK)), Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)))));
-        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
-        assert_ne!(*arc_sphere_1, *arc_sphere_2);
+        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
+        assert_ne!(arc_sphere_1.as_ref(), arc_sphere_2.as_ref());
         let mut sphere_1 = Sphere::default();
         sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)), Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)))));
-        let arc_sphere_1: Arc<dyn Shape> = Arc::new(sphere_1);
-        assert_ne!(*arc_sphere_1, *arc_sphere_2);
+        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
+        assert_ne!(arc_sphere_1.as_ref(), arc_sphere_2.as_ref());
     }
 }

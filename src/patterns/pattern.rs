@@ -13,8 +13,8 @@ use crate::shapes::Shape;
 pub trait Pattern: Debug + Display + Sync + Send {
     fn color_at(&self, point: &Point) -> Color;
 
-    fn color_at_shape(&self, object: &dyn Shape, point: &Point) -> Color {
-        let object_point = object.transformation().inverse() * *point;
+    fn color_at_shape(&self, shape: &dyn Shape, point: &Point) -> Color {
+        let object_point = shape.transformation().inverse() * *point;
         let pattern_point = self.transformation().inverse() * object_point;
         return self.color_at(&pattern_point);
     }

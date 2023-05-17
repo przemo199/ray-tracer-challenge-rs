@@ -13,6 +13,7 @@ impl Light {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::{Color, Light, Point};
+    ///
     ///     let light = Light::new(Point::default(), Color::BLACK);
     ///
     ///     assert_eq!(light.position, Point::default());

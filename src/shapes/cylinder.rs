@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -44,14 +43,14 @@ impl Cylinder {
         return (x * x + z * z) <= 1.0;
     }
 
-    fn intersect_caps(self: Arc<Self>, ray: &Ray, intersections: &mut Intersections) {
+    fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
 
         let distance = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, distance) {
-            intersections.add(Intersection::new(distance, self.clone()));
+            intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.maximum - ray.origin.y) / ray.direction.y;
@@ -92,7 +91,7 @@ impl Shape for Cylinder {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
@@ -119,12 +118,12 @@ impl Shape for Cylinder {
 
         let y0 = ray.origin.y + distance_0 * ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            intersections.add(Intersection::new(distance_0, self.clone()));
+            intersections.add(Intersection::new(distance_0, self));
         }
 
         let y1 = ray.origin.y + distance_1 * ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            intersections.add(Intersection::new(distance_1, self.clone()));
+            intersections.add(Intersection::new(distance_1, self));
         }
 
         self.intersect_caps(ray, &mut intersections);
@@ -180,9 +179,9 @@ mod tests {
     #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1))]
     fn ray_misses_cylinder(#[case] origin: Point, #[case] direction: Vector) {
         let cylinder = Cylinder::default();
-        let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
+        let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = arc_cylinder.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 
@@ -192,9 +191,9 @@ mod tests {
     #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.80798191702732, 7.088723439378861)]
     fn ray_intersects_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] distance_1: f64, #[case] distance_2: f64) {
             let cylinder = Cylinder::default();
-            let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
+            let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
             let ray = Ray::new(origin, direction.normalized());
-            let intersections = arc_cylinder.local_intersect(&ray);
+            let intersections = boxed_shape.local_intersect(&ray);
             assert_eq!(intersections.len(), 2);
             assert_eq!(intersections[0].distance, distance_1);
             assert_eq!(intersections[1].distance, distance_2);
@@ -224,9 +223,9 @@ mod tests {
             maximum: 2.0,
             ..Default::default()
         };
-        let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
+        let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = arc_cylinder.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), count);
     }
 
@@ -241,9 +240,9 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let arc_cylinder: Arc<dyn Shape> = Arc::new(cylinder);
+        let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = arc_cylinder.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), count);
     }
 

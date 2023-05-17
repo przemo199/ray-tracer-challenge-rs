@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -58,13 +57,13 @@ impl Shape for Plane {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
+        let mut result = Intersections::new();
         if ray.direction.y.abs() < EPSILON {
-            return Intersections::new();
+            return result;
         }
 
         let distance = -ray.origin.y / ray.direction.y;
-        let mut result = Intersections::new();
         result.add(Intersection::new(distance, self));
         return result;
     }
@@ -103,31 +102,31 @@ mod tests {
     #[test]
     fn ray_intersects_plane_in_parallel() {
         let plane = Plane::default();
-        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
+        let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, 10, 0), Vector::new(0, 0, 1));
-        let intersections = arc_plane.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 
     #[test]
     fn ray_intersects_plane_from_above() {
         let plane = Plane::default();
-        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
+        let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, 1, 0), Vector::new(0, -1, 0));
-        let intersections = arc_plane.clone().local_intersect(&ray);
+        let intersections = boxed_shape.as_ref().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
-        assert_eq!(&intersections[0].object, &arc_plane);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
     }
 
     #[test]
     fn ray_intersects_plane_from_below() {
         let plane = Plane::default();
-        let arc_plane: Arc<dyn Shape> = Arc::new(plane);
+        let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, -1, 0), Vector::new(0, 1, 0));
-        let intersections = arc_plane.clone().local_intersect(&ray);
+        let intersections = boxed_shape.as_ref().local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
-        assert_eq!(&intersections[0].object, &arc_plane);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
     }
 }

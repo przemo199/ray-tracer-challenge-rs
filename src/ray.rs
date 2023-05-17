@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use crate::intersections::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
@@ -20,9 +19,9 @@ impl Ray {
         return self.origin + self.direction * distance.into();
     }
 
-    pub fn intersect(&self, shape: &Arc<dyn Shape>) -> Intersections {
+    pub fn intersect<'a>(&self, shape: &'a dyn Shape) -> Intersections<'a> {
         let local_ray = self.transform(shape.transformation().inverse());
-        return shape.clone().local_intersect(&local_ray);
+        return shape.local_intersect(&local_ray);
     }
 
     pub fn transform(&self, transformation: Transformation) -> Ray {
@@ -49,7 +48,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new_ray() {
+    fn creating_and_inspecting_ray() {
         let origin = Point::new(1, 2, 3);
         let direction = Vector::new(4, 5, 6);
         let ray = Ray::new(origin, direction);
@@ -70,61 +69,62 @@ mod tests {
     fn intersections_in_the_middle_of_sphere() {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, 4.0);
         assert_eq!(intersections[1].distance, 6.0);
-        assert_eq!(&intersections[0].object, &arc_sphere);
-        assert_eq!(&intersections[1].object, &arc_sphere);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[1].object, boxed_shape.as_ref());
     }
 
     #[test]
     fn intersections_on_the_edge_of_sphere() {
         let ray = Ray::new(Point::new(0, 1, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, 5.0);
         assert_eq!(intersections[1].distance, 5.0);
-        assert_eq!(&intersections[0].object, &arc_sphere);
-        assert_eq!(&intersections[1].object, &arc_sphere);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[1].object, boxed_shape.as_ref());
     }
 
     #[test]
     fn no_intersections() {
         let ray = Ray::new(Point::new(0, 2, -5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 0);
     }
 
     #[test]
-    fn ray_begins_inside_sphere() {
+    fn ray_origin_inside_sphere() {
         let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, -1.0);
         assert_eq!(intersections[1].distance, 1.0);
-        assert_eq!(&intersections[0].object, &arc_sphere);
-        assert_eq!(&intersections[1].object, &arc_sphere);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[1].object, boxed_shape.as_ref());
     }
 
     #[test]
-    fn ray_begins_behind_sphere() {
+    fn ray_origin_behind_sphere() {
         let ray = Ray::new(Point::new(0, 0, 5), Vector::new(0, 0, 1));
         let sphere = Sphere::default();
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
+        intersections[0].object.encoded();
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, -6.0);
         assert_eq!(intersections[1].distance, -4.0);
-        assert_eq!(&intersections[0].object, &arc_sphere);
-        assert_eq!(&intersections[1].object, &arc_sphere);
+        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[1].object, boxed_shape.as_ref());
     }
 
     #[test]
@@ -150,8 +150,8 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let mut sphere = Sphere::default();
         sphere.transformation = transformations::scaling(2, 2, 2);
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, 3.0);
         assert_eq!(intersections[1].distance, 7.0);
@@ -162,8 +162,8 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
         let mut sphere = Sphere::default();
         sphere.transformation = transformations::translation(5, 0, 0);
-        let arc_sphere: Arc<dyn Shape> = Arc::new(sphere);
-        let intersections = ray.intersect(&arc_sphere);
+        let boxed_shape: Box<dyn Shape> = Box::new(sphere);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections.len(), 0);
     }
 }

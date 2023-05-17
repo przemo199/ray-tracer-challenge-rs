@@ -51,11 +51,11 @@ impl Material {
         return Material::new(Color::BLACK, None, 0, 0, 0, 0, 0, 0, 1);
     }
 
-    pub fn lighting(&self, object: &dyn Shape, light: &Light, point: &Point, camera_vector: &Vector, normal_vector: &Vector, is_shadowed: &bool) -> Color {
+    pub fn lighting(&self, shape: &dyn Shape, light: &Light, point: &Point, camera_vector: &Vector, normal_vector: &Vector, is_shadowed: &bool) -> Color {
         let diffuse: Color;
         let specular: Color;
         let color = match &self.pattern {
-            Some(pattern) => pattern.color_at_shape(object, point),
+            Some(pattern) => pattern.color_at_shape(shape, point),
             None => self.color
         };
         let effective_color = color * light.intensity;
@@ -87,7 +87,7 @@ impl Material {
     }
 
     pub fn lighting_from_computed_hit(&self, computed_hit: &ComputedHit, light: &Light, is_shadowed: &bool) -> Color {
-        return self.lighting(&*computed_hit.object, light, &computed_hit.point, &computed_hit.camera_vector, &computed_hit.normal_vector, is_shadowed);
+        return self.lighting(computed_hit.object, light, &computed_hit.point, &computed_hit.camera_vector, &computed_hit.normal_vector, is_shadowed);
     }
 }
 

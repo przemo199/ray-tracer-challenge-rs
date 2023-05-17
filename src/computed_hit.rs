@@ -1,13 +1,11 @@
-use std::sync::Arc;
-
 use crate::consts::EPSILON;
 use crate::primitives::{Point, Vector};
 use crate::shapes::Shape;
 
 #[derive(Clone, Debug)]
-pub struct ComputedHit {
+pub struct ComputedHit<'a> {
     pub distance: f64,
-    pub object: Arc<dyn Shape>,
+    pub object: &'a dyn Shape,
     pub point: Point,
     pub over_point: Point,
     pub under_point: Point,
@@ -19,10 +17,10 @@ pub struct ComputedHit {
     pub n2: f64,
 }
 
-impl ComputedHit {
+impl<'a> ComputedHit<'a> {
     pub fn new(
         distance: f64,
-        object: Arc<dyn Shape>,
+        object: &dyn Shape,
         point: Point,
         camera_vector: Vector,
         normal_vector: Vector,
@@ -69,6 +67,7 @@ impl ComputedHit {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use crate::intersection::Intersection;
     use crate::intersections::Intersections;
     use crate::ray::Ray;
@@ -81,9 +80,9 @@ mod tests {
         let shape = Sphere::glass();
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::new(0, 1, 0));
         let mut intersections = Intersections::new();
-        let arc_shape = Arc::new(shape);
-        intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, arc_shape.clone()));
-        intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, arc_shape));
+        let boxed_shape = Box::new(shape);
+        intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, boxed_shape.as_ref()));
+        intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, boxed_shape.as_ref()));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 1.0);
     }
@@ -93,9 +92,9 @@ mod tests {
         let shape = Sphere::glass();
         let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 1, 0));
         let mut intersections = Intersections::new();
-        let arc_shape = Arc::new(shape);
-        intersections.add(Intersection::new(-1, arc_shape.clone()));
-        intersections.add(Intersection::new(1, arc_shape));
+        let boxed_shape = Box::new(shape);
+        intersections.add(Intersection::new(-1, boxed_shape.as_ref()));
+        intersections.add(Intersection::new(1, boxed_shape.as_ref()));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 0.04000000000000001);
     }
@@ -105,7 +104,8 @@ mod tests {
         let shape = Sphere::glass();
         let ray = Ray::new(Point::new(0, 0.99, -2), Vector::new(0, 0, 1));
         let mut intersections = Intersections::new();
-        intersections.add(Intersection::new(1.8589, Arc::new(shape)));
+        let boxed_shape = Box::new(shape);
+        intersections.add(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 0.48873081012212183);
     }

@@ -1,5 +1,4 @@
 use std::fmt::{Debug, Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -64,7 +63,7 @@ impl Shape for Triangle {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let direction_cross_edge2 = ray.direction.cross(&self.edge_2);
         let determinant = self.edge_1.dot(&direction_cross_edge2);
@@ -146,8 +145,8 @@ mod tests {
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 1, 0));
-        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
-        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
+        let boxed_shape: Box<dyn Shape> = Box::new(triangle);
+        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -157,8 +156,8 @@ mod tests {
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(1, 1, -2), Vector::new(0, 0, 1));
-        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
-        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
+        let boxed_shape: Box<dyn Shape> = Box::new(triangle);
+        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -168,8 +167,8 @@ mod tests {
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(-1, 1, -2), Vector::new(0, 0, 1));
-        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
-        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
+        let boxed_shape: Box<dyn Shape> = Box::new(triangle);
+        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -179,8 +178,8 @@ mod tests {
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 0, 1));
-        let arc_triangle = Arc::new(triangle);
-        assert_eq!(arc_triangle.local_intersect(&ray).len(), 0);
+        let boxed_shape = Box::new(triangle);
+        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
 
     #[test]
@@ -190,8 +189,8 @@ mod tests {
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, 0.5, -2), Vector::new(0, 0, 1));
-        let arc_triangle: Arc<dyn Shape> = Arc::new(triangle);
-        let intersections = arc_triangle.local_intersect(&ray);
+        let boxed_shape: Box<dyn Shape> = Box::new(triangle);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 2.0);
     }

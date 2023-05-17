@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -59,7 +58,7 @@ impl Shape for Sphere {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, local_ray: &Ray) -> Intersections {
+    fn local_intersect(&self, local_ray: &Ray) -> Intersections {
         let sphere_to_ray_distance = Vector::new(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
@@ -73,7 +72,7 @@ impl Shape for Sphere {
         let distance_1 = (-b - discriminant_root) / (2.0 * a);
         let distance_2 = (-b + discriminant_root) / (2.0 * a);
 
-        intersections.add(Intersection::new(distance_1, self.clone()));
+        intersections.add(Intersection::new(distance_1, self));
         intersections.add(Intersection::new(distance_2, self));
         return intersections;
     }

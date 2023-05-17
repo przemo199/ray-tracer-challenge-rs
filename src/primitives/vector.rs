@@ -17,6 +17,7 @@ impl Vector {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Vector;
+    ///
     ///     let vector = Vector::new(1, 0.5, 0);
     ///
     ///     assert_eq!(vector.x, 1.0);

@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 use bincode::Encode;
 
@@ -40,14 +39,14 @@ impl Cone {
         return x * x + z * z <= (ray.origin.y + distance * ray.direction.y).abs();
     }
 
-    fn intersect_caps(self: Arc<Self>, ray: &Ray, intersections: &mut Intersections) {
+    fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
 
         let distance = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(ray, distance) {
-            intersections.add(Intersection::new(distance, self.clone()));
+            intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.maximum - ray.origin.y) / ray.direction.y;
@@ -93,7 +92,7 @@ impl Shape for Cone {
         self.transformation = transformation;
     }
 
-    fn local_intersect(self: Arc<Self>, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         let a = ray.direction.x.powi(2) -
             ray.direction.y.powi(2) +
@@ -109,26 +108,26 @@ impl Shape for Cone {
 
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
-            intersections.add(Intersection::new(distance, self.clone()));
+            intersections.add(Intersection::new(distance, self));
         } else {
             let discriminant = b * b - 4.0 * a * c;
             if discriminant >= 0.0 {
                 let double_a = 2.0 * a;
                 let discriminant_sqrt = discriminant.sqrt();
-                let mut distance_0 = (-b - discriminant_sqrt) / double_a;
-                let mut distance_1 = (-b + discriminant_sqrt) / double_a;
-                if distance_0 > distance_1 {
-                    std::mem::swap(&mut distance_0, &mut distance_1);
+                let mut distance_1 = (-b - discriminant_sqrt) / double_a;
+                let mut distance_2 = (-b + discriminant_sqrt) / double_a;
+                if distance_1 > distance_2 {
+                    std::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y0 = ray.origin.y + distance_0 * ray.direction.y;
+                let y0 = ray.origin.y + distance_1 * ray.direction.y;
                 if self.minimum < y0 && y0 < self.maximum {
-                    intersections.add(Intersection::new(distance_0, self.clone()));
+                    intersections.add(Intersection::new(distance_1, self));
                 }
 
-                let y1 = ray.origin.y + distance_1 * ray.direction.y;
+                let y1 = ray.origin.y + distance_2 * ray.direction.y;
                 if self.minimum < y1 && y1 < self.maximum {
-                    intersections.add(Intersection::new(distance_1, self.clone()));
+                    intersections.add(Intersection::new(distance_2, self));
                 }
             }
         }
@@ -172,8 +171,6 @@ impl PartialEq for Cone {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use rstest::rstest;
 
     use crate::primitives::{Point, Vector};
@@ -192,9 +189,9 @@ mod tests {
         #[case] distance_2: f64
     ) {
         let cone = Cone::default();
-        let arc_cone: Arc<dyn Shape> = Arc::new(cone);
+        let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = arc_cone.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, distance_1);
         assert_eq!(intersections[1].distance, distance_2);
@@ -203,9 +200,9 @@ mod tests {
     #[test]
     fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
         let cone = Cone::default();
-        let arc_cone: Arc<dyn Shape> = Arc::new(cone);
+        let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
-        let intersections = arc_cone.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.intersections.len(), 1);
         assert_eq!(intersections[0].distance, 0.3535533905932738);
     }
@@ -216,9 +213,9 @@ mod tests {
     #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 0), 4)]
     fn intersecting_ray_with_cone_caps(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
         let cone = Cone { minimum: -0.5, maximum: 0.5, closed: true, ..Default::default() };
-        let arc_cone: Arc<dyn Shape> = Arc::new(cone);
+        let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = arc_cone.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), count);
     }
 

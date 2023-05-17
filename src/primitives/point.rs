@@ -19,6 +19,7 @@ impl Point {
     /// # Examples
     /// ```
     ///     use raytracer::primitives::Point;
+    ///
     ///     let point = Point::new(1, 0.5, 0);
     ///
     ///     assert_eq!(point.x, 1.0);

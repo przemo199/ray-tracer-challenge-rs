@@ -21,7 +21,7 @@ fn raytrace_red_sphere() {
     let mut canvas = Canvas::new(canvas_side_length, canvas_side_length);
     let color = Color::RED;
     let shape = Sphere::default();
-    let arc_shape: Arc<dyn Shape> = Arc::new(shape);
+    let boxed_shape: Box<dyn Shape> = Box::new(shape);
 
     for y in 0..canvas_side_length {
         let world_y = half_wall_size - pixel_size * (y as f64);
@@ -29,7 +29,7 @@ fn raytrace_red_sphere() {
             let world_x = -half_wall_size + pixel_size * (x as f64);
             let position = Point::new(world_x, world_y, wall_z);
             let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
-            let intersections = ray.intersect(&arc_shape);
+            let intersections = ray.intersect(boxed_shape.as_ref());
             let hit = intersections.hit();
             if hit.is_some() {
                 canvas.set_pixel(x, y, color);
@@ -50,7 +50,7 @@ fn raytrace_red_sphere_parallel() {
     let mut canvas = Canvas::new(canvas_side_length, canvas_side_length);
     let color = Color::RED;
     let shape = Sphere::default();
-    let shape_box: Arc<dyn Shape> = Arc::new(shape);
+    let boxed_shape: Box<dyn Shape> = Box::new(shape);
 
     canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
         let x: u32 = index as u32 % canvas_side_length;
@@ -59,7 +59,7 @@ fn raytrace_red_sphere_parallel() {
         let world_y = half_wall_size - pixel_size * (y as f64);
         let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
-        let intersections = ray.intersect(&shape_box);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         let hit = intersections.hit();
         if hit.is_some() {
             *pixel = color;
@@ -81,7 +81,7 @@ fn raytrace_shaded_sphere_parallel() {
     shape.material = Material::default();
     shape.material.color = Color::new(0.5, 0.5, 1.0);
     // shape.material.color = Color::green();
-    let shape_box: Arc<dyn Shape> = Arc::new(shape);
+    let boxed_shape: Box<dyn Shape> = Box::new(shape);
     let light = Light::new(Point::new(-10.0, 10.0, -10.0), Color::WHITE);
 
     canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
@@ -91,7 +91,7 @@ fn raytrace_shaded_sphere_parallel() {
         let world_y = half_wall_size - pixel_size * (y as f64);
         let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
-        let intersections = ray.intersect(&shape_box);
+        let intersections = ray.intersect(boxed_shape.as_ref());
         let maybe_hit = intersections.hit();
         if let Some(hit) = maybe_hit {
             let point = ray.position(hit.distance);
@@ -152,13 +152,13 @@ fn render_scene_parallel(x: u32, y: u32) {
     left_sphere.material.specular = 0.3;
 
     let mut world = World::default();
-    world.objects = vec![
-        Arc::new(floor),
-        Arc::new(left_wall),
-        Arc::new(right_wall),
-        Arc::new(middle_sphere),
-        Arc::new(right_sphere),
-        Arc::new(left_sphere),
+    world.shapes = vec![
+        Box::new(floor),
+        Box::new(left_wall),
+        Box::new(right_wall),
+        Box::new(middle_sphere),
+        Box::new(right_sphere),
+        Box::new(left_sphere),
     ];
 
     let mut camera = Camera::new(x, y, PI / 3.0);
@@ -213,11 +213,11 @@ fn render_scene_parallel2(x: u32, y: u32) {
     left_sphere.material.specular = 0.3;
 
     let mut world = World::default();
-    world.objects = vec![
-        Arc::new(floor),
-        Arc::new(middle_sphere),
-        Arc::new(right_sphere),
-        Arc::new(left_sphere),
+    world.shapes = vec![
+        Box::new(floor),
+        Box::new(middle_sphere),
+        Box::new(right_sphere),
+        Box::new(left_sphere),
     ];
 
     world.lights = vec![Light::new(Point::new(-10.0, 10.0, -10.0), Color::WHITE)];
@@ -297,13 +297,13 @@ fn render_scene_parallel3(x: u32, y: u32) {
         transformations::scaling(0.4, 0.4, 0.4));
 
     let mut world = World::default();
-    world.objects = vec![
-        Arc::new(floor),
-        Arc::new(middle_sphere),
-        Arc::new(right_sphere),
-        Arc::new(left_sphere),
-        Arc::new(cone),
-        Arc::new(cone2),
+    world.shapes = vec![
+        Box::new(floor),
+        Box::new(middle_sphere),
+        Box::new(right_sphere),
+        Box::new(left_sphere),
+        Box::new(cone),
+        Box::new(cone2),
     ];
 
     world.lights = vec![Light::new(Point::new(-100.0, 100.0, -100.0), Color::WHITE)];
@@ -339,10 +339,10 @@ fn render_refraction_test() {
     let material = Material::new(Color::new(1.0, 1.0, 1.0), None, 0.0, 0.0, 0.9, 300.0, 0.9, 0.9, 1.0000034);
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);
-    let mut objects: Vec<Arc<dyn Shape>> = Vec::new();
-    objects.push(Arc::new(wall));
-    objects.push(Arc::new(ball));
-    objects.push(Arc::new(ball2));
+    let mut objects: Vec<Box<dyn Shape>> = Vec::new();
+    objects.push(Box::new(wall));
+    objects.push(Box::new(ball));
+    objects.push(Box::new(ball2));
     let world = World::new(vec![light], objects);
     let mut camera = Camera::new(3840, 2650, 0.65);
     camera.transformation = transformations::view_transform(
@@ -367,10 +367,10 @@ fn render_refraction_test2() {
     let material = Material::new(Color::new(1.0, 1.0, 1.0), None, 0.0, 0.0, 0.9, 300.0, 0.9, 0.9, 1.0000034);
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);
-    let mut objects: Vec<Arc<dyn Shape>> = Vec::new();
-    objects.push(Arc::new(wall));
-    objects.push(Arc::new(ball));
-    objects.push(Arc::new(ball2));
+    let mut objects: Vec<Box<dyn Shape>> = Vec::new();
+    objects.push(Box::new(wall));
+    objects.push(Box::new(ball));
+    objects.push(Box::new(ball2));
     let world = World::new(vec![light], objects);
     let mut camera = Camera::new(500, 500, 0.65);
     camera.transformation = transformations::view_transform(
