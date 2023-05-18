@@ -11,10 +11,10 @@ mod scenes;
 
 fn main() {
     let args = Args::parse();
-    let world_camera = load_scene_description(args.scene_path);
+    let (world, camera) = load_scene_description(args.scene_path);
     let now = Instant::now();
-    let canvas = world_camera.1.render_parallel(&world_camera.0);
+    let canvas = camera.render_parallel(&world);
     let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}", elapsed.as_millis());
+    println!("Rendered in: {:.3?}s", elapsed.as_secs_f64());
     canvas.to_png_file(args.image_output_path);
 }
