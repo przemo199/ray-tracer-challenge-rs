@@ -118,13 +118,13 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case(Point::new(5, 0.5, 0), Vector::new(-1, 0, 0), 4, 6)]
-    #[case(Point::new(-5, 0.5, 0), Vector::new(1, 0, 0), 4, 6)]
-    #[case(Point::new(0.5, 5, 0), Vector::new(0, -1, 0), 4, 6)]
-    #[case(Point::new(0.5, -5, 0), Vector::new(0, 1, 0), 4, 6)]
-    #[case(Point::new(0.5, 0, 5), Vector::new(0, 0, -1), 4, 6)]
-    #[case(Point::new(0.5, 0, -5), Vector::new(0, 0, 1), 4, 6)]
-    #[case(Point::new(0, 0.5, 0), Vector::new(0, 0, 1), -1, 1)]
+    #[case(Point::new(5, 0.5, 0), Vector::LEFT, 4, 6)]
+    #[case(Point::new(-5, 0.5, 0), Vector::RIGHT, 4, 6)]
+    #[case(Point::new(0.5, 5, 0), Vector::DOWN, 4, 6)]
+    #[case(Point::new(0.5, -5, 0), Vector::UP, 4, 6)]
+    #[case(Point::new(0.5, 0, 5), Vector::BACKWARD, 4, 6)]
+    #[case(Point::new(0.5, 0, -5), Vector::FORWARD, 4, 6)]
+    #[case(Point::new(0, 0.5, 0), Vector::FORWARD, -1, 1)]
     fn ray_intersects_cube(
         #[case] origin: Point,
         #[case] direction: Vector,
@@ -144,9 +144,9 @@ mod tests {
     #[case(Point::new(-2, 0, 0), Vector::new(0.2673, 0.5345, 0.8018))]
     #[case(Point::new(0, -2, 0), Vector::new(0.8018, 0.2673, 0.5345))]
     #[case(Point::new(0, 0, -2), Vector::new(0.5345, 0.8018, 0.2673))]
-    #[case(Point::new(2, 0, 2), Vector::new(0, 0, -1))]
-    #[case(Point::new(0, 2, 2), Vector::new(0, -1, 0))]
-    #[case(Point::new(2, 2, 0), Vector::new(-1, 0, 0))]
+    #[case(Point::new(2, 0, 2), Vector::BACKWARD)]
+    #[case(Point::new(0, 2, 2), Vector::DOWN)]
+    #[case(Point::new(2, 2, 0), Vector::LEFT)]
     fn ray_misses_cube(#[case] origin: Point, #[case] direction: Vector) {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
@@ -156,14 +156,14 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(1, 0.5, -0.8), Vector::new(1, 0, 0))]
-    #[case(Point::new(-1, -0.2, 0.9), Vector::new(-1, 0, 0))]
-    #[case(Point::new(-0.4, 1, -0.1), Vector::new(0, 1, 0))]
-    #[case(Point::new(0.3, -1, -0.7), Vector::new(0, -1, 0))]
-    #[case(Point::new(-0.6, 0.3, 1), Vector::new(0, 0, 1))]
-    #[case(Point::new(0.4, 0.4, -1), Vector::new(0, 0, -1))]
-    #[case(Point::new(1, 1, 1), Vector::new(1, 0, 0))]
-    #[case(Point::new(-1, -1, -1), Vector::new(-1, 0, 0))]
+    #[case(Point::new(1, 0.5, -0.8), Vector::RIGHT)]
+    #[case(Point::new(-1, -0.2, 0.9), Vector::LEFT)]
+    #[case(Point::new(-0.4, 1, -0.1), Vector::UP)]
+    #[case(Point::new(0.3, -1, -0.7), Vector::DOWN)]
+    #[case(Point::new(-0.6, 0.3, 1), Vector::FORWARD)]
+    #[case(Point::new(0.4, 0.4, -1), Vector::BACKWARD)]
+    #[case(Point::new(1, 1, 1), Vector::RIGHT)]
+    #[case(Point::new(-1, -1, -1), Vector::LEFT)]
     fn normal_on_surface_of_cube(#[case] point: Point, #[case] normal: Vector) {
         let cube = Cube::default();
         let cube_normal = cube.local_normal_at(point);

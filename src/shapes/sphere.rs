@@ -123,13 +123,13 @@ mod tests {
     fn sphere_normal() {
         let sphere = Sphere::default();
         let normal = sphere.normal_at(Point::new(1, 0, 0));
-        assert_eq!(normal, Vector::new(1, 0, 0));
+        assert_eq!(normal, Vector::RIGHT);
 
         let normal = sphere.normal_at(Point::new(0, 1, 0));
-        assert_eq!(normal, Vector::new(0, 1, 0));
+        assert_eq!(normal, Vector::UP);
 
         let normal = sphere.normal_at(Point::new(0, 0, 1));
-        assert_eq!(normal, Vector::new(0, 0, 1));
+        assert_eq!(normal, Vector::FORWARD);
 
         let normal = sphere.normal_at(Point::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));
         assert_eq!(normal, Vector::new(3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0));

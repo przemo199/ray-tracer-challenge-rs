@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn compute_point_from_distance() {
-        let ray = Ray::new(Point::new(2, 3, 4), Vector::new(1, 0, 0));
+        let ray = Ray::new(Point::new(2, 3, 4), Vector::RIGHT);
         assert_eq!(ray.position(0), Point::new(2, 3, 4));
         assert_eq!(ray.position(1), Point::new(3, 3, 4));
         assert_eq!(ray.position(-1), Point::new(1, 3, 4));
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn intersections_in_the_middle_of_sphere() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn intersections_on_the_edge_of_sphere() {
-        let ray = Ray::new(Point::new(0, 1, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 1, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn no_intersections() {
-        let ray = Ray::new(Point::new(0, 2, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 2, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn ray_origin_inside_sphere() {
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn ray_origin_behind_sphere() {
-        let ray = Ray::new(Point::new(0, 0, 5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, 5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
@@ -129,16 +129,16 @@ mod tests {
 
     #[test]
     fn ray_translation() {
-        let ray = Ray::new(Point::new(1, 2, 3), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(1, 2, 3), Vector::UP);
         let matrix = transformations::translation(3, 4, 5);
         let transformed_ray = ray.transform(matrix);
         assert_eq!(transformed_ray.origin, Point::new(4, 6, 8));
-        assert_eq!(transformed_ray.direction, Vector::new(0, 1, 0));
+        assert_eq!(transformed_ray.direction, Vector::UP);
     }
 
     #[test]
     fn ray_scaling() {
-        let ray = Ray::new(Point::new(1, 2, 3), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(1, 2, 3), Vector::UP);
         let matrix = transformations::scaling(2, 3, 4);
         let transformed_ray = ray.transform(matrix);
         assert_eq!(transformed_ray.origin, Point::new(2, 6, 12));
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn intersecting_scaled_sphere() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut sphere = Sphere::default();
         sphere.transformation = transformations::scaling(2, 2, 2);
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn intersecting_translated_sphere() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut sphere = Sphere::default();
         sphere.transformation = transformations::translation(5, 0, 0);
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);

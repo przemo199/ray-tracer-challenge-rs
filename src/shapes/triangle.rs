@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(triangle.vertex_3, p_3);
         assert_eq!(triangle.edge_1, Vector::new(-1, -1, 0));
         assert_eq!(triangle.edge_2, Vector::new(1, -1, 0));
-        assert_eq!(triangle.normal, Vector::new(0, 0, -1));
+        assert_eq!(triangle.normal, Vector::BACKWARD);
     }
 
     #[test]
@@ -144,7 +144,7 @@ mod tests {
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
-        let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(0, -1, -2), Vector::UP);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
@@ -155,7 +155,7 @@ mod tests {
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
-        let ray = Ray::new(Point::new(1, 1, -2), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
@@ -166,7 +166,7 @@ mod tests {
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
-        let ray = Ray::new(Point::new(-1, 1, -2), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(-1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
@@ -177,7 +177,7 @@ mod tests {
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
-        let ray = Ray::new(Point::new(0, -1, -2), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, -1, -2), Vector::FORWARD);
         let boxed_shape = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
     }
@@ -188,7 +188,7 @@ mod tests {
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
             Point::new(1, 0, 0));
-        let ray = Ray::new(Point::new(0, 0.5, -2), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0.5, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         let intersections = boxed_shape.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);

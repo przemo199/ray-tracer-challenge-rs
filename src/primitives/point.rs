@@ -15,6 +15,8 @@ pub struct Point {
 }
 
 impl Point {
+    pub const ORIGIN: Point = Point { x: 0.0, y: 0.0, z: 0.0 };
+
     /// Creates new instance of struct [Point]
     /// # Examples
     /// ```
@@ -45,7 +47,7 @@ impl Point {
 
 impl Default for Point {
     fn default() -> Self {
-        return Point::new(0, 0, 0);
+        return Point::ORIGIN;
     }
 }
 

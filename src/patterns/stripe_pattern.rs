@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn stripe_pattern_alternates_in_x() {
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::ORIGIN), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(0.9, 0, 0)), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
         assert_eq!(pattern.color_at(&Point::new(-0.1, 0, 0)), Color::BLACK);
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn stripe_pattern_is_constant_in_y() {
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::ORIGIN), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(0, 1, 0)), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(0, 2, 0)), Color::WHITE);
     }
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn stripe_pattern_is_constant_in_z() {
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
-        assert_eq!(pattern.color_at(&Point::new(0, 0, 0)), Color::WHITE);
+        assert_eq!(pattern.color_at(&Point::ORIGIN), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(0, 0, 1)), Color::WHITE);
         assert_eq!(pattern.color_at(&Point::new(0, 0, 2)), Color::WHITE);
     }

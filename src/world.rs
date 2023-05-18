@@ -162,8 +162,8 @@ mod tests {
         sphere_2.transformation = transformations::scaling(0.5, 0.5, 0.5);
         assert_eq!(world.lights[0], light);
         assert_eq!(world.shapes.len(), 2);
-        assert!(world.shapes.iter().any(|element| element.as_ref() == (Box::new(sphere_1.clone())).as_ref()));
-        assert!(world.shapes.iter().any(|element| element.as_ref() == (Box::new(sphere_2.clone())).as_ref()));
+        assert!(world.shapes.iter().any(|element| element.as_ref() == &sphere_1));
+        assert!(world.shapes.iter().any(|element| element.as_ref() == &sphere_2));
     }
 
     #[test]
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn intersect_world_with_ray() {
         let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let intersections = world.intersections(&ray);
         assert_eq!(intersections.len(), 4);
         assert_eq!(intersections[0].distance, 4.0);
@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn shading_intersection() {
         let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let shape = &world.shapes[0];
         let intersection = Intersection::new(4.0, shape.as_ref());
         let intersections = Intersections::new();
@@ -211,7 +211,7 @@ mod tests {
     fn shading_intersection_from_inside() {
         let mut world = World::default();
         world.lights = vec![Light::new(Point::new(0, 0.25, 0), Color::WHITE)];
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let intersection = Intersection::new(0.5, world.shapes[1].as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn color_when_ray_misses() {
         let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::UP);
         let color = world.color_at(&ray);
         assert_eq!(color, Color::BLACK);
     }
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn color_when_ray_hits() {
         let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let color = world.color_at(&ray);
         assert_eq!(color, Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
     }
@@ -251,7 +251,7 @@ mod tests {
         sphere2.set_material(material2);
         world.shapes[1] = Box::new(sphere2);
 
-        let ray = Ray::new(Point::new(0, 0, 0.75), Vector::new(0, 0, -1));
+        let ray = Ray::new(Point::new(0, 0, 0.75), Vector::BACKWARD);
         let color = world.color_at(&ray);
         assert_eq!(color, world.shapes[1].material().color);
     }
@@ -291,7 +291,7 @@ mod tests {
         world.shapes.push(Box::new(Sphere::default()));
         let sphere = Sphere { transformation: transformations::translation(0, 0, 10), ..Default::default() };
         world.shapes.push(Box::new(sphere.clone()));
-        let ray = Ray::new(Point::new(0, 0, 5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, 5), Vector::FORWARD);
         let boxed_sphere = Box::new(sphere);
         let intersection = Intersection::new(4, boxed_sphere.as_ref());
         let intersections = Intersections::new();
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn reflected_color_for_nonreflective_material() {
         let mut world = World::default();
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let mut sphere1 = world_default_sphere_2();
         let mut material = sphere1.material();
         material.ambient = 1.0;
@@ -356,7 +356,7 @@ mod tests {
     fn avoid_infinite_recursion_in_reflections() {
         let mut world = World::default();
         world.shapes = Vec::new();
-        world.lights = vec![Light::new(Point::new(0, 0, 0), Color::new(1, 1, 1))];
+        world.lights = vec![Light::new(Point::ORIGIN, Color::new(1, 1, 1))];
         let mut lower = Plane::default();
         lower.material.reflectiveness = 1.0;
         lower.transformation = transformations::translation(0, -1, 0);
@@ -367,7 +367,7 @@ mod tests {
         upper.transformation = transformations::translation(0, 1, 0);
         let arc_upper = Box::new(upper);
         world.shapes.push(arc_upper);
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::ORIGIN, Vector::UP);
         world.color_at(&ray);
     }
 
@@ -393,7 +393,7 @@ mod tests {
     fn refracted_color_with_opaque_material() {
         let world = World::default();
         let shape = world.shapes[0].as_ref();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(4, shape));
         intersections.add(Intersection::new(6, shape));
@@ -411,7 +411,7 @@ mod tests {
         material.refractive_index = 1.5;
         sphere1.set_material(material);
         world.shapes[0] = Box::new(sphere1.clone());
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         let shape = Box::new(sphere1);
         intersections.add(Intersection::new(4, shape.as_ref()));
@@ -430,7 +430,7 @@ mod tests {
         material.refractive_index = 1.5;
         sphere1.set_material(material);
         world.shapes[0] = Box::new(sphere1.clone());
-        let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(sphere1);
         intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, boxed_shape.as_ref()));
@@ -455,7 +455,7 @@ mod tests {
         material2.refractive_index = 1.5;
         sphere2.set_material(material2);
         world.shapes[1] = Box::new(sphere2);
-        let ray = Ray::new(Point::new(0, 0, 0.1), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(0, 0, 0.1), Vector::UP);
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(-0.9899, world.shapes[0].as_ref()));
         intersections.add(Intersection::new(-0.4899, world.shapes[1].as_ref()));

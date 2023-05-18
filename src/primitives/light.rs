@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn light_has_position_and_intensity() {
-        let position = Point::new(0, 0, 0);
+        let position = Point::ORIGIN;
         let intensity = Color::WHITE;
         let light = Light::new(position, intensity);
         assert_eq!(light.position, position);

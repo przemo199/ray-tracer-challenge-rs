@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
         intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, boxed_shape.as_ref()));
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn schlick_approximation_perpendicular_to_viewing_angle() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 1, 0));
+        let ray = Ray::new(Point::ORIGIN, Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
         intersections.add(Intersection::new(-1, boxed_shape.as_ref()));
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn schlick_approximation_with_small_angle() {
         let shape = Sphere::glass();
-        let ray = Ray::new(Point::new(0, 0.99, -2), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0.99, -2), Vector::FORWARD);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
         intersections.add(Intersection::new(1.8589, boxed_shape.as_ref()));

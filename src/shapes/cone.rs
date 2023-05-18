@@ -61,11 +61,11 @@ impl Shape for Cone {
         let distance = point.x * point.x + point.z * point.z;
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
-            return Vector::new(0, 1, 0);
+            return Vector::UP;
         }
 
         if distance < 1.0 && point.y <= self.minimum + EPSILON {
-            return Vector::new(0, -1, 0);
+            return Vector::DOWN;
         }
 
         let mut y = distance.sqrt();
@@ -179,7 +179,7 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case(Point::new(0, 0, -5), Vector::new(0, 0, 1), 5.0, 5.0)]
+    #[case(Point::new(0, 0, -5), Vector::FORWARD, 5.0, 5.0)]
     #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254037844386, 8.660254037844386)]
     #[case(Point::new(1, 1, -5), Vector::new(-0.5, -1, 1), 4.550055679356349, 49.449944320643645)]
     fn intersecting_ray_with_cone(
@@ -208,9 +208,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0, 0, -5), Vector::new(0, 1, 0), 0)]
+    #[case(Point::new(0, 0, -5), Vector::UP, 0)]
     #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 1), 2)]
-    #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 0), 4)]
+    #[case(Point::new(0, 0, -0.25), Vector::UP, 4)]
     fn intersecting_ray_with_cone_caps(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
         let cone = Cone { minimum: -0.5, maximum: 0.5, closed: true, ..Default::default() };
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Point::new(0, 0, 0), Vector::new(0, 0, 0))]
+    #[case(Point::ORIGIN, Vector::ZERO)]
     #[case(Point::new(1, 1, 1), Vector::new(1, -(2.0_f64.sqrt()), 1))]
     #[case(Point::new(-1, -1, 0), Vector::new(-1, 1, 0))]
     fn computing_normal_vector_on_cone(#[case] point: Point, #[case] expected_normal: Vector) {

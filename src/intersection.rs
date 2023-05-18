@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn precomputing_intersection_state() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(4, boxed_shape.as_ref());
@@ -109,13 +109,13 @@ mod tests {
         assert_eq!(computed_hit.distance, intersection.distance);
         assert_eq!(computed_hit.object, boxed_shape.as_ref());
         assert_eq!(computed_hit.point, Point::new(0, 0, -1));
-        assert_eq!(computed_hit.camera_vector, Vector::new(0, 0, -1));
-        assert_eq!(computed_hit.normal_vector, Vector::new(0, 0, -1));
+        assert_eq!(computed_hit.camera_vector, Vector::BACKWARD);
+        assert_eq!(computed_hit.normal_vector, Vector::BACKWARD);
     }
 
     #[test]
     fn hit_when_intersection_is_outside() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection1 = Intersection::new(4, boxed_shape.as_ref());
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn hit_when_intersection_is_inside() {
-        let ray = Ray::new(Point::new(0, 0, 0), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection1 = Intersection::new(1, boxed_shape.as_ref());
@@ -134,12 +134,12 @@ mod tests {
         let computations = intersection1.prepare_computations(&ray, &intersections);
         assert!(computations.is_inside);
         assert_eq!(computations.point, Point::new(0, 0, 1));
-        assert_eq!(computations.camera_vector, Vector::new(0, 0, -1));
+        assert_eq!(computations.camera_vector, Vector::BACKWARD);
     }
 
     #[test]
     fn hit_offsets_point() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let sphere = Sphere { transformation: transformations::translation(0, 0, 1), ..Default::default() };
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
@@ -180,7 +180,7 @@ mod tests {
         material3.refractive_index = 2.5;
         sphere3.set_material(material3);
         let boxed_shape3: Box<dyn Shape> = Box::new(sphere3);
-        let ray = Ray::new(Point::new(0, 0, -4), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -4), Vector::FORWARD);
 
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(2, boxed_shape1.as_ref()));
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn under_point_is_below_surface() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::new(0, 0, 1));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut sphere = Sphere::glass();
         sphere.set_transformation(transformations::translation(0, 0, 1));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);

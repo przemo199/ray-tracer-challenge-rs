@@ -140,15 +140,15 @@ mod tests {
     fn ray_through_canvas_center() {
         let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(100, 50);
-        assert_eq!(ray.origin, Point::new(0, 0, 0));
-        assert_eq!(ray.direction, Vector::new(0, 0, -1));
+        assert_eq!(ray.origin, Point::ORIGIN);
+        assert_eq!(ray.direction, Vector::BACKWARD);
     }
 
     #[test]
     fn ray_through_canvas_corner() {
         let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(0, 0);
-        assert_eq!(ray.origin, Point::new(0, 0, 0));
+        assert_eq!(ray.origin, Point::ORIGIN);
         assert_eq!(ray.direction, Vector::new(0.6651864261194508, 0.3325932130597254, -0.6685123582500481));
     }
 
@@ -166,8 +166,8 @@ mod tests {
         let world = World::default();
         let mut camera = Camera::new(11, 11, PI / 2.0);
         let from = Point::new(0, 0, -5);
-        let to = Point::new(0, 0, 0);
-        let up = Vector::new(0, 1, 0);
+        let to = Point::ORIGIN;
+        let up = Vector::UP;
         camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
@@ -178,8 +178,8 @@ mod tests {
         let world = World::default();
         let mut camera = Camera::new(11, 11, PI / 2.0);
         let from = Point::new(0, 0, -5);
-        let to = Point::new(0, 0, 0);
-        let up = Vector::new(0, 1, 0);
+        let to = Point::ORIGIN;
+        let up = Vector::UP;
         camera.transformation = transformations::view_transform(from, to, up);
         let canvas = camera.render_parallel(&world);
         assert_eq!(canvas.get_pixel(5, 5), &Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));

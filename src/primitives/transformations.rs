@@ -224,18 +224,18 @@ mod tests {
 
     #[test]
     fn transformation_matrix_for_default_orientation() {
-        let from = Point::new(0, 0, 0);
+        let from = Point::ORIGIN;
         let to = Point::new(0, 0, -1);
-        let up = Vector::new(0, 1, 0);
+        let up = Vector::UP;
         let orientation = view_transform(from, to, up);
         assert_eq!(orientation, IDENTITY);
     }
 
     #[test]
     fn transformation_matrix_with_positive_z_direction() {
-        let from = Point::new(0, 0, 0);
+        let from = Point::ORIGIN;
         let to = Point::new(0, 0, 1);
-        let up = Vector::new(0, 1, 0);
+        let up = Vector::UP;
         let orientation = view_transform(from, to, up);
         assert_eq!(orientation, scaling(-1, 1, -1));
     }
@@ -243,8 +243,8 @@ mod tests {
     #[test]
     fn view_transformation_moves_world() {
         let from = Point::new(0, 0, 8);
-        let to = Point::new(0, 0, 0);
-        let up = Vector::new(0, 1, 0);
+        let to = Point::ORIGIN;
+        let up = Vector::UP;
         let orientation = view_transform(from, to, up);
         assert_eq!(orientation, translation(0, 0, -8));
     }

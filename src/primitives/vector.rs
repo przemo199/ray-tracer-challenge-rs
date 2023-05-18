@@ -13,6 +13,20 @@ pub struct Vector {
 }
 
 impl Vector {
+    pub const ZERO: Vector = Vector { x: 0.0, y: 0.0, z: 0.0 };
+
+    pub const UP: Vector = Vector { x: 0.0, y: 1.0, z: 0.0 };
+
+    pub const DOWN: Vector = Vector { x: 0.0, y: -1.0, z: 0.0 };
+
+    pub const RIGHT: Vector = Vector { x: 1.0, y: 0.0, z: 0.0 };
+
+    pub const LEFT: Vector = Vector { x: -1.0, y: 0.0, z: 0.0 };
+
+    pub const FORWARD: Vector = Vector { x: 0.0, y: 0.0, z: 1.0 };
+
+    pub const BACKWARD: Vector = Vector { x: 0.0, y: 0.0, z: -1.0 };
+
     /// Creates new instance of struct [Vector]
     /// # Examples
     /// ```
@@ -60,7 +74,7 @@ impl Vector {
 
 impl Default for Vector {
     fn default() -> Self {
-        return Vector::new(0, 0, 0);
+        return Vector::ZERO;
     }
 }
 
@@ -160,7 +174,7 @@ mod tests {
     fn sub_vector() {
         let vector_1 = Vector::new(4, -4, 3);
         let vector_2 = vector_1;
-        assert_eq!(vector_1 - vector_2, Vector::new(0, 0, 0));
+        assert_eq!(vector_1 - vector_2, Vector::ZERO);
     }
 
     #[test]
@@ -188,9 +202,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(Vector::new(1, 0, 0), 1.0)]
-    #[case(Vector::new(0, 1, 0), 1.0)]
-    #[case(Vector::new(0, 0, 1), 1.0)]
+    #[case(Vector::RIGHT, 1.0)]
+    #[case(Vector::UP, 1.0)]
+    #[case(Vector::FORWARD, 1.0)]
     #[case(Vector::new(1, 2, 3), 14.0_f64.sqrt())]
     #[case(Vector::new(-1, -2, -3), 14.0_f64.sqrt())]
     fn vector_magnitude(#[case] vector: Vector, #[case] magnitude: f64) {
@@ -207,11 +221,11 @@ mod tests {
         let normalised2 = vector2.normalized();
         let normalised3 = vector3.normalized();
         let normalised4 = vector4.normalized();
-        assert_eq!(normalised1, Vector::new(1, 0, 0));
+        assert_eq!(normalised1, Vector::RIGHT);
         assert_eq!(normalised1.magnitude(), 1.0);
-        assert_eq!(normalised2, Vector::new(0, 1, 0));
+        assert_eq!(normalised2, Vector::UP);
         assert_eq!(normalised2.magnitude(), 1.0);
-        assert_eq!(normalised3, Vector::new(0, 0, 1));
+        assert_eq!(normalised3, Vector::FORWARD);
         assert_eq!(normalised3.magnitude(), 1.0);
         assert_eq!(normalised4, Vector::new(0.2672612419124244, 0.5345224838248488, 0.8017837257372732));
     }
@@ -240,16 +254,16 @@ mod tests {
     #[test]
     fn reflect_vector() {
         let vector = Vector::new(1, -1, 0);
-        let normal = Vector::new(0, 1, 0);
+        let normal = Vector::UP;
         let reflected = vector.reflect(&normal);
         assert_eq!(reflected, Vector::new(1, 1, 0));
     }
 
     #[test]
     fn reflect_vector_on_slanted_surface() {
-        let vector = Vector::new(0, -1, 0);
+        let vector = Vector::DOWN;
         let normal = Vector::new(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0);
         let reflected = vector.reflect(&normal);
-        assert_eq!(reflected, Vector::new(1, 0, 0));
+        assert_eq!(reflected, Vector::RIGHT);
     }
 }
