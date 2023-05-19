@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use bincode::Encode;
 
-use crate::utils::CloseEnough;
+use crate::utils::{CloseEnough, Squared};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -47,7 +47,7 @@ impl Vector {
     }
 
     pub fn magnitude(&self) -> f64 {
-        return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
+        return (self.x.squared() + self.y.squared() + self.z.squared()).sqrt();
     }
 
     pub fn normalized(&self) -> Vector {

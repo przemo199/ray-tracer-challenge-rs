@@ -10,6 +10,7 @@ use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
 use crate::ray::Ray;
 use crate::shapes::Shape;
+use crate::utils::Squared;
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
@@ -94,7 +95,7 @@ impl Shape for Cylinder {
 
     fn local_intersect(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
-        let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
+        let a = ray.direction.x.squared() + ray.direction.z.squared();
 
         if a.abs() < EPSILON {
             self.intersect_caps(ray, &mut intersections);
@@ -102,7 +103,7 @@ impl Shape for Cylinder {
         }
 
         let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
-        let c = ray.origin.x.powi(2) + ray.origin.z.powi(2) - 1.0;
+        let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
         let discriminant = b * b - 4.0 * a * c;
 
         if discriminant < 0.0 {

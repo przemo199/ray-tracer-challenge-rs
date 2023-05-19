@@ -1,6 +1,7 @@
 use crate::consts::EPSILON;
 use crate::primitives::{Point, Vector};
 use crate::shapes::Shape;
+use crate::utils::Squared;
 
 #[derive(Clone, Debug)]
 pub struct ComputedHit<'a> {
@@ -60,14 +61,13 @@ impl<'a> ComputedHit<'a> {
             cos = (1.0 - sin2_t).sqrt();
         }
 
-        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powi(2);
+        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).squared();
         return r0 + (1.0 - r0) * (1.0 - cos).powf(5.0);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use crate::intersection::Intersection;
     use crate::intersections::Intersections;
     use crate::ray::Ray;

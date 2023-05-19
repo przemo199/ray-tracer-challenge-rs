@@ -9,7 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
 use crate::ray::Ray;
-use crate::utils::CloseEnough;
+use crate::utils::{CloseEnough, Squared};
 
 use super::Shape;
 
@@ -94,17 +94,17 @@ impl Shape for Cone {
 
     fn local_intersect(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
-        let a = ray.direction.x.powi(2) -
-            ray.direction.y.powi(2) +
-            ray.direction.z.powi(2);
+        let a = ray.direction.x.squared() -
+            ray.direction.y.squared() +
+            ray.direction.z.squared();
 
         let b = 2.0 * (ray.origin.x * ray.direction.x -
             ray.origin.y * ray.direction.y +
             ray.origin.z * ray.direction.z);
 
-        let c = ray.origin.x.powi(2) -
-            ray.origin.y.powi(2) +
-            ray.origin.z.powi(2);
+        let c = ray.origin.x.squared() -
+            ray.origin.y.squared() +
+            ray.origin.z.squared();
 
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
