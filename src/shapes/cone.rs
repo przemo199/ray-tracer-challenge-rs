@@ -36,7 +36,7 @@ impl Cone {
         let distance = distance.into();
         let x = ray.origin.x + ray.direction.x * distance;
         let z = ray.origin.z + ray.direction.z * distance;
-        return x * x + z * z <= (ray.origin.y + distance * ray.direction.y).abs();
+        return x.squared() + z.squared() <= (ray.origin.y + distance * ray.direction.y).abs();
     }
 
     fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
@@ -58,7 +58,7 @@ impl Cone {
 
 impl Shape for Cone {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let distance = point.x * point.x + point.z * point.z;
+        let distance = point.x.squared() + point.z.squared();
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
             return Vector::UP;

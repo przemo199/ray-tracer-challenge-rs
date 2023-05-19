@@ -9,6 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Point, Vector};
 use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
+use crate::utils::Squared;
 
 use super::Shape;
 
@@ -63,7 +64,7 @@ impl Shape for Sphere {
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
-        let discriminant = b * b - 4.0 * a * c;
+        let discriminant = b.squared() - 4.0 * a * c;
         let mut intersections = Intersections::new();
         if discriminant < 0.0 {
             return intersections;

@@ -6,7 +6,7 @@ use crate::intersections::Intersections;
 use crate::primitives::{Color, Light, Point};
 use crate::ray::Ray;
 use crate::shapes::Shape;
-use crate::utils::{world_default_sphere_1, world_default_sphere_2};
+use crate::utils::{Squared, world_default_sphere_1, world_default_sphere_2};
 
 #[derive(Debug)]
 pub struct World {
@@ -94,7 +94,7 @@ impl World {
 
         let n_ratio = computed_hit.n1 / computed_hit.n2;
         let cos_i = computed_hit.camera_vector.dot(&computed_hit.normal_vector);
-        let sin2_t = n_ratio * n_ratio * (1.0 - cos_i * cos_i);
+        let sin2_t = n_ratio.squared() * (1.0 - cos_i.squared());
         let is_total_internal_reflection = sin2_t + EPSILON > 1.0;
 
         if is_total_internal_reflection {

@@ -42,7 +42,7 @@ impl Cylinder {
         let distance = distance.into();
         let x = ray.origin.x + ray.direction.x * distance;
         let z = ray.origin.z + ray.direction.z * distance;
-        return (x * x + z * z) <= 1.0;
+        return (x.squared() + z.squared()) <= 1.0;
     }
 
     fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
@@ -64,7 +64,7 @@ impl Cylinder {
 
 impl Shape for Cylinder {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let distance = point.x * point.x + point.z * point.z;
+        let distance = point.x.squared() + point.z.squared();
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
             return Vector::UP;
@@ -104,7 +104,7 @@ impl Shape for Cylinder {
 
         let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
         let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
-        let discriminant = b * b - 4.0 * a * c;
+        let discriminant = b.squared() - 4.0 * a * c;
 
         if discriminant < 0.0 {
             return intersections;

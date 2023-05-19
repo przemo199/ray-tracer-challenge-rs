@@ -6,6 +6,7 @@ use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point};
 use crate::primitives::{Transformation, transformations};
+use crate::utils::Squared;
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct RingPattern {
@@ -24,7 +25,7 @@ impl RingPattern {
 
 impl Pattern for RingPattern {
     fn color_at(&self, point: &Point) -> Color {
-        let distance = (point.x * point.x + point.z * point.z).sqrt().floor() as i64;
+        let distance = (point.x.squared() + point.z.squared()).sqrt().floor() as i64;
         return if distance % 2 == 0 { self.color_a } else { self.color_b };
     }
 
