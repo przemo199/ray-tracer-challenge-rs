@@ -1,3 +1,5 @@
+//! Collection of basic types and methods useful for modelling world
+
 pub use color::Color;
 pub use light::Light;
 pub use matrix::Matrix;

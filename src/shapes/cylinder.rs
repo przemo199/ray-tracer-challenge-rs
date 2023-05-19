@@ -14,27 +14,27 @@ use crate::utils::Squared;
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
+    pub material: Material,
+    pub transformation: Matrix<4>,
     pub minimum: f64,
     pub maximum: f64,
     pub closed: bool,
-    pub transformation: Matrix<4>,
-    pub material: Material,
 }
 
 impl Cylinder {
     pub fn new(
+        material: Material,
+        transformation: Matrix<4>,
         minimum: f64,
         maximum: f64,
         closed: bool,
-        transformation: Matrix<4>,
-        material: Material,
     ) -> Cylinder {
         return Cylinder {
+            material,
+            transformation,
             minimum,
             maximum,
             closed,
-            transformation,
-            material,
         };
     }
 
@@ -140,11 +140,11 @@ impl Shape for Cylinder {
 impl Default for Cylinder {
     fn default() -> Cylinder {
         return Cylinder::new(
+            Material::default(),
+            Matrix::default(),
             f64::MIN,
             f64::MAX,
             false,
-            Matrix::default(),
-            Material::default(),
         );
     }
 }

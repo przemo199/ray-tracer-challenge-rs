@@ -30,12 +30,6 @@ impl Plane {
     }
 }
 
-impl Default for Plane {
-    fn default() -> Plane {
-        return Plane::new(Material::default(), transformations::IDENTITY);
-    }
-}
-
 impl Shape for Plane {
     fn local_normal_at(&self, _: Point) -> Vector {
         return self.normal;
@@ -70,6 +64,12 @@ impl Shape for Plane {
 
     fn encoded(&self) -> Vec<u8> {
         return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+    }
+}
+
+impl Default for Plane {
+    fn default() -> Plane {
+        return Plane::new(Material::default(), transformations::IDENTITY);
     }
 }
 

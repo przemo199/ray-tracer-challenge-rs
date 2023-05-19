@@ -15,21 +15,22 @@ use super::Shape;
 
 #[derive(Clone, Debug, Encode)]
 pub struct Cone {
+    pub transformation: Transformation,
+    pub material: Material,
     pub minimum: f64,
     pub maximum: f64,
     pub closed: bool,
-    pub transformation: Transformation,
-    pub material: Material,
 }
 
 impl Cone {
     pub fn new(
+        material: Material,
+        transformation: Transformation,
         minimum: impl Into<f64>,
         maximum: impl Into<f64>,
-        closed: bool, transformation: Transformation,
-        material: Material,
+        closed: bool,
     ) -> Cone {
-        return Cone { minimum: minimum.into(), maximum: maximum.into(), closed, transformation, material };
+        return Cone { transformation, material, minimum: minimum.into(), maximum: maximum.into(), closed };
     }
 
     fn check_cap(ray: &Ray, distance: impl Into<f64>) -> bool {
@@ -110,7 +111,7 @@ impl Shape for Cone {
             let distance = -c / (2.0 * b);
             intersections.add(Intersection::new(distance, self));
         } else {
-            let discriminant = b * b - 4.0 * a * c;
+            let discriminant = b.squared() - 4.0 * a * c;
             if discriminant >= 0.0 {
                 let double_a = 2.0 * a;
                 let discriminant_sqrt = discriminant.sqrt();
@@ -143,7 +144,7 @@ impl Shape for Cone {
 
 impl Default for Cone {
     fn default() -> Cone {
-        return Cone::new(f64::MIN, f64::MAX, false, Matrix::default(), Material::default());
+        return Cone::new(Material::default(), Matrix::default(), f64::MIN, f64::MAX, false);
     }
 }
 

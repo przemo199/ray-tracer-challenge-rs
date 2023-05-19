@@ -14,14 +14,14 @@ use super::Shape;
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
+    pub material: Material,
+    pub transformation: Transformation,
     pub vertex_1: Point,
     pub vertex_2: Point,
     pub vertex_3: Point,
     pub edge_1: Vector,
     pub edge_2: Vector,
     pub normal: Vector,
-    pub material: Material,
-    pub transformation: Transformation,
 }
 
 impl Triangle {
@@ -30,14 +30,14 @@ impl Triangle {
         let edge_2 = vertex_3 - vertex_1;
         let normal = (edge_2.cross(&edge_1)).normalized();
         return Triangle {
+            material: Material::default(),
+            transformation: transformations::IDENTITY,
             vertex_1,
             vertex_2,
             vertex_3,
             edge_1,
             edge_2,
             normal,
-            material: Material::default(),
-            transformation: transformations::IDENTITY,
         };
     }
 }

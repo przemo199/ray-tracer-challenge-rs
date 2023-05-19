@@ -52,7 +52,7 @@ impl<'a> ComputedHit<'a> {
 
         if self.n1 > self.n2 {
             let n = self.n1 / self.n2;
-            let sin2_t = n * n * (1.0 - cos * cos);
+            let sin2_t = n.squared() * (1.0 - cos.squared());
 
             if sin2_t > 1.0 {
                 return 1.0;
