@@ -159,74 +159,67 @@ mod tests {
 
     #[test]
     fn lighting_with_camera_between_light_and_surface() {
-        let object = Sphere::default();
-        let material = Material::default();
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
 
     #[test]
     fn lighting_with_camera_between_light_and_surface_eye_offset_45_degree() {
-        let object = Sphere::default();
-        let material = Material::default();
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
         let camera = Vector::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1, 1, 1));
     }
 
     #[test]
     fn lighting_with_camera_opposite_surface_light_offset_45_degree() {
-        let object = Sphere::default();
-        let material = Material::default();
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
-        let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(0.7363961030678927, 0.7363961030678927, 0.7363961030678927));
     }
 
     #[test]
     fn lighting_with_camera_in_path_of_reflection_vector() {
-        let object = Sphere::default();
-        let material = Material::default();
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
         let camera = Vector::new(0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
-        let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1.6363961030678928, 1.6363961030678928, 1.6363961030678928));
     }
 
     #[test]
     fn lighting_with_light_behind_surface() {
-        let object = Sphere::default();
-        let material = Material::default();
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, 10), Color::WHITE);
-        let result = material.lighting(&object, &light, &position, &camera, &normal, &false);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 
     #[test]
     fn lighting_with_surface_in_shadow() {
-        let object = Sphere::default();
-        let material = Material::default();
-        let camera_vector = Vector::BACKWARD;
-        let normal_vector = Vector::BACKWARD;
-        let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let in_shadow = true;
+        let shape = Sphere::default();
         let position = Point::ORIGIN;
-        let result = material.lighting(&object, &light, &position, &camera_vector, &normal_vector, &in_shadow);
+        let camera = Vector::BACKWARD;
+        let normal = Vector::BACKWARD;
+        let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
+        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &true);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 }

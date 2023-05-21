@@ -78,7 +78,6 @@ impl Display for Plane {
         return formatter.debug_struct("Plane")
             .field("material", &self.material)
             .field("transformation", &self.transformation)
-            .field("normal", &self.normal)
             .finish();
     }
 }

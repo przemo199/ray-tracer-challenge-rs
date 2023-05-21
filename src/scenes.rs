@@ -11,7 +11,7 @@ use raytracer::ray::Ray;
 use raytracer::shapes::{Cone, Plane, Shape, Sphere};
 use raytracer::world::World;
 
-fn raytrace_red_sphere() {
+pub fn raytrace_red_sphere() {
     let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
@@ -40,7 +40,7 @@ fn raytrace_red_sphere() {
     canvas.to_ppm_file("red_sphere.ppm");
 }
 
-fn raytrace_red_sphere_parallel() {
+pub fn raytrace_red_sphere_parallel() {
     let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
@@ -69,7 +69,7 @@ fn raytrace_red_sphere_parallel() {
     canvas.to_ppm_file("rendered_images/red_sphere.ppm");
 }
 
-fn raytrace_shaded_sphere_parallel() {
+pub fn raytrace_shaded_sphere_parallel() {
     let ray_origin = Point::new(0.0, 0.0, -5.0);
     let wall_z = 10.0;
     let wall_size = 7.0;
@@ -111,7 +111,7 @@ fn raytrace_shaded_sphere_parallel() {
     canvas.to_png_file("rendered_images/shaded_sphere.png");
 }
 
-fn render_scene_parallel(x: u32, y: u32) {
+pub fn render_scene_parallel(x: u32, y: u32) {
     let mut floor = Sphere::default();
     floor.transformation = transformations::scaling(10.0, 0.01, 10.0);
     floor.material.color = Color::new(1.0, 0.9, 0.9);
@@ -172,7 +172,7 @@ fn render_scene_parallel(x: u32, y: u32) {
     canvas.to_png_file("rendered_images/test.png");
 }
 
-fn render_scene_parallel2(x: u32, y: u32) {
+pub fn render_scene_parallel2(x: u32, y: u32) {
     let mut floor = Plane::default();
     floor.material.color = Color::new(1.0, 0.9, 0.9);
     floor.material.specular = 0.0;
@@ -233,7 +233,7 @@ fn render_scene_parallel2(x: u32, y: u32) {
     canvas.to_png_file("rendered_images/3_sphere_scene.png");
 }
 
-fn render_scene_parallel3(x: u32, y: u32) {
+pub fn render_scene_parallel3(x: u32, y: u32) {
     let mut floor = Plane::default();
     floor.material.color = Color::RED;
     floor.material.specular = 0.0;
@@ -319,7 +319,7 @@ fn render_scene_parallel3(x: u32, y: u32) {
     canvas.to_png_file("rendered_images/3_sphere_scene.png");
 }
 
-fn render_refraction_test() {
+pub fn render_refraction_test() {
     let light = Light::new(Point::new(2.0, 10.0, -5.0), Color::new(0.9, 0.9, 0.9));
     let material = Material::new(
         Color::new(0.0, 0.0, 0.0),
@@ -354,7 +354,7 @@ fn render_refraction_test() {
     canvas.to_png_file("rendered_images/refraction_test.png");
 }
 
-fn render_refraction_test2() {
+pub fn render_refraction_test2() {
     let light = Light::new(Point::new(2.0, 10.0, -5.0), Color::new(0.9, 0.9, 0.9));
     let material = Material::new(
         Color::new(0.0, 0.0, 0.0),

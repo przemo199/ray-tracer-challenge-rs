@@ -33,11 +33,11 @@ impl Cone {
         return Cone { transformation, material, minimum: minimum.into(), maximum: maximum.into(), closed };
     }
 
-    fn check_cap(ray: &Ray, distance: impl Into<f64>) -> bool {
+    fn check_caps(ray: &Ray, distance: impl Into<f64>) -> bool {
         let distance = distance.into();
         let x = ray.origin.x + ray.direction.x * distance;
         let z = ray.origin.z + ray.direction.z * distance;
-        return x.squared() + z.squared() <= (ray.origin.y + distance * ray.direction.y).abs();
+        return x.squared() + z.squared() <= (ray.origin.y + ray.direction.y * distance).abs();
     }
 
     fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
@@ -46,12 +46,12 @@ impl Cone {
         }
 
         let distance = (self.minimum - ray.origin.y) / ray.direction.y;
-        if Cone::check_cap(ray, distance) {
+        if Cone::check_caps(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.maximum - ray.origin.y) / ray.direction.y;
-        if Cone::check_cap(ray, distance) {
+        if Cone::check_caps(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
     }
@@ -121,13 +121,13 @@ impl Shape for Cone {
                     std::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y0 = ray.origin.y + distance_1 * ray.direction.y;
-                if self.minimum < y0 && y0 < self.maximum {
+                let y1 = ray.origin.y + ray.direction.y * distance_1;
+                if self.minimum < y1 && y1 < self.maximum {
                     intersections.add(Intersection::new(distance_1, self));
                 }
 
-                let y1 = ray.origin.y + distance_2 * ray.direction.y;
-                if self.minimum < y1 && y1 < self.maximum {
+                let y2 = ray.origin.y + ray.direction.y * distance_2;
+                if self.minimum < y2 && y2 < self.maximum {
                     intersections.add(Intersection::new(distance_2, self));
                 }
             }
@@ -144,7 +144,7 @@ impl Shape for Cone {
 
 impl Default for Cone {
     fn default() -> Cone {
-        return Cone::new(Material::default(), Matrix::default(), f64::MIN, f64::MAX, false);
+        return Cone::new(Material::default(), Matrix::default(), f64::NEG_INFINITY, f64::INFINITY, false);
     }
 }
 

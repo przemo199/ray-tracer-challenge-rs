@@ -17,6 +17,7 @@ Options:
   -h, --help     Print help
   -V, --version  Print version
 ```
+
 ## Examples
 
 ![](./rendered_images/cover.png)
@@ -24,3 +25,5 @@ Options:
 ![](./rendered_images/reflect_refract.png)
 
 ![](./rendered_images/refraction.png)
+
+![](./rendered_images/three_sphere_scene.png)

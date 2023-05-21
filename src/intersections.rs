@@ -26,7 +26,7 @@ impl<'a> Intersections<'a> {
 
     pub fn hit(&self) -> Option<&Intersection> {
         let mut maybe_hit = None;
-        let mut hit_distance = f64::MAX;
+        let mut hit_distance = f64::INFINITY;
         for intersection in &self.intersections {
             if intersection.distance < hit_distance && intersection.distance >= 0.0 {
                 maybe_hit = Some(intersection);

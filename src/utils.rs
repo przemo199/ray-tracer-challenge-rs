@@ -29,6 +29,7 @@ impl CloseEnough for f64 {
     }
 }
 
+/// Trait for efficiently squaring value
 pub trait Squared: Copy + Mul<Self, Output=Self> {
     #[inline(always)]
     fn squared(self) -> Self {

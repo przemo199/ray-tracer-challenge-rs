@@ -190,9 +190,8 @@ mod tests {
     #[test]
     fn mul_vector() {
         let vector_1 = Vector::new(1, -2, 3);
-        let vector_2 = Vector::new(1, -2, 3);
         assert_eq!(vector_1 * 3.5, Vector::new(3.5, -7, 10.5));
-        assert_eq!(vector_2 * 0.5, Vector::new(0.5, -1, 1.5));
+        assert_eq!(vector_1 * 0.5, Vector::new(0.5, -1, 1.5));
     }
 
     #[test]

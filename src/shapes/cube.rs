@@ -26,17 +26,17 @@ impl Cube {
     pub fn check_axis(origin: impl Into<f64>, direction: impl Into<f64>) -> (f64, f64) {
         let origin = origin.into();
         let direction = direction.into();
-        let mut distance_max: f64;
-        let mut distance_min: f64;
         let distance_min_numerator = -1.0 - origin;
         let distance_max_numerator = 1.0 - origin;
+        let mut distance_max: f64;
+        let mut distance_min: f64;
 
         if direction.abs() >= EPSILON {
             distance_min = distance_min_numerator / direction;
             distance_max = distance_max_numerator / direction;
         } else {
-            distance_min = distance_min_numerator * f64::MAX;
-            distance_max = distance_max_numerator * f64::MAX;
+            distance_min = distance_min_numerator * f64::INFINITY;
+            distance_max = distance_max_numerator * f64::INFINITY;
         }
 
         if distance_min > distance_max {
@@ -49,7 +49,7 @@ impl Cube {
 
 impl Shape for Cube {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().copied().fold(f64::MIN, f64::max);
+        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().copied().fold(f64::NEG_INFINITY, f64::max);
         if max_value == point.x.abs() {
             return Vector::new(point.x, 0, 0)
         } else if max_value == point.y.abs() {
@@ -79,8 +79,8 @@ impl Shape for Cube {
         let (y_distance_min, y_distance_max) = Cube::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Cube::check_axis(ray.origin.z, ray.direction.z);
 
-        let distance_min = [x_distance_min, y_distance_min, z_distance_min].iter().copied().fold(f64::MIN, f64::max);
-        let distance_max = [x_distance_max, y_distance_max, z_distance_max].iter().copied().fold(f64::MAX, f64::min);
+        let distance_min = [x_distance_min, y_distance_min, z_distance_min].iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let distance_max = [x_distance_max, y_distance_max, z_distance_max].iter().copied().fold(f64::INFINITY, f64::min);
 
         let mut result = Intersections::new();
         if distance_min > distance_max {

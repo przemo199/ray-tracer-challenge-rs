@@ -142,8 +142,8 @@ impl Default for Cylinder {
         return Cylinder::new(
             Material::default(),
             Matrix::default(),
-            f64::MIN,
-            f64::MAX,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
             false,
         );
     }
@@ -170,8 +170,8 @@ mod tests {
     #[test]
     fn default_cylinder() {
         let cylinder = Cylinder::default();
-        assert_eq!(cylinder.minimum, f64::MIN);
-        assert_eq!(cylinder.maximum, f64::MAX);
+        assert_eq!(cylinder.minimum, f64::NEG_INFINITY);
+        assert_eq!(cylinder.maximum, f64::INFINITY);
         assert!(!cylinder.closed);
     }
 
