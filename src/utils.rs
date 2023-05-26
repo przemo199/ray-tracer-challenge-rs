@@ -5,27 +5,27 @@ use crate::primitives::transformations;
 use crate::shapes::Sphere;
 
 /// Trait for imprecise comparison between floats
-pub trait CloseEnough where Self: Sized {
+pub trait CoarseEq where Self: Sized {
     const EPSILON: Self;
 
-    fn close_enough(&self, rhs: Self) -> bool;
+    fn coarse_eq(&self, rhs: Self) -> bool;
 }
 
-impl CloseEnough for f32 {
+impl CoarseEq for f32 {
     const EPSILON: f32 = EPSILON as f32;
 
     #[inline(always)]
-    fn close_enough(&self, rhs: Self) -> bool {
-        return (self - rhs).abs() < CloseEnough::EPSILON;
+    fn coarse_eq(&self, rhs: Self) -> bool {
+        return (self - rhs).abs() < CoarseEq::EPSILON;
     }
 }
 
-impl CloseEnough for f64 {
+impl CoarseEq for f64 {
     const EPSILON: f64 = EPSILON;
 
     #[inline(always)]
-    fn close_enough(&self, rhs: Self) -> bool {
-        return (self - rhs).abs() < CloseEnough::EPSILON;
+    fn coarse_eq(&self, rhs: Self) -> bool {
+        return (self - rhs).abs() < CoarseEq::EPSILON;
     }
 }
 

@@ -13,9 +13,7 @@ pub struct Matrix<const SIDE_LENGTH: usize> {
 }
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
-    pub const EMPTY: Matrix<SIDE_LENGTH> = Matrix {
-        elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH]
-    };
+    pub const EMPTY: Matrix<SIDE_LENGTH> = Matrix { elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH] };
 
     pub const IDENTITY: Matrix<SIDE_LENGTH> = {
         let mut result = Self::EMPTY;
@@ -197,11 +195,9 @@ impl Matrix<4> {
     pub fn inverse(&self) -> Matrix<4> {
         let mut result = Matrix::<4>::EMPTY;
         let determinant = self.determinant();
-
         for row in 0..4 {
             for column in 0..4 {
-                let cofactor = self.cofactor(row, column);
-                result.set_index(column, row, cofactor / determinant);
+                result.set_index(column, row, self.cofactor(row, column) / determinant);
             }
         }
         return result;

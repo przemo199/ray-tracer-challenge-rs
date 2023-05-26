@@ -4,7 +4,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use bincode::Encode;
 
 use crate::primitives::Vector;
-use crate::utils::CloseEnough;
+use crate::utils::CoarseEq;
 
 /// Struct representing point in three dimensional space
 #[derive(Clone, Copy, Debug, Encode)]
@@ -63,9 +63,9 @@ impl Display for Point {
 
 impl PartialEq for Point {
     fn eq(&self, rhs: &Point) -> bool {
-        return self.x.close_enough(rhs.x) &&
-            self.y.close_enough(rhs.y) &&
-            self.z.close_enough(rhs.z);
+        return self.x.coarse_eq(rhs.x) &&
+            self.y.coarse_eq(rhs.y) &&
+            self.z.coarse_eq(rhs.z);
     }
 }
 

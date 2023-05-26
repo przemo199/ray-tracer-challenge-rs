@@ -7,7 +7,7 @@ use crate::computed_hit::ComputedHit;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
-use crate::utils::CloseEnough;
+use crate::utils::CoarseEq;
 
 #[derive(Clone, Debug, Encode)]
 pub struct Material {
@@ -127,13 +127,13 @@ impl PartialEq for Material {
     fn eq(&self, rhs: &Self) -> bool {
         return self.color == rhs.color &&
             self.pattern == rhs.pattern &&
-            self.ambient.close_enough(rhs.ambient) &&
-            self.diffuse.close_enough(rhs.diffuse) &&
-            self.specular.close_enough(rhs.specular) &&
-            self.shininess.close_enough(rhs.shininess) &&
-            self.reflectiveness.close_enough(rhs.reflectiveness) &&
-            self.refractive_index.close_enough(rhs.refractive_index) &&
-            self.transparency.close_enough(rhs.transparency);
+            self.ambient.coarse_eq(rhs.ambient) &&
+            self.diffuse.coarse_eq(rhs.diffuse) &&
+            self.specular.coarse_eq(rhs.specular) &&
+            self.shininess.coarse_eq(rhs.shininess) &&
+            self.reflectiveness.coarse_eq(rhs.reflectiveness) &&
+            self.refractive_index.coarse_eq(rhs.refractive_index) &&
+            self.transparency.coarse_eq(rhs.transparency);
     }
 }
 

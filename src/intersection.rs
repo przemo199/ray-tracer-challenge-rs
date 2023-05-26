@@ -4,7 +4,7 @@ use crate::computed_hit::ComputedHit;
 use crate::intersections::Intersections;
 use crate::ray::Ray;
 use crate::shapes::Shape;
-use crate::utils::CloseEnough;
+use crate::utils::CoarseEq;
 
 #[derive(Clone, Debug)]
 pub struct Intersection<'a> {
@@ -76,7 +76,7 @@ impl<'a> Intersection<'a> {
 
 impl<'a> PartialEq<Intersection<'a>> for Intersection<'a> {
     fn eq(&self, rhs: &Intersection) -> bool {
-        return self.distance.close_enough(rhs.distance) && self.object.encoded() == rhs.object.encoded();
+        return self.distance.coarse_eq(rhs.distance) && self.object.encoded() == rhs.object.encoded();
     }
 }
 

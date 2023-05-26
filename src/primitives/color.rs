@@ -3,7 +3,7 @@ use std::ops::{Add, Mul, Sub};
 
 use bincode::Encode;
 
-use crate::utils::CloseEnough;
+use crate::utils::CoarseEq;
 
 /// Struct representing RGB values of a color
 #[derive(Clone, Copy, Debug, Encode)]
@@ -71,9 +71,9 @@ impl Display for Color {
 
 impl PartialEq for Color {
     fn eq(&self, rhs: &Color) -> bool {
-        return self.red.close_enough(rhs.red) &&
-            self.green.close_enough(rhs.green) &&
-            self.blue.close_enough(rhs.blue);
+        return self.red.coarse_eq(rhs.red) &&
+            self.green.coarse_eq(rhs.green) &&
+            self.blue.coarse_eq(rhs.blue);
     }
 }
 

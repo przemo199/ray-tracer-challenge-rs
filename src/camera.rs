@@ -6,7 +6,7 @@ use crate::canvas::Canvas;
 use crate::primitives::{Transformation, transformations};
 use crate::primitives::Point;
 use crate::ray::Ray;
-use crate::utils::CloseEnough;
+use crate::utils::CoarseEq;
 use crate::world::World;
 
 #[derive(Clone, Copy, Debug)]
@@ -98,10 +98,10 @@ impl PartialEq for Camera {
         return self.horizontal_size == rhs.horizontal_size &&
             self.vertical_size == rhs.vertical_size &&
             self.horizontal_size == rhs.horizontal_size &&
-            self.field_of_view.close_enough(rhs.field_of_view) &&
-            self.half_width.close_enough(rhs.half_width) &&
-            self.half_height.close_enough(rhs.half_height) &&
-            self.pixel_size.close_enough(rhs.pixel_size);
+            self.field_of_view.coarse_eq(rhs.field_of_view) &&
+            self.half_width.coarse_eq(rhs.half_width) &&
+            self.half_height.coarse_eq(rhs.half_height) &&
+            self.pixel_size.coarse_eq(rhs.pixel_size);
     }
 }
 

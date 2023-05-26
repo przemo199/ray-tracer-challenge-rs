@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn ray_strikes_triangle() {
+    fn ray_intersects_triangle() {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),

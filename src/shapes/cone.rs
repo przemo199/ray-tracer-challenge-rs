@@ -9,7 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
 use crate::ray::Ray;
-use crate::utils::{CloseEnough, Squared};
+use crate::utils::{CoarseEq, Squared};
 
 use super::Shape;
 
@@ -165,8 +165,8 @@ impl PartialEq for Cone {
         return self.material == rhs.material &&
             self.transformation == rhs.transformation &&
             self.closed == rhs.closed &&
-            self.minimum.close_enough(rhs.minimum) &&
-            self.maximum.close_enough(rhs.maximum);
+            self.minimum.coarse_eq(rhs.minimum) &&
+            self.maximum.coarse_eq(rhs.maximum);
     }
 }
 

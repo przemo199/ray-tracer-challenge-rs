@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use bincode::Encode;
 
-use crate::utils::{CloseEnough, Squared};
+use crate::utils::{CoarseEq, Squared};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -90,9 +90,9 @@ impl Display for Vector {
 
 impl PartialEq for Vector {
     fn eq(&self, rhs: &Vector) -> bool {
-        return self.x.close_enough(rhs.x) &&
-            self.y.close_enough(rhs.y) &&
-            self.z.close_enough(rhs.z);
+        return self.x.coarse_eq(rhs.x) &&
+            self.y.coarse_eq(rhs.y) &&
+            self.z.coarse_eq(rhs.z);
     }
 }
 
@@ -232,7 +232,7 @@ mod tests {
     #[test]
     fn magnitude_of_normalized_vector() {
         let vector = Vector::new(1, 2, 3);
-        assert!(vector.normalized().magnitude().close_enough(1.0));
+        assert_eq!(vector.normalized().magnitude(), 1.0);
     }
 
     #[test]
