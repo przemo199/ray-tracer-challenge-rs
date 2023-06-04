@@ -20,14 +20,16 @@ impl World {
     }
 
     pub fn intersections(&self, ray: &Ray) -> Intersections {
-        let mut intersections = Intersections::new();
+        let mut result = Intersections::new();
         for shape in &self.shapes {
-            intersections.add_all(ray.intersect(shape.as_ref()));
+            if let Some(intersections) = ray.intersect(shape.as_ref()) {
+                result.add_all(intersections);
+            }
         }
-        if !intersections.intersections.is_empty() {
-            intersections.intersections.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        if !result.intersections.is_empty() {
+            result.intersections.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
         }
-        return intersections;
+        return result;
     }
 
     pub fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
@@ -58,7 +60,7 @@ impl World {
                 self.shade_hit(&computed_hit, remaining_iterations)
             }
             None => Color::BLACK
-        }
+        };
     }
 
     pub fn color_at(&self, ray: &Ray) -> Color {
@@ -74,7 +76,7 @@ impl World {
         return match maybe_hit {
             Some(hit) => hit.distance < distance_to_light,
             None => false,
-        }
+        };
     }
 
     fn reflected_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {

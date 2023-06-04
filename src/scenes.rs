@@ -30,9 +30,12 @@ pub fn raytrace_red_sphere() {
             let position = Point::new(world_x, world_y, wall_z);
             let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
             let intersections = ray.intersect(boxed_shape.as_ref());
-            let hit = intersections.hit();
-            if hit.is_some() {
-                canvas.set_pixel(x, y, color);
+            if let Some(intersections) = intersections {
+                let hit = intersections.hit();
+
+                if hit.is_some() {
+                    canvas.set_pixel(x, y, color);
+                }
             }
         }
     }
@@ -60,9 +63,11 @@ pub fn raytrace_red_sphere_parallel() {
         let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
         let intersections = ray.intersect(boxed_shape.as_ref());
-        let hit = intersections.hit();
-        if hit.is_some() {
-            *pixel = color;
+        if let Some(intersections) = intersections {
+            let hit = intersections.hit();
+            if hit.is_some() {
+                *pixel = color;
+            }
         }
     });
 
@@ -92,19 +97,21 @@ pub fn raytrace_shaded_sphere_parallel() {
         let position = Point::new(world_x, world_y, wall_z);
         let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
         let intersections = ray.intersect(boxed_shape.as_ref());
-        let maybe_hit = intersections.hit();
-        if let Some(hit) = maybe_hit {
-            let point = ray.position(hit.distance);
-            let normal = hit.object.normal_at(point);
-            let camera = -ray.direction;
-            *pixel = hit.object.material().lighting(
-                hit.object,
-                &light,
-                &point,
-                &camera,
-                &normal,
-                &false,
-            );
+        if let Some(intersections) = intersections {
+            let maybe_hit = intersections.hit();
+            if let Some(hit) = maybe_hit {
+                let point = ray.position(hit.distance);
+                let normal = hit.object.normal_at(point);
+                let camera = -ray.direction;
+                *pixel = hit.object.material().lighting(
+                    hit.object,
+                    &light,
+                    &point,
+                    &camera,
+                    &normal,
+                    &false,
+                );
+            }
         }
     });
 

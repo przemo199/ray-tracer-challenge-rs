@@ -37,9 +37,20 @@ pub trait Squared: Copy + Mul<Self, Output=Self> {
     }
 }
 
-impl Squared for f32 {}
+impl<T> Squared for T where T: Copy + Mul<Self, Output=Self> {}
 
-impl Squared for f64 {}
+#[inline(always)]
+pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
+    let discriminant = b.squared() - 4.0 * a * c;
+    if discriminant < 0.0 {
+        return None;
+    }
+    let double_a = 2.0 * a;
+    let discriminant_root = discriminant.sqrt();
+    let solution_1 = (-b - discriminant_root) / double_a;
+    let solution_2 = (-b + discriminant_root) / double_a;
+    return Some((solution_1, solution_2));
+}
 
 #[inline(always)]
 pub fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {

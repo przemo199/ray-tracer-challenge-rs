@@ -24,7 +24,7 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn set_transformation(&mut self, transformation: Transformation);
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections;
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections>;
 
     fn local_ray(&self, ray: &Ray) -> Ray {
         return ray.transform(self.transformation().inverse());

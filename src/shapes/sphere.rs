@@ -9,7 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Point, Vector};
 use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
-use crate::utils::Squared;
+use crate::utils::{solve_quadratic, Squared};
 
 use super::Shape;
 
@@ -59,23 +59,18 @@ impl Shape for Sphere {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, local_ray: &Ray) -> Intersections {
+    fn local_intersect(&self, local_ray: &Ray) -> Option<Intersections> {
         let sphere_to_ray_distance = Vector::new(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
-        let discriminant = b.squared() - 4.0 * a * c;
-        let mut intersections = Intersections::new();
-        if discriminant < 0.0 {
-            return intersections;
-        }
-        let discriminant_root = discriminant.sqrt();
-        let distance_1 = (-b - discriminant_root) / (2.0 * a);
-        let distance_2 = (-b + discriminant_root) / (2.0 * a);
 
-        intersections.add(Intersection::new(distance_1, self));
-        intersections.add(Intersection::new(distance_2, self));
-        return intersections;
+        return solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
+            return Intersections::with([
+                Intersection::new(distance_1, self),
+                Intersection::new(distance_2, self)
+            ]);
+        });
     }
 
     fn encoded(&self) -> Vec<u8> {

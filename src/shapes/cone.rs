@@ -9,7 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
 use crate::ray::Ray;
-use crate::utils::{CoarseEq, Squared};
+use crate::utils::{CoarseEq, solve_quadratic, Squared};
 
 use super::Shape;
 
@@ -93,8 +93,7 @@ impl Shape for Cone {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
-        let mut intersections = Intersections::new();
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let a = ray.direction.x.squared() -
             ray.direction.y.squared() +
             ray.direction.z.squared();
@@ -107,34 +106,30 @@ impl Shape for Cone {
             ray.origin.y.squared() +
             ray.origin.z.squared();
 
+        let mut intersections = Intersections::new();
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
             intersections.add(Intersection::new(distance, self));
         } else {
-            let discriminant = b.squared() - 4.0 * a * c;
-            if discriminant >= 0.0 {
-                let double_a = 2.0 * a;
-                let discriminant_sqrt = discriminant.sqrt();
-                let mut distance_1 = (-b - discriminant_sqrt) / double_a;
-                let mut distance_2 = (-b + discriminant_sqrt) / double_a;
+            if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
                 if distance_1 > distance_2 {
                     std::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y1 = ray.origin.y + ray.direction.y * distance_1;
-                if self.minimum < y1 && y1 < self.maximum {
+                let y0 = ray.origin.y + distance_1 * ray.direction.y;
+                if self.minimum < y0 && y0 < self.maximum {
                     intersections.add(Intersection::new(distance_1, self));
                 }
 
-                let y2 = ray.origin.y + ray.direction.y * distance_2;
-                if self.minimum < y2 && y2 < self.maximum {
+                let y1 = ray.origin.y + distance_2 * ray.direction.y;
+                if self.minimum < y1 && y1 < self.maximum {
                     intersections.add(Intersection::new(distance_2, self));
                 }
             }
         }
 
         self.intersect_caps(ray, &mut intersections);
-        return intersections;
+        return intersections.into_option();
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -192,7 +187,7 @@ mod tests {
         let cone = Cone::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, distance_1);
         assert_eq!(intersections[1].distance, distance_2);
@@ -203,8 +198,8 @@ mod tests {
         let cone = Cone::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.intersections.len(), 1);
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 0.3535533905932738);
     }
 
@@ -217,7 +212,11 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
         let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.len(), count);
+        if count > 0 {
+            assert_eq!(intersections.unwrap().len(), count);
+        } else {
+            assert_eq!(intersections, None);
+        }
     }
 
     #[rstest]

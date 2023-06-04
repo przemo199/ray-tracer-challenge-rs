@@ -63,27 +63,25 @@ impl Shape for Triangle {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
-        let mut intersections = Intersections::new();
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let direction_cross_edge2 = ray.direction.cross(&self.edge_2);
         let determinant = self.edge_1.dot(&direction_cross_edge2);
         if determinant.abs() < EPSILON {
-            return intersections;
+            return None;
         }
         let determinant_inverse = 1.0 / determinant;
         let vertex1_to_origin = ray.origin - self.vertex_1;
         let u = determinant_inverse * vertex1_to_origin.dot(&direction_cross_edge2);
         if !(0.0..1.0).contains(&u) {
-            return intersections;
+            return None;
         }
         let origin_cross_edge1 = vertex1_to_origin.cross(&self.edge_1);
         let v = determinant_inverse * ray.direction.dot(&origin_cross_edge1);
         if v < 0.0 || u + v > 1.0 {
-            return intersections;
+            return None;
         }
         let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
-        intersections.add(Intersection::new(distance, self));
-        return intersections;
+        return Some(Intersections::with([Intersection::new(distance, self)]));
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -146,7 +144,7 @@ mod tests {
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, -1, -2), Vector::UP);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
-        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
+        assert_eq!(boxed_shape.local_intersect(&ray), None);
     }
 
     #[test]
@@ -157,7 +155,7 @@ mod tests {
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
-        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
+        assert_eq!(boxed_shape.local_intersect(&ray), None);
     }
 
     #[test]
@@ -168,7 +166,7 @@ mod tests {
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(-1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
-        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
+        assert_eq!(boxed_shape.local_intersect(&ray), None);
     }
 
     #[test]
@@ -179,7 +177,7 @@ mod tests {
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, -1, -2), Vector::FORWARD);
         let boxed_shape = Box::new(triangle);
-        assert_eq!(boxed_shape.local_intersect(&ray).len(), 0);
+        assert_eq!(boxed_shape.local_intersect(&ray), None);
     }
 
     #[test]
@@ -190,7 +188,7 @@ mod tests {
             Point::new(1, 0, 0));
         let ray = Ray::new(Point::new(0, 0.5, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
-        let intersections = boxed_shape.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 2.0);
     }

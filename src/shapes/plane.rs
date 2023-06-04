@@ -51,15 +51,13 @@ impl Shape for Plane {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
-        let mut result = Intersections::new();
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         if ray.direction.y.abs() < EPSILON {
-            return result;
+            return None;
+        } else {
+            let distance = -ray.origin.y / ray.direction.y;
+            return Some(Intersections::with([Intersection::new(distance, self)]));
         }
-
-        let distance = -ray.origin.y / ray.direction.y;
-        result.add(Intersection::new(distance, self));
-        return result;
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -104,7 +102,7 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, 10, 0), Vector::FORWARD);
         let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.len(), 0);
+        assert_eq!(intersections, None);
     }
 
     #[test]
@@ -112,7 +110,7 @@ mod tests {
         let plane = Plane::default();
         let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, 1, 0), Vector::DOWN);
-        let intersections = boxed_shape.as_ref().local_intersect(&ray);
+        let intersections = boxed_shape.as_ref().local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
         assert_eq!(intersections[0].object, boxed_shape.as_ref());
@@ -123,7 +121,7 @@ mod tests {
         let plane = Plane::default();
         let boxed_shape: Box<dyn Shape> = Box::new(plane);
         let ray = Ray::new(Point::new(0, -1, 0), Vector::UP);
-        let intersections = boxed_shape.as_ref().local_intersect(&ray);
+        let intersections = boxed_shape.as_ref().local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
         assert_eq!(intersections[0].object, boxed_shape.as_ref());

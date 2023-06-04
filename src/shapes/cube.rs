@@ -74,7 +74,7 @@ impl Shape for Cube {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let (x_distance_min, x_distance_max) = Cube::check_axis(ray.origin.x, ray.direction.x);
         let (y_distance_min, y_distance_max) = Cube::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Cube::check_axis(ray.origin.z, ray.direction.z);
@@ -82,13 +82,14 @@ impl Shape for Cube {
         let distance_min = [x_distance_min, y_distance_min, z_distance_min].iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let distance_max = [x_distance_max, y_distance_max, z_distance_max].iter().copied().fold(f64::INFINITY, f64::min);
 
-        let mut result = Intersections::new();
         if distance_min > distance_max {
-            return result;
+            return None;
+        } else {
+            return Some(Intersections::with([
+                Intersection::new(distance_min, self),
+                Intersection::new(distance_max, self)]
+            ));
         }
-        result.add(Intersection::new(distance_min, self));
-        result.add(Intersection::new(distance_max, self));
-        return result;
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -134,7 +135,7 @@ mod tests {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
-        let intersections = boxed_shape.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, t_1.into());
         assert_eq!(intersections[1].distance, t_2.into());
@@ -152,7 +153,7 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
         let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.len(), 0);
+        assert_eq!(intersections, None);
     }
 
     #[rstest]

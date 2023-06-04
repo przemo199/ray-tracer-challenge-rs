@@ -10,7 +10,7 @@ use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
 use crate::ray::Ray;
 use crate::shapes::Shape;
-use crate::utils::Squared;
+use crate::utils::{solve_quadratic, Squared};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
@@ -93,43 +93,36 @@ impl Shape for Cylinder {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, ray: &Ray) -> Intersections {
-        let mut intersections = Intersections::new();
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let a = ray.direction.x.squared() + ray.direction.z.squared();
 
+        let mut intersections = Intersections::new();
         if a.abs() < EPSILON {
             self.intersect_caps(ray, &mut intersections);
-            return intersections;
+            return intersections.into_option();
         }
 
         let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
         let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
-        let discriminant = b.squared() - 4.0 * a * c;
 
-        if discriminant < 0.0 {
-            return intersections;
-        }
+        return solve_quadratic(a, b, c).and_then(|(mut distance_1, mut distance_2)| {
+            if distance_1 > distance_2 {
+                std::mem::swap(&mut distance_1, &mut distance_2);
+            }
 
-        let double_a = 2.0 * a;
-        let discriminant_sqrt = discriminant.sqrt();
-        let mut distance_0 = (-b - discriminant_sqrt) / double_a;
-        let mut distance_1 = (-b + discriminant_sqrt) / double_a;
-        if distance_0 > distance_1 {
-            std::mem::swap(&mut distance_0, &mut distance_1);
-        }
+            let y1 = ray.origin.y + distance_1 * ray.direction.y;
+            if self.minimum < y1 && y1 < self.maximum {
+                intersections.add(Intersection::new(distance_1, self));
+            }
 
-        let y0 = ray.origin.y + distance_0 * ray.direction.y;
-        if self.minimum < y0 && y0 < self.maximum {
-            intersections.add(Intersection::new(distance_0, self));
-        }
+            let y2 = ray.origin.y + distance_2 * ray.direction.y;
+            if self.minimum < y2 && y2 < self.maximum {
+                intersections.add(Intersection::new(distance_2, self));
+            }
 
-        let y1 = ray.origin.y + distance_1 * ray.direction.y;
-        if self.minimum < y1 && y1 < self.maximum {
-            intersections.add(Intersection::new(distance_1, self));
-        }
-
-        self.intersect_caps(ray, &mut intersections);
-        return intersections;
+            self.intersect_caps(ray, &mut intersections);
+            return intersections.into_option();
+        });
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -178,13 +171,13 @@ mod tests {
     #[rstest]
     #[case(Point::new(1, 0, 0), Vector::UP)]
     #[case(Point::new(0, 1, 0), Vector::UP)]
-    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1))]
+    #[case(Point::new(0, 0, - 5), Vector::new(1, 1, 1))]
     fn ray_misses_cylinder(#[case] origin: Point, #[case] direction: Vector) {
         let cylinder = Cylinder::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
         let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.len(), 0);
+        assert_eq!(intersections, None);
     }
 
     #[rstest]
@@ -192,13 +185,13 @@ mod tests {
     #[case(Point::new(0, 0, -5), Vector::FORWARD, 4.0, 6.0)]
     #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.80798191702732, 7.088723439378861)]
     fn ray_intersects_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] distance_1: f64, #[case] distance_2: f64) {
-            let cylinder = Cylinder::default();
-            let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
-            let ray = Ray::new(origin, direction.normalized());
-            let intersections = boxed_shape.local_intersect(&ray);
-            assert_eq!(intersections.len(), 2);
-            assert_eq!(intersections[0].distance, distance_1);
-            assert_eq!(intersections[1].distance, distance_2);
+        let cylinder = Cylinder::default();
+        let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
+        let ray = Ray::new(origin, direction.normalized());
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        assert_eq!(intersections.len(), 2);
+        assert_eq!(intersections[0].distance, distance_1);
+        assert_eq!(intersections[1].distance, distance_2);
     }
 
     #[rstest]
@@ -228,7 +221,11 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
         let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections.len(), count);
+        if count > 0 {
+            assert_eq!(intersections.unwrap().len(), count);
+        } else {
+            assert_eq!(intersections, None);
+        }
     }
 
     #[rstest]
@@ -244,7 +241,7 @@ mod tests {
         cylinder.closed = true;
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), count);
     }
 

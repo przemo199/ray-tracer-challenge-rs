@@ -12,6 +12,10 @@ impl<'a> Intersections<'a> {
         return Intersections { intersections: Vec::new() };
     }
 
+    pub fn with<const T: usize>(elements: [Intersection<'a>; T]) -> Intersections<'a> {
+        return Intersections { intersections: Vec::from(elements) };
+    }
+
     pub fn add(&mut self, item: Intersection<'a>) {
         self.intersections.push(item);
     }
@@ -34,6 +38,20 @@ impl<'a> Intersections<'a> {
             }
         }
         return maybe_hit;
+    }
+
+    pub fn into_option(self) -> Option<Intersections<'a>> {
+        if self.len() > 0 {
+            return Some(self);
+        } else {
+            return None;
+        }
+    }
+}
+
+impl<'a> Default for Intersections<'a> {
+    fn default() -> Self {
+        return Intersections::new();
     }
 }
 
