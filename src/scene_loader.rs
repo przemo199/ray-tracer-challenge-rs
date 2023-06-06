@@ -11,7 +11,7 @@ use crate::material::Material;
 use crate::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::primitives::{Transformation, transformations};
-use crate::shapes::{Cube, Plane, Sphere};
+use crate::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
 use crate::world::World;
 
 const ADD: &str = "add";
@@ -390,6 +390,16 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
                     world.shapes.push(Box::new(Cube::new(material, transformation)));
                 }
+                "cone" => {
+                    let material = parse_material(&entry["material"], definitions);
+                    let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
+                    world.shapes.push(Box::new(Cone { material, transformation, ..Default::default() }));
+                }
+                "cylinder" => {
+                    let material = parse_material(&entry["material"], definitions);
+                    let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
+                    world.shapes.push(Box::new(Cylinder { material, transformation, ..Default::default() }));
+                }
                 _ => ()
             }
         }
@@ -399,6 +409,7 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
 
 #[cfg(test)]
 mod tests {
+    use std::assert_eq;
     use rstest::rstest;
     use yaml_rust::{Yaml, YamlLoader};
 

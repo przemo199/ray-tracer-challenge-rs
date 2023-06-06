@@ -30,13 +30,11 @@ impl Vector {
     /// Creates new instance of struct [Vector]
     /// # Examples
     /// ```
-    ///     use raytracer::primitives::Vector;
-    ///
-    ///     let vector = Vector::new(1, 0.5, 0);
-    ///
-    ///     assert_eq!(vector.x, 1.0);
-    ///     assert_eq!(vector.y, 0.5);
-    ///     assert_eq!(vector.z, 0.0);
+    /// use raytracer::primitives::Vector;
+    /// let vector = Vector::new(1, 0.5, 0);
+    /// assert_eq!(vector.x, 1.0);
+    /// assert_eq!(vector.y, 0.5);
+    /// assert_eq!(vector.z, 0.0);
     /// ```
     pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Vector {
         return Vector { x: x.into(), y: y.into(), z: z.into() };

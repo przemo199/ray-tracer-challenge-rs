@@ -20,13 +20,13 @@ impl Point {
     /// Creates new instance of struct [Point]
     /// # Examples
     /// ```
-    ///     use raytracer::primitives::Point;
+    /// use raytracer::primitives::Point;
     ///
-    ///     let point = Point::new(1, 0.5, 0);
+    /// let point = Point::new(1, 0.5, 0);
     ///
-    ///     assert_eq!(point.x, 1.0);
-    ///     assert_eq!(point.y, 0.5);
-    ///     assert_eq!(point.z, 0.0);
+    /// assert_eq!(point.x, 1.0);
+    /// assert_eq!(point.y, 0.5);
+    /// assert_eq!(point.z, 0.0);
     /// ```
     pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Point {
         return Point { x: x.into(), y: y.into(), z: z.into() };

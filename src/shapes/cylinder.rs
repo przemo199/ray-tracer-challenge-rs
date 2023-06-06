@@ -97,32 +97,31 @@ impl Shape for Cylinder {
         let a = ray.direction.x.squared() + ray.direction.z.squared();
 
         let mut intersections = Intersections::new();
-        if a.abs() < EPSILON {
-            self.intersect_caps(ray, &mut intersections);
-            return intersections.into_option();
+        if a.abs() > 0.0 {
+            let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
+            let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
+
+            if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
+                if distance_1 > distance_2 {
+                    std::mem::swap(&mut distance_1, &mut distance_2);
+                }
+
+                let y1 = ray.origin.y + distance_1 * ray.direction.y;
+                if self.minimum < y1 && y1 < self.maximum {
+                    intersections.add(Intersection::new(distance_1, self));
+                }
+
+                let y2 = ray.origin.y + distance_2 * ray.direction.y;
+                if self.minimum < y2 && y2 < self.maximum {
+                    intersections.add(Intersection::new(distance_2, self));
+                }
+                self.intersect_caps(ray, &mut intersections);
+                return intersections.into_option();
+            }
         }
 
-        let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
-        let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
-
-        return solve_quadratic(a, b, c).and_then(|(mut distance_1, mut distance_2)| {
-            if distance_1 > distance_2 {
-                std::mem::swap(&mut distance_1, &mut distance_2);
-            }
-
-            let y1 = ray.origin.y + distance_1 * ray.direction.y;
-            if self.minimum < y1 && y1 < self.maximum {
-                intersections.add(Intersection::new(distance_1, self));
-            }
-
-            let y2 = ray.origin.y + distance_2 * ray.direction.y;
-            if self.minimum < y2 && y2 < self.maximum {
-                intersections.add(Intersection::new(distance_2, self));
-            }
-
-            self.intersect_caps(ray, &mut intersections);
-            return intersections.into_option();
-        });
+        self.intersect_caps(ray, &mut intersections);
+        return intersections.into_option();
     }
 
     fn encoded(&self) -> Vec<u8> {

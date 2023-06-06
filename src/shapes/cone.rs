@@ -116,13 +116,13 @@ impl Shape for Cone {
                     std::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y0 = ray.origin.y + distance_1 * ray.direction.y;
-                if self.minimum < y0 && y0 < self.maximum {
+                let y1 = ray.origin.y + distance_1 * ray.direction.y;
+                if self.minimum < y1 && y1 < self.maximum {
                     intersections.add(Intersection::new(distance_1, self));
                 }
 
-                let y1 = ray.origin.y + distance_2 * ray.direction.y;
-                if self.minimum < y1 && y1 < self.maximum {
+                let y2 = ray.origin.y + distance_2 * ray.direction.y;
+                if self.minimum < y2 && y2 < self.maximum {
                     intersections.add(Intersection::new(distance_2, self));
                 }
             }

@@ -27,13 +27,13 @@ impl Color {
     /// Creates new instance of struct [Color]
     /// # Examples
     /// ```
-    ///     use raytracer::primitives::Color;
+    /// use raytracer::primitives::Color;
     ///
-    ///     let color = Color::new(1, 0.5, 0);
+    /// let color = Color::new(1, 0.5, 0);
     ///
-    ///     assert_eq!(color.red, 1.0);
-    ///     assert_eq!(color.green, 0.5);
-    ///     assert_eq!(color.blue, 0.0);
+    /// assert_eq!(color.red, 1.0);
+    /// assert_eq!(color.green, 0.5);
+    /// assert_eq!(color.blue, 0.0);
     /// ```
     pub fn new(red: impl Into<f64>, green: impl Into<f64>, blue: impl Into<f64>) -> Color {
         return Color { red: red.into(), green: green.into(), blue: blue.into() };
@@ -42,11 +42,11 @@ impl Color {
     /// Returns array of RGB values representing color
     /// # Examples
     /// ```
-    ///     use raytracer::primitives::Color;
+    /// use raytracer::primitives::Color;
     ///
-    ///     let color = Color::new(1.0, 0.5, 0.0);
+    /// let color = Color::new(1.0, 0.5, 0.0);
     ///
-    ///     assert_eq!(color.get_channels(), [1.0, 0.5, 0.0]);
+    ///  assert_eq!(color.get_channels(), [1.0, 0.5, 0.0]);
     /// ```
     pub fn get_channels(&self) -> [f64; 3] {
         return [self.red, self.green, self.blue];

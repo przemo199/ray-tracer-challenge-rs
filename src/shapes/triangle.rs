@@ -79,9 +79,10 @@ impl Shape for Triangle {
         let v = determinant_inverse * ray.direction.dot(&origin_cross_edge1);
         if v < 0.0 || u + v > 1.0 {
             return None;
+        } else {
+            let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
+            return Some(Intersections::with([Intersection::new(distance, self)]));
         }
-        let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
-        return Some(Intersections::with([Intersection::new(distance, self)]));
     }
 
     fn encoded(&self) -> Vec<u8> {

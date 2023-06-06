@@ -11,6 +11,17 @@ pub struct Ray {
 }
 
 impl Ray {
+    /// Creates new instance of struct [Ray]
+    /// # Examples
+    /// ```
+    /// use raytracer::primitives::{Point, Vector};
+    /// use raytracer::ray::Ray;
+    ///
+    /// let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
+    ///
+    /// assert_eq!(ray.origin, Point::ORIGIN);
+    /// assert_eq!(ray.direction, Vector::FORWARD);
+    /// ```
     pub fn new(origin: Point, direction: Vector) -> Ray {
         return Ray { origin, direction };
     }

@@ -12,12 +12,12 @@ impl Light {
     /// Creates new instance of struct [Light]
     /// # Examples
     /// ```
-    ///     use raytracer::primitives::{Color, Light, Point};
+    /// use raytracer::primitives::{Color, Light, Point};
     ///
-    ///     let light = Light::new(Point::default(), Color::BLACK);
+    /// let light = Light::new(Point::default(), Color::BLACK);
     ///
-    ///     assert_eq!(light.position, Point::default());
-    ///     assert_eq!(light.intensity, Color::BLACK);
+    /// assert_eq!(light.position, Point::default());
+    /// assert_eq!(light.intensity, Color::BLACK);
     /// ```
     pub fn new(position: Point, intensity: Color) -> Light {
         return Light { position, intensity };
