@@ -110,21 +110,19 @@ impl Shape for Cone {
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
             intersections.add(Intersection::new(distance, self));
-        } else {
-            if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
-                if distance_1 > distance_2 {
-                    std::mem::swap(&mut distance_1, &mut distance_2);
-                }
+        } else if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
+            if distance_1 > distance_2 {
+                std::mem::swap(&mut distance_1, &mut distance_2);
+            }
 
-                let y1 = ray.origin.y + distance_1 * ray.direction.y;
-                if self.minimum < y1 && y1 < self.maximum {
-                    intersections.add(Intersection::new(distance_1, self));
-                }
+            let y1 = ray.origin.y + distance_1 * ray.direction.y;
+            if self.minimum < y1 && y1 < self.maximum {
+                intersections.add(Intersection::new(distance_1, self));
+            }
 
-                let y2 = ray.origin.y + distance_2 * ray.direction.y;
-                if self.minimum < y2 && y2 < self.maximum {
-                    intersections.add(Intersection::new(distance_2, self));
-                }
+            let y2 = ray.origin.y + distance_2 * ray.direction.y;
+            if self.minimum < y2 && y2 < self.maximum {
+                intersections.add(Intersection::new(distance_2, self));
             }
         }
 

@@ -290,7 +290,7 @@ mod tests {
     fn shade_hit_is_given_intersection_in_shadow() {
         let mut world = World::default();
         world.lights = vec![Light::new(Point::new(0, 0, -10), Color::WHITE)];
-        world.shapes.push(Box::new(Sphere::default()));
+        world.shapes.push(Box::<Sphere>::default());
         let sphere = Sphere { transformation: transformations::translation(0, 0, 10), ..Default::default() };
         world.shapes.push(Box::new(sphere.clone()));
         let ray = Ray::new(Point::new(0, 0, 5), Vector::FORWARD);

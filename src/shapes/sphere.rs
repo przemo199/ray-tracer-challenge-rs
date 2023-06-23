@@ -9,7 +9,7 @@ use crate::material::Material;
 use crate::primitives::{Point, Vector};
 use crate::primitives::{Transformation, transformations};
 use crate::ray::Ray;
-use crate::utils::{solve_quadratic, Squared};
+use crate::utils::solve_quadratic;
 
 use super::Shape;
 
