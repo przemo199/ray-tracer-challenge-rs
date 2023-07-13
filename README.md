@@ -16,15 +16,16 @@ Implementation of ray tracer from Ray Tracer Challenge book by [Jamis Buck](mail
 ## Usage
 
 ```
-Usage: ray-tracer-challenge.exe <SCENE_PATH> <IMAGE_OUTPUT_PATH>
+Usage: ray-tracer-challenge.exe [OPTIONS] <SCENE_PATH> <IMAGE_OUTPUT_PATH>
 
 Arguments:
   <SCENE_PATH>
   <IMAGE_OUTPUT_PATH>
 
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
+  -r, --rendering-mode <RENDERING_MODE>  [default: serial] [possible values: serial, parallel]
+  -h, --help                             Print help
+  -V, --version                          Print version
 ```
 
 ## Examples

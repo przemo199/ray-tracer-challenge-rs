@@ -1,10 +1,8 @@
-use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-use bincode::Encode;
-
 use crate::primitives::Vector;
 use crate::utils::CoarseEq;
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Struct representing point in three dimensional space
 #[derive(Clone, Copy, Debug, Encode)]
@@ -15,7 +13,11 @@ pub struct Point {
 }
 
 impl Point {
-    pub const ORIGIN: Point = Point { x: 0.0, y: 0.0, z: 0.0 };
+    pub const ORIGIN: Point = Point {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
     /// Creates new instance of struct [Point]
     /// # Examples
@@ -29,7 +31,11 @@ impl Point {
     /// assert_eq!(point.z, 0.0);
     /// ```
     pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Point {
-        return Point { x: x.into(), y: y.into(), z: z.into() };
+        return Point {
+            x: x.into(),
+            y: y.into(),
+            z: z.into(),
+        };
     }
 
     pub fn get_values(&self) -> [f64; 4] {
@@ -53,7 +59,8 @@ impl Default for Point {
 
 impl Display for Point {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Point")
+        return formatter
+            .debug_struct("Point")
             .field("x", &self.x)
             .field("y", &self.y)
             .field("z", &self.z)
@@ -63,9 +70,7 @@ impl Display for Point {
 
 impl PartialEq for Point {
     fn eq(&self, rhs: &Point) -> bool {
-        return self.x.coarse_eq(rhs.x) &&
-            self.y.coarse_eq(rhs.y) &&
-            self.z.coarse_eq(rhs.z);
+        return self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
     }
 }
 

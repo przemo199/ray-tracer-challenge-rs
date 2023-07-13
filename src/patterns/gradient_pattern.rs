@@ -1,11 +1,9 @@
-use std::fmt::{Display, Formatter};
-
-use bincode::Encode;
-
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
+use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
-use crate::primitives::{Transformation, transformations};
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct GradientPattern {
@@ -18,7 +16,11 @@ impl GradientPattern {
     const PATTERN_IDENTIFIER: &'static [u8] = "GradientPattern".as_bytes();
 
     pub fn new(color_a: Color, color_b: Color) -> GradientPattern {
-        return GradientPattern { color_a, color_b, transformation: transformations::IDENTITY };
+        return GradientPattern {
+            color_a,
+            color_b,
+            transformation: transformations::IDENTITY,
+        };
     }
 }
 
@@ -49,7 +51,8 @@ impl Pattern for GradientPattern {
 
 impl Display for GradientPattern {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("GradientPattern")
+        return formatter
+            .debug_struct("GradientPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
             .field("transformation", &self.transformation)
@@ -65,9 +68,18 @@ mod tests {
     fn gradient_interpolates_between_colors() {
         let pattern = GradientPattern::new(Color::WHITE, Color::BLACK);
         assert_eq!(pattern.color_at(&Point::ORIGIN), Color::WHITE);
-        assert_eq!(pattern.color_at(&Point::new(0.25, 0, 0)), Color::new(0.75, 0.75, 0.75));
-        assert_eq!(pattern.color_at(&Point::new(0.5, 0, 0)), Color::new(0.5, 0.5, 0.5));
-        assert_eq!(pattern.color_at(&Point::new(0.75, 0, 0)), Color::new(0.25, 0.25, 0.25));
+        assert_eq!(
+            pattern.color_at(&Point::new(0.25, 0, 0)),
+            Color::new(0.75, 0.75, 0.75)
+        );
+        assert_eq!(
+            pattern.color_at(&Point::new(0.5, 0, 0)),
+            Color::new(0.5, 0.5, 0.5)
+        );
+        assert_eq!(
+            pattern.color_at(&Point::new(0.75, 0, 0)),
+            Color::new(0.25, 0.25, 0.25)
+        );
         assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
     }
 }

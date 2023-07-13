@@ -1,9 +1,7 @@
+use crate::utils::CoarseEq;
+use bincode::Encode;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Mul, Sub};
-
-use bincode::Encode;
-
-use crate::utils::CoarseEq;
 
 /// Struct representing RGB values of a color
 #[derive(Clone, Copy, Debug, Encode)]
@@ -14,15 +12,35 @@ pub struct Color {
 }
 
 impl Color {
-    pub const WHITE: Color = Color { red: 1.0, green: 1.0, blue: 1.0 };
+    pub const WHITE: Color = Color {
+        red: 1.0,
+        green: 1.0,
+        blue: 1.0,
+    };
 
-    pub const BLACK: Color = Color { red: 0.0, green: 0.0, blue: 0.0 };
+    pub const BLACK: Color = Color {
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+    };
 
-    pub const RED: Color = Color { red: 1.0, green: 0.0, blue: 0.0 };
+    pub const RED: Color = Color {
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
+    };
 
-    pub const GREEN: Color = Color { red: 0.0, green: 1.0, blue: 0.0 };
+    pub const GREEN: Color = Color {
+        red: 0.0,
+        green: 1.0,
+        blue: 0.0,
+    };
 
-    pub const BLUE: Color = Color { red: 0.0, green: 0.0, blue: 1.0 };
+    pub const BLUE: Color = Color {
+        red: 0.0,
+        green: 0.0,
+        blue: 1.0,
+    };
 
     /// Creates new instance of struct [Color]
     /// # Examples
@@ -36,7 +54,11 @@ impl Color {
     /// assert_eq!(color.blue, 0.0);
     /// ```
     pub fn new(red: impl Into<f64>, green: impl Into<f64>, blue: impl Into<f64>) -> Color {
-        return Color { red: red.into(), green: green.into(), blue: blue.into() };
+        return Color {
+            red: red.into(),
+            green: green.into(),
+            blue: blue.into(),
+        };
     }
 
     /// Returns array of RGB values representing color
@@ -61,7 +83,8 @@ impl Default for Color {
 
 impl Display for Color {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Color")
+        return formatter
+            .debug_struct("Color")
             .field("red", &self.red)
             .field("green", &self.green)
             .field("blue", &self.blue)
@@ -71,9 +94,9 @@ impl Display for Color {
 
 impl PartialEq for Color {
     fn eq(&self, rhs: &Color) -> bool {
-        return self.red.coarse_eq(rhs.red) &&
-            self.green.coarse_eq(rhs.green) &&
-            self.blue.coarse_eq(rhs.blue);
+        return self.red.coarse_eq(rhs.red)
+            && self.green.coarse_eq(rhs.green)
+            && self.blue.coarse_eq(rhs.blue);
     }
 }
 
@@ -81,7 +104,11 @@ impl Add for Color {
     type Output = Self;
 
     fn add(self, rhs: Color) -> Self::Output {
-        return Color::new(self.red + rhs.red, self.green + rhs.green, self.blue + rhs.blue);
+        return Color::new(
+            self.red + rhs.red,
+            self.green + rhs.green,
+            self.blue + rhs.blue,
+        );
     }
 }
 
@@ -89,7 +116,11 @@ impl Sub for Color {
     type Output = Self;
 
     fn sub(self, rhs: Color) -> Self::Output {
-        return Color::new(self.red - rhs.red, self.green - rhs.green, self.blue - rhs.blue);
+        return Color::new(
+            self.red - rhs.red,
+            self.green - rhs.green,
+            self.blue - rhs.blue,
+        );
     }
 }
 
@@ -97,7 +128,11 @@ impl Mul for Color {
     type Output = Self;
 
     fn mul(self, rhs: Color) -> Self::Output {
-        return Color::new(self.red * rhs.red, self.green * rhs.green, self.blue * rhs.blue);
+        return Color::new(
+            self.red * rhs.red,
+            self.green * rhs.green,
+            self.blue * rhs.blue,
+        );
     }
 }
 

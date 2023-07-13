@@ -1,18 +1,14 @@
+use crate::composites::{Camera, Material, World};
+use crate::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
+use crate::primitives::{transformations, Transformation};
+use crate::primitives::{Color, Light, Point, Vector};
+use crate::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
-
-use yaml_rust::{Yaml, YamlLoader};
 use yaml_rust::Yaml::BadValue;
-
-use crate::camera::Camera;
-use crate::material::Material;
-use crate::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
-use crate::primitives::{Color, Light, Point, Vector};
-use crate::primitives::{Transformation, transformations};
-use crate::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
-use crate::world::World;
+use yaml_rust::{Yaml, YamlLoader};
 
 const ADD: &str = "add";
 const COLOR: &str = "color";
@@ -27,7 +23,7 @@ struct Definitions {
     colors: HashMap<String, Color>,
     materials: HashMap<String, Material>,
     patterns: HashMap<String, Arc<dyn Pattern>>,
-    transformations: HashMap<String, Transformation>
+    transformations: HashMap<String, Transformation>,
 }
 
 impl Definitions {
@@ -71,7 +67,9 @@ fn process_definitions(yaml: &Yaml, definitions: &mut Definitions) {
                 continue;
             } else if name.ends_with("-transform") || name.ends_with("-object") {
                 let transformation = parse_transformation_definition(&entry, definitions);
-                definitions.transformations.insert(name.clone(), transformation);
+                definitions
+                    .transformations
+                    .insert(name.clone(), transformation);
             }
         }
     }
@@ -222,43 +220,41 @@ fn parse_pattern(yaml: &Yaml, definitions: &Definitions) -> Arc<dyn Pattern> {
     let color_b = parse_color(colors.get(1).unwrap(), definitions);
     let maybe_transformation = match &yaml[TRANSFORMATION] {
         BadValue => None,
-        _ => Some(parse_transformation(&yaml[TRANSFORMATION], definitions))
+        _ => Some(parse_transformation(&yaml[TRANSFORMATION], definitions)),
     };
     return match &yaml[TYPE] {
-        Yaml::String(value) => {
-            match value.as_str() {
-                "stripes" => {
-                    let mut pattern = StripePattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Arc::new(pattern)
+        Yaml::String(value) => match value.as_str() {
+            "stripes" => {
+                let mut pattern = StripePattern::new(color_a, color_b);
+                if let Some(transformation) = maybe_transformation {
+                    pattern.set_transformation(transformation);
                 }
-                "gradient" => {
-                    let mut pattern = GradientPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Arc::new(pattern)
-                }
-                "rings" => {
-                    let mut pattern = RingPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Arc::new(pattern)
-                }
-                "checkers" => {
-                    let mut pattern = CheckerPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Arc::new(pattern)
-                }
-                _ => panic!("Incorrect pattern type")
+                Arc::new(pattern)
             }
-        }
-        _ => panic!("Incorrect pattern type")
+            "gradient" => {
+                let mut pattern = GradientPattern::new(color_a, color_b);
+                if let Some(transformation) = maybe_transformation {
+                    pattern.set_transformation(transformation);
+                }
+                Arc::new(pattern)
+            }
+            "rings" => {
+                let mut pattern = RingPattern::new(color_a, color_b);
+                if let Some(transformation) = maybe_transformation {
+                    pattern.set_transformation(transformation);
+                }
+                Arc::new(pattern)
+            }
+            "checkers" => {
+                let mut pattern = CheckerPattern::new(color_a, color_b);
+                if let Some(transformation) = maybe_transformation {
+                    pattern.set_transformation(transformation);
+                }
+                Arc::new(pattern)
+            }
+            _ => panic!("Incorrect pattern type"),
+        },
+        _ => panic!("Incorrect pattern type"),
     };
 }
 
@@ -271,31 +267,31 @@ fn parse_transformation_definition(yaml: &Yaml, definitions: &Definitions) -> Tr
             Yaml::String(ref value) => {
                 transformation = transformation * definitions.transformations[&value.clone()];
             }
-            Yaml::Array(ref values) => {
-                match values[0].as_str().unwrap() {
-                    "scale" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation = transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "translate" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation = transformations::translation(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "rotate-x" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_x(vals) * transformation;
-                    }
-                    "rotate-y" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_y(vals) * transformation;
-                    }
-                    "rotate-z" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_z(vals) * transformation;
-                    }
-                    _ => {}
+            Yaml::Array(ref values) => match values[0].as_str().unwrap() {
+                "scale" => {
+                    let vals = parse_array_of_3(&values[1..4]);
+                    transformation =
+                        transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
                 }
-            }
+                "translate" => {
+                    let vals = parse_array_of_3(&values[1..4]);
+                    transformation =
+                        transformations::translation(vals[0], vals[1], vals[2]) * transformation;
+                }
+                "rotate-x" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_x(vals) * transformation;
+                }
+                "rotate-y" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_y(vals) * transformation;
+                }
+                "rotate-z" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_z(vals) * transformation;
+                }
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -310,31 +306,31 @@ fn parse_transformation(yaml: &Yaml, definitions: &Definitions) -> Transformatio
             Yaml::String(ref value) => {
                 transformation = transformation * definitions.transformations[&value.clone()];
             }
-            Yaml::Array(ref values) => {
-                match values[0].as_str().unwrap() {
-                    "scale" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation = transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "translate" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation = transformations::translation(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "rotate-x" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_x(vals) * transformation;
-                    }
-                    "rotate-y" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_y(vals) * transformation;
-                    }
-                    "rotate-z" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_z(vals) * transformation;
-                    }
-                    _ => {}
+            Yaml::Array(ref values) => match values[0].as_str().unwrap() {
+                "scale" => {
+                    let vals = parse_array_of_3(&values[1..4]);
+                    transformation =
+                        transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
                 }
-            }
+                "translate" => {
+                    let vals = parse_array_of_3(&values[1..4]);
+                    transformation =
+                        transformations::translation(vals[0], vals[1], vals[2]) * transformation;
+                }
+                "rotate-x" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_x(vals) * transformation;
+                }
+                "rotate-y" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_y(vals) * transformation;
+                }
+                "rotate-z" => {
+                    let vals = parse_f64(&values[1]);
+                    transformation = transformations::rotation_z(vals) * transformation;
+                }
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -378,29 +374,43 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
                 "plane" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Plane::new(material, transformation)));
+                    world
+                        .shapes
+                        .push(Box::new(Plane::new(material, transformation)));
                 }
                 "sphere" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Sphere::new(material, transformation)));
+                    world
+                        .shapes
+                        .push(Box::new(Sphere::new(material, transformation)));
                 }
                 "cube" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Cube::new(material, transformation)));
+                    world
+                        .shapes
+                        .push(Box::new(Cube::new(material, transformation)));
                 }
                 "cone" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Cone { material, transformation, ..Default::default() }));
+                    world.shapes.push(Box::new(Cone {
+                        material,
+                        transformation,
+                        ..Default::default()
+                    }));
                 }
                 "cylinder" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Cylinder { material, transformation, ..Default::default() }));
+                    world.shapes.push(Box::new(Cylinder {
+                        material,
+                        transformation,
+                        ..Default::default()
+                    }));
                 }
-                _ => ()
+                _ => (),
             }
         }
     }
@@ -409,11 +419,9 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
 
 #[cfg(test)]
 mod tests {
-    use std::assert_eq;
+    use super::*;
     use rstest::rstest;
     use yaml_rust::{Yaml, YamlLoader};
-
-    use crate::scene_loader::{parse_array_of_3, parse_f64};
 
     fn parse_yaml(value: &str) -> Yaml {
         return YamlLoader::load_from_str(value).unwrap().remove(0);

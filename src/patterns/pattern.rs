@@ -1,14 +1,12 @@
-use std::fmt::{Debug, Display, Formatter};
-
-use bincode::enc::Encoder;
-use bincode::enc::write::Writer;
-use bincode::Encode;
-use bincode::error::EncodeError;
-
 use crate::consts::BINCODE_CONFIG;
+use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
-use crate::primitives::{Transformation, transformations};
 use crate::shapes::Shape;
+use bincode::enc::write::Writer;
+use bincode::enc::Encoder;
+use bincode::error::EncodeError;
+use bincode::Encode;
+use std::fmt::{Debug, Display, Formatter};
 
 pub trait Pattern: Debug + Display + Sync + Send {
     fn color_at(&self, point: &Point) -> Color;
@@ -47,7 +45,9 @@ impl TestPattern {
     const PATTERN_IDENTIFIER: &'static [u8] = "TestPattern".as_bytes();
 
     pub fn new() -> TestPattern {
-        return TestPattern { transformation: transformations::IDENTITY };
+        return TestPattern {
+            transformation: transformations::IDENTITY,
+        };
     }
 }
 
@@ -73,7 +73,8 @@ impl Pattern for TestPattern {
 
 impl Display for TestPattern {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("TestPattern")
+        return formatter
+            .debug_struct("TestPattern")
             .field("transformation", &self.transformation)
             .finish();
     }
@@ -96,7 +97,10 @@ mod tests {
     fn assigning_test_pattern_transformation() {
         let mut pattern = TestPattern::new();
         pattern.transformation = transformations::translation(1, 2, 3);
-        assert_eq!(pattern.transformation, transformations::translation(1, 2, 3));
+        assert_eq!(
+            pattern.transformation,
+            transformations::translation(1, 2, 3)
+        );
     }
 
     #[test]

@@ -1,10 +1,7 @@
-use std::fmt::Debug;
-
-use crate::computed_hit::ComputedHit;
-use crate::intersections::Intersections;
-use crate::ray::Ray;
+use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
+use std::fmt::Debug;
 
 #[derive(Clone, Debug)]
 pub struct Intersection<'a> {
@@ -14,10 +11,17 @@ pub struct Intersection<'a> {
 
 impl<'a> Intersection<'a> {
     pub fn new(distance: impl Into<f64>, object: &dyn Shape) -> Intersection {
-        return Intersection { distance: distance.into(), object };
+        return Intersection {
+            distance: distance.into(),
+            object,
+        };
     }
 
-    pub fn prepare_computations(&'a self, ray: &Ray, intersections: &'a Intersections<'a>) -> ComputedHit<'a> {
+    pub fn prepare_computations(
+        &'a self,
+        ray: &Ray,
+        intersections: &'a Intersections<'a>,
+    ) -> ComputedHit<'a> {
         let point = ray.position(self.distance);
         let mut normal_vector = self.object.normal_at(point);
         let camera_vector = -ray.direction;
@@ -33,14 +37,20 @@ impl<'a> Intersection<'a> {
         let mut n1: f64 = 1.0;
         let mut n2: f64 = 1.0;
 
-        let encoded_objects: Vec<_> = intersections.into_iter().map(|intersection| intersection.object.encoded()).collect();
+        let encoded_objects: Vec<_> = intersections
+            .into_iter()
+            .map(|intersection| intersection.object.encoded())
+            .collect();
 
         for (index, intersection) in intersections.intersections.iter().enumerate() {
             if intersection == self {
                 if containers.is_empty() {
                     n1 = 1.0;
                 } else {
-                    n1 = intersections[*containers.last().unwrap()].object.material().refractive_index;
+                    n1 = intersections[*containers.last().unwrap()]
+                        .object
+                        .material()
+                        .refractive_index;
                 }
             }
 
@@ -54,7 +64,10 @@ impl<'a> Intersection<'a> {
                 if containers.is_empty() {
                     n2 = 1.0;
                 } else {
-                    n2 = intersections[*containers.last().unwrap()].object.material().refractive_index;
+                    n2 = intersections[*containers.last().unwrap()]
+                        .object
+                        .material()
+                        .refractive_index;
                 }
                 break;
             }
@@ -76,15 +89,17 @@ impl<'a> Intersection<'a> {
 
 impl<'a> PartialEq<Intersection<'a>> for Intersection<'a> {
     fn eq(&self, rhs: &Intersection) -> bool {
-        return self.distance.coarse_eq(rhs.distance) && self.object.encoded() == rhs.object.encoded();
+        return self.distance.coarse_eq(rhs.distance)
+            && self.object.encoded() == rhs.object.encoded();
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::composites::{Intersections, Ray};
     use crate::consts::EPSILON;
-    use crate::primitives::{Point, Vector};
     use crate::primitives::transformations;
+    use crate::primitives::{Point, Vector};
     use crate::shapes::{Plane, Shape, Sphere};
 
     use super::*;
@@ -140,7 +155,10 @@ mod tests {
     #[test]
     fn hit_offsets_point() {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let sphere = Sphere { transformation: transformations::translation(0, 0, 1), ..Default::default() };
+        let sphere = Sphere {
+            transformation: transformations::translation(0, 0, 1),
+            ..Default::default()
+        };
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let intersections = Intersections::new();
@@ -153,11 +171,17 @@ mod tests {
     fn precomputing_reflection_vector() {
         let plane = Plane::default();
         let boxed_shape: Box<dyn Shape> = Box::new(plane);
-        let ray = Ray::new(Point::new(0, 1, -1), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0, 1, -1),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let prepared_computations = intersection.prepare_computations(&ray, &intersections);
-        assert_eq!(prepared_computations.reflection_vector, Vector::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(
+            prepared_computations.reflection_vector,
+            Vector::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
+        );
     }
 
     #[test]
@@ -192,7 +216,11 @@ mod tests {
 
         let n_1s = [1.0, 1.5, 2.0, 2.5, 2.5, 1.5];
         let n_2s = [1.5, 2.0, 2.5, 2.5, 1.5, 1.0];
-        for (intersection, (n_1, n_2)) in intersections.intersections.iter().zip(n_1s.iter().zip(n_2s.iter())) {
+        for (intersection, (n_1, n_2)) in intersections
+            .intersections
+            .iter()
+            .zip(n_1s.iter().zip(n_2s.iter()))
+        {
             let prepared_computations = intersection.prepare_computations(&ray, &intersections);
             assert_eq!(prepared_computations.n1, *n_1);
             assert_eq!(prepared_computations.n2, *n_2);

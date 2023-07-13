@@ -11,6 +11,5 @@ mod color;
 mod light;
 mod matrix;
 mod point;
-mod vector;
 pub mod transformations;
-
+mod vector;

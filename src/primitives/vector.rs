@@ -1,9 +1,7 @@
+use crate::utils::{CoarseEq, Squared};
+use bincode::Encode;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-
-use bincode::Encode;
-
-use crate::utils::{CoarseEq, Squared};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -13,19 +11,47 @@ pub struct Vector {
 }
 
 impl Vector {
-    pub const ZERO: Vector = Vector { x: 0.0, y: 0.0, z: 0.0 };
+    pub const ZERO: Vector = Vector {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
-    pub const UP: Vector = Vector { x: 0.0, y: 1.0, z: 0.0 };
+    pub const UP: Vector = Vector {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
 
-    pub const DOWN: Vector = Vector { x: 0.0, y: -1.0, z: 0.0 };
+    pub const DOWN: Vector = Vector {
+        x: 0.0,
+        y: -1.0,
+        z: 0.0,
+    };
 
-    pub const RIGHT: Vector = Vector { x: 1.0, y: 0.0, z: 0.0 };
+    pub const RIGHT: Vector = Vector {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
-    pub const LEFT: Vector = Vector { x: -1.0, y: 0.0, z: 0.0 };
+    pub const LEFT: Vector = Vector {
+        x: -1.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
-    pub const FORWARD: Vector = Vector { x: 0.0, y: 0.0, z: 1.0 };
+    pub const FORWARD: Vector = Vector {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    };
 
-    pub const BACKWARD: Vector = Vector { x: 0.0, y: 0.0, z: -1.0 };
+    pub const BACKWARD: Vector = Vector {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    };
 
     /// Creates new instance of struct [Vector]
     /// # Examples
@@ -37,7 +63,11 @@ impl Vector {
     /// assert_eq!(vector.z, 0.0);
     /// ```
     pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Vector {
-        return Vector { x: x.into(), y: y.into(), z: z.into() };
+        return Vector {
+            x: x.into(),
+            y: y.into(),
+            z: z.into(),
+        };
     }
 
     pub fn get_values(&self) -> [f64; 4] {
@@ -78,7 +108,8 @@ impl Default for Vector {
 
 impl Display for Vector {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        return formatter.debug_struct("Vector")
+        return formatter
+            .debug_struct("Vector")
             .field("x", &self.x)
             .field("y", &self.y)
             .field("z", &self.z)
@@ -88,9 +119,7 @@ impl Display for Vector {
 
 impl PartialEq for Vector {
     fn eq(&self, rhs: &Vector) -> bool {
-        return self.x.coarse_eq(rhs.x) &&
-            self.y.coarse_eq(rhs.y) &&
-            self.z.coarse_eq(rhs.z);
+        return self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
     }
 }
 
@@ -224,7 +253,10 @@ mod tests {
         assert_eq!(normalised2.magnitude(), 1.0);
         assert_eq!(normalised3, Vector::FORWARD);
         assert_eq!(normalised3.magnitude(), 1.0);
-        assert_eq!(normalised4, Vector::new(0.2672612419124244, 0.5345224838248488, 0.8017837257372732));
+        assert_eq!(
+            normalised4,
+            Vector::new(0.2672612419124244, 0.5345224838248488, 0.8017837257372732)
+        );
     }
 
     #[test]
