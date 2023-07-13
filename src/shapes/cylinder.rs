@@ -1,23 +1,18 @@
-use std::fmt::{Display, Formatter};
-
-use bincode::Encode;
-
+use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::intersection::Intersection;
-use crate::intersections::Intersections;
-use crate::material::Material;
-use crate::primitives::{Matrix, Point, Vector};
 use crate::primitives::Transformation;
-use crate::ray::Ray;
+use crate::primitives::{Matrix, Point, Vector};
 use crate::shapes::Shape;
 use crate::utils::{solve_quadratic, Squared};
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
     pub material: Material,
     pub transformation: Matrix<4>,
-    pub minimum: f64,
-    pub maximum: f64,
+    pub min: f64,
+    pub max: f64,
     pub closed: bool,
 }
 
@@ -25,15 +20,15 @@ impl Cylinder {
     pub fn new(
         material: Material,
         transformation: Matrix<4>,
-        minimum: f64,
-        maximum: f64,
+        min: impl Into<f64>,
+        max: impl Into<f64>,
         closed: bool,
     ) -> Cylinder {
         return Cylinder {
             material,
             transformation,
-            minimum,
-            maximum,
+            min: min.into(),
+            max: max.into(),
             closed,
         };
     }
@@ -50,12 +45,12 @@ impl Cylinder {
             return;
         }
 
-        let distance = (self.minimum - ray.origin.y) / ray.direction.y;
+        let distance = (self.min - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
 
-        let distance = (self.maximum - ray.origin.y) / ray.direction.y;
+        let distance = (self.max - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
@@ -66,11 +61,11 @@ impl Shape for Cylinder {
     fn local_normal_at(&self, point: Point) -> Vector {
         let distance = point.x.squared() + point.z.squared();
 
-        if distance < 1.0 && point.y >= self.maximum - EPSILON {
+        if distance < 1.0 && point.y >= self.max - EPSILON {
             return Vector::UP;
         }
 
-        if distance < 1.0 && point.y <= self.minimum + EPSILON {
+        if distance < 1.0 && point.y <= self.min + EPSILON {
             return Vector::DOWN;
         }
 
@@ -107,12 +102,12 @@ impl Shape for Cylinder {
                 }
 
                 let y1 = ray.origin.y + distance_1 * ray.direction.y;
-                if self.minimum < y1 && y1 < self.maximum {
+                if self.min < y1 && y1 < self.max {
                     intersections.add(Intersection::new(distance_1, self));
                 }
 
                 let y2 = ray.origin.y + distance_2 * ray.direction.y;
-                if self.minimum < y2 && y2 < self.maximum {
+                if self.min < y2 && y2 < self.max {
                     intersections.add(Intersection::new(distance_2, self));
                 }
                 self.intersect_caps(ray, &mut intersections);
@@ -143,9 +138,10 @@ impl Default for Cylinder {
 
 impl Display for Cylinder {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Cylinder")
-            .field("minimum", &self.minimum)
-            .field("maximum", &self.maximum)
+        return formatter
+            .debug_struct("Cylinder")
+            .field("min", &self.min)
+            .field("max", &self.max)
             .field("closed", &self.closed)
             .field("material", &self.material)
             .field("transformation", &self.transformation)
@@ -156,14 +152,13 @@ impl Display for Cylinder {
 #[cfg(test)]
 mod tests {
     use rstest::rstest;
-
     use super::*;
 
     #[test]
     fn default_cylinder() {
         let cylinder = Cylinder::default();
-        assert_eq!(cylinder.minimum, f64::NEG_INFINITY);
-        assert_eq!(cylinder.maximum, f64::INFINITY);
+        assert_eq!(cylinder.min, f64::NEG_INFINITY);
+        assert_eq!(cylinder.max, f64::INFINITY);
         assert!(!cylinder.closed);
     }
 
@@ -183,7 +178,12 @@ mod tests {
     #[case(Point::new(1, 0, -5), Vector::FORWARD, 5.0, 5.0)]
     #[case(Point::new(0, 0, -5), Vector::FORWARD, 4.0, 6.0)]
     #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.80798191702732, 7.088723439378861)]
-    fn ray_intersects_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] distance_1: f64, #[case] distance_2: f64) {
+    fn ray_intersects_cylinder(
+        #[case] origin: Point,
+        #[case] direction: Vector,
+        #[case] distance_1: f64,
+        #[case] distance_2: f64,
+    ) {
         let cylinder = Cylinder::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
@@ -211,10 +211,14 @@ mod tests {
     #[case(Point::new(0, 2, -5), Vector::FORWARD, 0)]
     #[case(Point::new(0, 1, -5), Vector::FORWARD, 0)]
     #[case(Point::new(0, 1.5, -2), Vector::FORWARD, 2)]
-    fn intersecting_constrained_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
+    fn intersecting_constrained_cylinder(
+        #[case] origin: Point,
+        #[case] direction: Vector,
+        #[case] count: usize,
+    ) {
         let cylinder = Cylinder {
-            minimum: 1.0,
-            maximum: 2.0,
+            min: 1.0,
+            max: 2.0,
             ..Default::default()
         };
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
@@ -233,10 +237,14 @@ mod tests {
     #[case(Point::new(0, 4, -2), Vector::new(0, -1, 1), 2)]
     #[case(Point::new(0, 0, -2), Vector::new(0, 1, 2), 2)]
     #[case(Point::new(0, -1, -2), Vector::new(0, 1, 1), 2)]
-    fn intersecting_caps_of_closed_cylinder(#[case] origin: Point, #[case] direction: Vector, #[case] count: usize) {
+    fn intersecting_caps_of_closed_cylinder(
+        #[case] origin: Point,
+        #[case] direction: Vector,
+        #[case] count: usize,
+    ) {
         let mut cylinder = Cylinder::default();
-        cylinder.minimum = 1.0;
-        cylinder.maximum = 2.0;
+        cylinder.min = 1.0;
+        cylinder.max = 2.0;
         cylinder.closed = true;
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
@@ -253,8 +261,8 @@ mod tests {
     #[case(Point::new(0, 2, 0.5), Vector::UP)]
     fn normal_vector_on_cylinder_caps(#[case] point: Point, #[case] normal: Vector) {
         let mut cylinder = Cylinder::default();
-        cylinder.minimum = 1.0;
-        cylinder.maximum = 2.0;
+        cylinder.min = 1.0;
+        cylinder.max = 2.0;
         cylinder.closed = true;
         assert_eq!(cylinder.local_normal_at(point), normal);
     }

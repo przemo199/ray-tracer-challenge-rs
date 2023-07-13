@@ -1,14 +1,7 @@
-pub mod camera;
-pub mod canvas;
-pub mod computed_hit;
+pub mod composites;
 pub mod consts;
-pub mod intersection;
-pub mod intersections;
-pub mod material;
 pub mod patterns;
 pub mod primitives;
-pub mod ray;
 pub mod scene_loader;
 pub mod shapes;
 pub mod utils;
-pub mod world;

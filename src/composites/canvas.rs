@@ -1,11 +1,9 @@
+use crate::primitives::Color;
+use image::codecs::png::*;
+use image::ImageEncoder;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
-
-use image::codecs::png::*;
-use image::ImageEncoder;
-
-use crate::primitives::Color;
 
 pub struct Canvas {
     pub width: u32,
@@ -61,7 +59,8 @@ impl Canvas {
                         color_value = 1.0;
                     }
 
-                    let scaled_color_value = ((color_value / max_color_value) * 255.0).round() as i32;
+                    let scaled_color_value =
+                        ((color_value / max_color_value) * 255.0).round() as i32;
                     line_content.push(scaled_color_value.to_string());
                 }
             }
@@ -95,8 +94,19 @@ impl Canvas {
         }
 
         let buf_file_writer = BufWriter::new(File::create(file_name.as_ref()).unwrap());
-        let encoder = PngEncoder::new_with_quality(buf_file_writer, CompressionType::Best, FilterType::NoFilter);
-        encoder.write_image(buffer.as_slice(), self.width, self.height, image::ColorType::Rgb8).unwrap();
+        let encoder = PngEncoder::new_with_quality(
+            buf_file_writer,
+            CompressionType::Best,
+            FilterType::NoFilter,
+        );
+        encoder
+            .write_image(
+                buffer.as_slice(),
+                self.width,
+                self.height,
+                image::ColorType::Rgb8,
+            )
+            .unwrap();
     }
 }
 

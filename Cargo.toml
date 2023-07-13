@@ -10,7 +10,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 bincode = "2.0.0-rc.3"
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.3.11", features = ["derive"] }
 image = "0.24.6"
 indicatif = { version = "0.17.3", features = ["rayon"] }
 rayon = "1.7.0"

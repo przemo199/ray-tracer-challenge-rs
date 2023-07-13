@@ -1,16 +1,10 @@
-use std::fmt::{Display, Formatter};
-
-use bincode::Encode;
-
-use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::intersection::Intersection;
-use crate::intersections::Intersections;
-use crate::material::Material;
-use crate::primitives::{Matrix, Point, Vector};
-use crate::primitives::{Transformation, transformations};
-use crate::ray::Ray;
-
 use super::Shape;
+use crate::composites::{Intersection, Intersections, Material, Ray};
+use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::primitives::{transformations, Transformation};
+use crate::primitives::{Matrix, Point, Vector};
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Plane {
@@ -73,7 +67,8 @@ impl Default for Plane {
 
 impl Display for Plane {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        return formatter.debug_struct("Plane")
+        return formatter
+            .debug_struct("Plane")
             .field("material", &self.material)
             .field("transformation", &self.transformation)
             .finish();
@@ -83,6 +78,7 @@ impl Display for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::composites::Ray;
 
     #[test]
     fn normal_is_constant() {

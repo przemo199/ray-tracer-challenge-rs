@@ -1,16 +1,10 @@
-use std::fmt::{Display, Formatter};
-
-use bincode::Encode;
-
-use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::intersection::Intersection;
-use crate::intersections::Intersections;
-use crate::material::Material;
-use crate::primitives::{Matrix, Point, Vector};
-use crate::primitives::Transformation;
-use crate::ray::Ray;
-
 use super::Shape;
+use crate::composites::{Intersection, Intersections, Material, Ray};
+use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::primitives::Transformation;
+use crate::primitives::{Matrix, Point, Vector};
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cube {
@@ -20,7 +14,10 @@ pub struct Cube {
 
 impl Cube {
     pub fn new(material: Material, transformation: Matrix<4>) -> Cube {
-        return Cube { material, transformation };
+        return Cube {
+            material,
+            transformation,
+        };
     }
 
     pub fn check_axis(origin: impl Into<f64>, direction: impl Into<f64>) -> (f64, f64) {
@@ -49,13 +46,16 @@ impl Cube {
 
 impl Shape for Cube {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()].iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()]
+            .iter()
+            .copied()
+            .fold(f64::NEG_INFINITY, f64::max);
         if max_value == point.x.abs() {
-            return Vector::new(point.x, 0, 0)
+            return Vector::new(point.x, 0, 0);
         } else if max_value == point.y.abs() {
-            return Vector::new(0, point.y, 0)
+            return Vector::new(0, point.y, 0);
         }
-        return Vector::new(0, 0, point.z)
+        return Vector::new(0, 0, point.z);
     }
 
     fn material(&self) -> Material {
@@ -79,16 +79,22 @@ impl Shape for Cube {
         let (y_distance_min, y_distance_max) = Cube::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Cube::check_axis(ray.origin.z, ray.direction.z);
 
-        let distance_min = [x_distance_min, y_distance_min, z_distance_min].iter().copied().fold(f64::NEG_INFINITY, f64::max);
-        let distance_max = [x_distance_max, y_distance_max, z_distance_max].iter().copied().fold(f64::INFINITY, f64::min);
+        let distance_min = [x_distance_min, y_distance_min, z_distance_min]
+            .iter()
+            .copied()
+            .fold(f64::NEG_INFINITY, f64::max);
+        let distance_max = [x_distance_max, y_distance_max, z_distance_max]
+            .iter()
+            .copied()
+            .fold(f64::INFINITY, f64::min);
 
         if distance_min > distance_max {
             return None;
         } else {
             return Some(Intersections::with([
                 Intersection::new(distance_min, self),
-                Intersection::new(distance_max, self)]
-            ));
+                Intersection::new(distance_max, self),
+            ]));
         }
     }
 
@@ -105,7 +111,8 @@ impl Default for Cube {
 
 impl Display for Cube {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Cube")
+        return formatter
+            .debug_struct("Cube")
             .field("material", &self.material)
             .field("transformation", &self.transformation)
             .finish();
@@ -115,7 +122,6 @@ impl Display for Cube {
 #[cfg(test)]
 mod tests {
     use rstest::rstest;
-
     use super::*;
 
     #[rstest]
@@ -130,7 +136,7 @@ mod tests {
         #[case] origin: Point,
         #[case] direction: Vector,
         #[case] t_1: impl Into<f64>,
-        #[case] t_2: impl Into<f64>
+        #[case] t_2: impl Into<f64>,
     ) {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);

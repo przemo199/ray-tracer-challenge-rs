@@ -1,8 +1,7 @@
-use std::fmt::{Display, Formatter};
-
-use crate::intersections::Intersections;
+use crate::composites::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::shapes::Shape;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Ray {
@@ -14,8 +13,8 @@ impl Ray {
     /// Creates new instance of struct [Ray]
     /// # Examples
     /// ```
+    /// use raytracer::composites::Ray;
     /// use raytracer::primitives::{Point, Vector};
-    /// use raytracer::ray::Ray;
     ///
     /// let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
     ///
@@ -44,7 +43,8 @@ impl Ray {
 
 impl Display for Ray {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Ray")
+        return formatter
+            .debug_struct("Ray")
             .field("origin", &self.origin)
             .field("direction", &self.direction)
             .finish();

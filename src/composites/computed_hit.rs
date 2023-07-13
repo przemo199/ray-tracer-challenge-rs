@@ -28,7 +28,7 @@ impl<'a> ComputedHit<'a> {
         reflection_vector: Vector,
         is_inside: bool,
         n1: f64,
-        n2: f64
+        n2: f64,
     ) -> ComputedHit {
         let over_point = point + normal_vector * EPSILON;
         let under_point = point - normal_vector * EPSILON;
@@ -68,9 +68,7 @@ impl<'a> ComputedHit<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::intersection::Intersection;
-    use crate::intersections::Intersections;
-    use crate::ray::Ray;
+    use crate::composites::{Intersection, Intersections, Ray};
     use crate::shapes::Sphere;
 
     use super::*;
@@ -81,8 +79,14 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
-        intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, boxed_shape.as_ref()));
-        intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, boxed_shape.as_ref()));
+        intersections.add(Intersection::new(
+            -(2.0_f64.sqrt()) / 2.0,
+            boxed_shape.as_ref(),
+        ));
+        intersections.add(Intersection::new(
+            2.0_f64.sqrt() / 2.0,
+            boxed_shape.as_ref(),
+        ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 1.0);
     }

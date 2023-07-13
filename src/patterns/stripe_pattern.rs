@@ -1,11 +1,9 @@
-use std::fmt::{Display, Formatter};
-
-use bincode::Encode;
-
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
+use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
-use crate::primitives::{Transformation, transformations};
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct StripePattern {
@@ -18,14 +16,22 @@ impl StripePattern {
     const PATTERN_IDENTIFIER: &'static [u8] = "StripePattern".as_bytes();
 
     pub fn new(color_a: Color, color_b: Color) -> StripePattern {
-        return StripePattern { color_a, color_b, transformation: transformations::IDENTITY };
+        return StripePattern {
+            color_a,
+            color_b,
+            transformation: transformations::IDENTITY,
+        };
     }
 }
 
 impl Pattern for StripePattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = point.x.floor() as i64;
-        return if distance % 2 == 0 { self.color_a } else { self.color_b };
+        return if distance % 2 == 0 {
+            self.color_a
+        } else {
+            self.color_b
+        };
     }
 
     fn transformation(&self) -> Transformation {
@@ -45,7 +51,8 @@ impl Pattern for StripePattern {
 
 impl Display for StripePattern {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("StripePattern")
+        return formatter
+            .debug_struct("StripePattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
             .field("transformation", &self.transformation)
@@ -55,11 +62,10 @@ impl Display for StripePattern {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use crate::material::Material;
+    use crate::composites::Material;
     use crate::primitives::{Light, Vector};
     use crate::shapes::{Shape, Sphere};
+    use std::sync::Arc;
 
     use super::*;
 
@@ -94,15 +100,31 @@ mod tests {
     fn lighting_with_stripe_pattern_applied() {
         let object = Sphere::default();
         let mut material = Material::default();
-        material.pattern = Option::from(Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn Pattern>);
+        material.pattern = Option::from(
+            Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn Pattern>
+        );
         material.ambient = 1.0;
         material.diffuse = 0.0;
         material.specular = 0.0;
         let camera = Vector::new(0, 0, -1.0);
         let normal = Vector::new(0, 0, -1.0);
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
-        let color1 = material.lighting(&object, &light, &Point::new(0.9, 0, 0), &camera, &normal, &false);
-        let color2 = material.lighting(&object, &light, &Point::new(1.1, 0, 0), &camera, &normal, &false);
+        let color1 = material.lighting(
+            &object,
+            &light,
+            &Point::new(0.9, 0, 0),
+            &camera,
+            &normal,
+            &false,
+        );
+        let color2 = material.lighting(
+            &object,
+            &light,
+            &Point::new(1.1, 0, 0),
+            &camera,
+            &normal,
+            &false,
+        );
         assert_eq!(color1, Color::WHITE);
         assert_eq!(color2, Color::BLACK);
     }

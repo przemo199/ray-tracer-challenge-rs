@@ -1,12 +1,9 @@
-use std::fmt::{Display, Formatter};
-
-use crate::computed_hit::ComputedHit;
+use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::consts::{EPSILON, MAX_REFLECTION_ITERATIONS};
-use crate::intersections::Intersections;
 use crate::primitives::{Color, Light, Point};
-use crate::ray::Ray;
 use crate::shapes::Shape;
-use crate::utils::{Squared, world_default_sphere_1, world_default_sphere_2};
+use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct World {
@@ -16,7 +13,10 @@ pub struct World {
 
 impl World {
     pub fn new(lights: Vec<Light>, objects: Vec<Box<dyn Shape>>) -> World {
-        return World { lights, shapes: objects };
+        return World {
+            lights,
+            shapes: objects,
+        };
     }
 
     pub fn intersections(&self, ray: &Ray) -> Intersections {
@@ -27,24 +27,32 @@ impl World {
             }
         }
         if !result.intersections.is_empty() {
-            result.intersections.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+            result
+                .intersections
+                .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
         }
         return result;
     }
 
     pub fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
         let material = computed_hit.object.material();
-        let surface_color = self.lights.iter().map(|light| {
-            let is_shadowed = &self.is_shadowed(light, &computed_hit.over_point);
-            return material.lighting_from_computed_hit(computed_hit, light, is_shadowed);
-        }).fold(Color::BLACK, |acc, color| acc + color);
+        let surface_color = self
+            .lights
+            .iter()
+            .map(|light| {
+                let is_shadowed = &self.is_shadowed(light, &computed_hit.over_point);
+                return material.lighting_from_computed_hit(computed_hit, light, is_shadowed);
+            })
+            .fold(Color::BLACK, |acc, color| acc + color);
 
         let reflected_color = self.reflected_color(computed_hit, remaining_iterations);
         let refracted_color = self.refracted_color(computed_hit, remaining_iterations);
 
         if material.reflectiveness > 0.0 && material.transparency > 0.0 {
             let reflectance = computed_hit.schlick();
-            return surface_color + reflected_color * reflectance + refracted_color * (1.0 - reflectance);
+            return surface_color
+                + reflected_color * reflectance
+                + refracted_color * (1.0 - reflectance);
         } else {
             return surface_color + reflected_color + refracted_color;
         }
@@ -59,7 +67,7 @@ impl World {
                 let computed_hit = hit.prepare_computations(ray, &intersections);
                 self.shade_hit(&computed_hit, remaining_iterations)
             }
-            None => Color::BLACK
+            None => Color::BLACK,
         };
     }
 
@@ -104,7 +112,8 @@ impl World {
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = computed_hit.normal_vector * (n_ratio * cos_i - cos_t) - (computed_hit.camera_vector * n_ratio);
+        let direction = computed_hit.normal_vector * (n_ratio * cos_i - cos_t)
+            - (computed_hit.camera_vector * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color = self.internal_color_at(&refracted_ray, remaining_iterations - 1);
 
@@ -115,24 +124,31 @@ impl World {
 impl Default for World {
     fn default() -> World {
         let light = Light::default();
-        let objects: Vec<Box<dyn Shape>> =
-            vec![Box::new(world_default_sphere_1()), Box::new(world_default_sphere_2())];
+        let objects: Vec<Box<dyn Shape>> = vec![
+            Box::new(world_default_sphere_1()),
+            Box::new(world_default_sphere_2()),
+        ];
         return World::new(vec![light], objects);
     }
 }
 
 impl PartialEq for World {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.lights.len() == rhs.lights.len() &&
-            self.lights.iter().all(|light| rhs.lights.contains(light)) &&
-            self.shapes.len() == rhs.shapes.len() &&
-            self.shapes.iter().all(|object| rhs.shapes.iter().any(|entry| entry.as_ref() == object.as_ref()));
+        return self.lights.len() == rhs.lights.len()
+            && self.lights.iter().all(|light| rhs.lights.contains(light))
+            && self.shapes.len() == rhs.shapes.len()
+            && self.shapes.iter().all(|object| {
+                rhs.shapes
+                    .iter()
+                    .any(|entry| entry.as_ref() == object.as_ref())
+            });
     }
 }
 
 impl Display for World {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("World")
+        return formatter
+            .debug_struct("World")
             .field("light", &self.lights)
             .field("objects", &self.shapes)
             .finish();
@@ -141,14 +157,13 @@ impl Display for World {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use crate::composites::{Intersection, Intersections, Material, Ray};
     use crate::consts::PI;
-    use crate::intersection::Intersection;
-    use crate::material::Material;
     use crate::patterns::TestPattern;
     use crate::primitives::transformations;
     use crate::primitives::Vector;
     use crate::shapes::{Plane, Sphere};
+    use std::sync::Arc;
 
     use super::*;
 
@@ -164,8 +179,14 @@ mod tests {
         sphere_2.transformation = transformations::scaling(0.5, 0.5, 0.5);
         assert_eq!(world.lights[0], light);
         assert_eq!(world.shapes.len(), 2);
-        assert!(world.shapes.iter().any(|element| element.as_ref() == &sphere_1));
-        assert!(world.shapes.iter().any(|element| element.as_ref() == &sphere_2));
+        assert!(world
+            .shapes
+            .iter()
+            .any(|element| element.as_ref() == &sphere_1));
+        assert!(world
+            .shapes
+            .iter()
+            .any(|element| element.as_ref() == &sphere_2));
     }
 
     #[test]
@@ -206,7 +227,14 @@ mod tests {
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 1);
-        assert_eq!(color, Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
+        assert_eq!(
+            color,
+            Color::new(
+                0.38066119308103435,
+                0.47582649135129296,
+                0.28549589481077575
+            )
+        );
     }
 
     #[test]
@@ -218,7 +246,10 @@ mod tests {
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 1);
-        assert_eq!(color, Color::new(0.9049844720832575, 0.9049844720832575, 0.9049844720832575));
+        assert_eq!(
+            color,
+            Color::new(0.9049844720832575, 0.9049844720832575, 0.9049844720832575)
+        );
     }
 
     #[test]
@@ -234,7 +265,14 @@ mod tests {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let color = world.color_at(&ray);
-        assert_eq!(color, Color::new(0.38066119308103435, 0.47582649135129296, 0.28549589481077575));
+        assert_eq!(
+            color,
+            Color::new(
+                0.38066119308103435,
+                0.47582649135129296,
+                0.28549589481077575
+            )
+        );
     }
 
     #[test]
@@ -291,7 +329,10 @@ mod tests {
         let mut world = World::default();
         world.lights = vec![Light::new(Point::new(0, 0, -10), Color::WHITE)];
         world.shapes.push(Box::<Sphere>::default());
-        let sphere = Sphere { transformation: transformations::translation(0, 0, 10), ..Default::default() };
+        let sphere = Sphere {
+            transformation: transformations::translation(0, 0, 10),
+            ..Default::default()
+        };
         world.shapes.push(Box::new(sphere.clone()));
         let ray = Ray::new(Point::new(0, 0, 5), Vector::FORWARD);
         let boxed_sphere = Box::new(sphere);
@@ -327,13 +368,23 @@ mod tests {
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
-        let ray = Ray::new(Point::new(0, 0, -3), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0, 0, -3),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let boxed_shape = Box::new(shape);
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.reflected_color(&computed_hit, 1);
-        assert_eq!(color, Color::new(0.19033061377890123, 0.23791326722362655, 0.14274796033417592));
+        assert_eq!(
+            color,
+            Color::new(
+                0.19033061377890123,
+                0.23791326722362655,
+                0.14274796033417592
+            )
+        );
     }
 
     #[test]
@@ -345,13 +396,19 @@ mod tests {
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
-        let ray = Ray::new(Point::new(0.0, 0.0, -3.0), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let boxed_shape = Box::new(shape);
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 1);
-        assert_eq!(color, Color::new(0.8767560027604027, 0.9243386562051279, 0.8291733493156773));
+        assert_eq!(
+            color,
+            Color::new(0.8767560027604027, 0.9243386562051279, 0.8291733493156773)
+        );
     }
 
     #[test]
@@ -374,7 +431,7 @@ mod tests {
     }
 
     #[test]
-    fn reflected_color_at_maximum_recursion_depth() {
+    fn reflected_color_at_max_recursion_depth() {
         let mut world = World::default();
         let mut shape = Plane::default();
         let mut material = shape.material();
@@ -382,13 +439,19 @@ mod tests {
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
-        let ray = Ray::new(Point::new(0, 0, -3), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0, 0, -3),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let boxed_shape = Box::new(shape);
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 0);
-        assert_eq!(color, Color::new( 0.6864253889815014, 0.6864253889815014, 0.6864253889815014));
+        assert_eq!(
+            color,
+            Color::new(0.6864253889815014, 0.6864253889815014, 0.6864253889815014)
+        );
     }
 
     #[test]
@@ -405,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn refracted_color_at_maximum_recursion_depth() {
+    fn refracted_color_at_max_recursion_depth() {
         let mut world = World::default();
         let mut sphere1 = world_default_sphere_1();
         let mut material = sphere1.material();
@@ -435,8 +498,14 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(sphere1);
-        intersections.add(Intersection::new(-(2.0_f64.sqrt()) / 2.0, boxed_shape.as_ref()));
-        intersections.add(Intersection::new(2.0_f64.sqrt() / 2.0, boxed_shape.as_ref()));
+        intersections.add(Intersection::new(
+            -(2.0_f64.sqrt()) / 2.0,
+            boxed_shape.as_ref(),
+        ));
+        intersections.add(Intersection::new(
+            2.0_f64.sqrt() / 2.0,
+            boxed_shape.as_ref(),
+        ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
         assert_eq!(color, Color::BLACK);
@@ -465,7 +534,10 @@ mod tests {
         intersections.add(Intersection::new(0.9899, world.shapes[0].as_ref()));
         let computed_hit = intersections[2].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
-        assert_eq!(color, Color::new(0, 0.9988846813665367, 0.04721645191320928));
+        assert_eq!(
+            color,
+            Color::new(0, 0.9988846813665367, 0.04721645191320928)
+        );
     }
 
     #[test]
@@ -484,13 +556,19 @@ mod tests {
         ball.set_material(ball_material);
         ball.set_transformation(transformations::translation(0, -3.5, -0.5));
         world.shapes.push(Box::new(ball));
-        let ray = Ray::new(Point::new(0, 0, -3), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0, 0, -3),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let mut intersections = Intersections::new();
         let floor = Box::new(floor);
         intersections.add(Intersection::new(2.0_f64.sqrt(), floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 5);
-        assert_eq!(color, Color::new(0.9364253889815014, 0.6864253889815014, 0.6864253889815014));
+        assert_eq!(
+            color,
+            Color::new(0.9364253889815014, 0.6864253889815014, 0.6864253889815014)
+        );
     }
 
     #[test]
@@ -510,12 +588,18 @@ mod tests {
         ball.set_material(ball_material);
         ball.set_transformation(transformations::translation(0, -3.5, -0.5));
         world.shapes.push(Box::new(ball));
-        let ray = Ray::new(Point::new(0, 0, -3), Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0));
+        let ray = Ray::new(
+            Point::new(0, 0, -3),
+            Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+        );
         let mut intersections = Intersections::new();
         let boxed_floor = Box::new(floor);
         intersections.add(Intersection::new(2.0_f64.sqrt(), boxed_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 5);
-        assert_eq!(color, Color::new(0.9339151412754023, 0.696434227200244, 0.692430691912747));
+        assert_eq!(
+            color,
+            Color::new(0.9339151412754023, 0.696434227200244, 0.692430691912747)
+        );
     }
 }

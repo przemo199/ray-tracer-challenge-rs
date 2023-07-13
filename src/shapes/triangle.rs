@@ -1,16 +1,10 @@
-use std::fmt::{Debug, Display, Formatter};
-
-use bincode::Encode;
-
-use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::intersection::Intersection;
-use crate::intersections::Intersections;
-use crate::material::Material;
-use crate::primitives::{Point, Vector};
-use crate::primitives::{Transformation, transformations};
-use crate::ray::Ray;
-
 use super::Shape;
+use crate::composites::{Intersection, Intersections, Material, Ray};
+use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::primitives::{transformations, Transformation};
+use crate::primitives::{Point, Vector};
+use bincode::Encode;
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
@@ -92,7 +86,8 @@ impl Shape for Triangle {
 
 impl Display for Triangle {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        return formatter.debug_struct("Triangle")
+        return formatter
+            .debug_struct("Triangle")
             .field("p1", &self.vertex_1)
             .field("p2", &self.vertex_2)
             .field("p3", &self.vertex_3)
@@ -108,6 +103,7 @@ impl Display for Triangle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::composites::Ray;
 
     #[test]
     fn creating_triangle() {
@@ -128,7 +124,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let n_1 = triangle.local_normal_at(Point::new(0, 0.5, 0));
         let n_2 = triangle.local_normal_at(Point::new(-0.5, 0.75, 0));
         let n_3 = triangle.local_normal_at(Point::new(0.5, 0.25, 0));
@@ -142,7 +139,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let ray = Ray::new(Point::new(0, -1, -2), Vector::UP);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray), None);
@@ -153,7 +151,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let ray = Ray::new(Point::new(1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray), None);
@@ -164,7 +163,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let ray = Ray::new(Point::new(-1, 1, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray), None);
@@ -175,7 +175,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let ray = Ray::new(Point::new(0, -1, -2), Vector::FORWARD);
         let boxed_shape = Box::new(triangle);
         assert_eq!(boxed_shape.local_intersect(&ray), None);
@@ -186,7 +187,8 @@ mod tests {
         let triangle = Triangle::new(
             Point::new(0, 1, 0),
             Point::new(-1, 0, 0),
-            Point::new(1, 0, 0));
+            Point::new(1, 0, 0),
+        );
         let ray = Ray::new(Point::new(0, 0.5, -2), Vector::FORWARD);
         let boxed_shape: Box<dyn Shape> = Box::new(triangle);
         let intersections = boxed_shape.local_intersect(&ray).unwrap();

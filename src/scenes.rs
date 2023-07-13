@@ -1,15 +1,11 @@
-use std::sync::Arc;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::*;
-use raytracer::camera::Camera;
-use raytracer::canvas::Canvas;
+use raytracer::composites::{Camera, Canvas, Material, Ray, World};
 use raytracer::consts::PI;
-use raytracer::material::Material;
 use raytracer::patterns::{CheckerPattern, RingPattern};
-use raytracer::primitives::{Color, Light, Point, transformations, Vector};
-use raytracer::ray::Ray;
+use raytracer::primitives::{transformations, Color, Light, Point, Vector};
 use raytracer::shapes::{Cone, Plane, Shape, Sphere};
-use raytracer::world::World;
+use std::sync::Arc;
 
 pub fn raytrace_red_sphere() {
     let ray_origin = Point::new(0, 0, -5);
@@ -55,21 +51,25 @@ pub fn raytrace_red_sphere_parallel() {
     let shape = Sphere::default();
     let boxed_shape: Box<dyn Shape> = Box::new(shape);
 
-    canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
-        let x: u32 = index as u32 % canvas_side_length;
-        let y: u32 = index as u32 / canvas_side_length;
-        let world_x = -half_wall_size + pixel_size * (x as f64);
-        let world_y = half_wall_size - pixel_size * (y as f64);
-        let position = Point::new(world_x, world_y, wall_z);
-        let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
-        let intersections = ray.intersect(boxed_shape.as_ref());
-        if let Some(intersections) = intersections {
-            let hit = intersections.hit();
-            if hit.is_some() {
-                *pixel = color;
+    canvas
+        .pixels
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(index, pixel)| {
+            let x: u32 = index as u32 % canvas_side_length;
+            let y: u32 = index as u32 / canvas_side_length;
+            let world_x = -half_wall_size + pixel_size * (x as f64);
+            let world_y = half_wall_size - pixel_size * (y as f64);
+            let position = Point::new(world_x, world_y, wall_z);
+            let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
+            let intersections = ray.intersect(boxed_shape.as_ref());
+            if let Some(intersections) = intersections {
+                let hit = intersections.hit();
+                if hit.is_some() {
+                    *pixel = color;
+                }
             }
-        }
-    });
+        });
 
     canvas.to_ppm_file("rendered_images/red_sphere.ppm");
 }
@@ -89,31 +89,31 @@ pub fn raytrace_shaded_sphere_parallel() {
     let boxed_shape: Box<dyn Shape> = Box::new(shape);
     let light = Light::new(Point::new(-10, 10, -1), Color::WHITE);
 
-    canvas.pixels.par_iter_mut().enumerate().for_each(|(index, pixel)| {
-        let x: u32 = index as u32 % canvas.width;
-        let y: u32 = index as u32 / canvas.width;
-        let world_x = -half_wall_size + pixel_size * (x as f64);
-        let world_y = half_wall_size - pixel_size * (y as f64);
-        let position = Point::new(world_x, world_y, wall_z);
-        let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
-        let intersections = ray.intersect(boxed_shape.as_ref());
-        if let Some(intersections) = intersections {
-            let maybe_hit = intersections.hit();
-            if let Some(hit) = maybe_hit {
-                let point = ray.position(hit.distance);
-                let normal = hit.object.normal_at(point);
-                let camera = -ray.direction;
-                *pixel = hit.object.material().lighting(
-                    hit.object,
-                    &light,
-                    &point,
-                    &camera,
-                    &normal,
-                    &false,
-                );
+    canvas
+        .pixels
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(index, pixel)| {
+            let x: u32 = index as u32 % canvas.width;
+            let y: u32 = index as u32 / canvas.width;
+            let world_x = -half_wall_size + pixel_size * (x as f64);
+            let world_y = half_wall_size - pixel_size * (y as f64);
+            let position = Point::new(world_x, world_y, wall_z);
+            let ray = Ray::new(ray_origin, (position - ray_origin).normalized());
+            let intersections = ray.intersect(boxed_shape.as_ref());
+            if let Some(intersections) = intersections {
+                let maybe_hit = intersections.hit();
+                if let Some(hit) = maybe_hit {
+                    let point = ray.position(hit.distance);
+                    let normal = hit.object.normal_at(point);
+                    let camera = -ray.direction;
+                    *pixel = hit
+                        .object
+                        .material()
+                        .lighting(hit.object, &light, &point, &camera, &normal, &false);
+                }
             }
-        }
-    });
+        });
 
     canvas.to_png_file("rendered_images/shaded_sphere.png");
 }
@@ -125,17 +125,17 @@ pub fn render_scene_parallel(x: u32, y: u32) {
     floor.material.specular = 0.0;
 
     let mut left_wall = Sphere::default();
-    left_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(-PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    left_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(-PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     left_wall.material = floor.material.clone();
 
     let mut right_wall = Sphere::default();
-    right_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    right_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     right_wall.material = floor.material.clone();
 
     let mut middle_sphere = Sphere::default();
@@ -145,15 +145,15 @@ pub fn render_scene_parallel(x: u32, y: u32) {
     middle_sphere.material.specular = 0.3;
 
     let mut right_sphere = Sphere::default();
-    right_sphere.transformation = transformations::translation(1.5, 0.5, -0.5) *
-        transformations::scaling(0.5, 0.5, 0.5);
+    right_sphere.transformation =
+        transformations::translation(1.5, 0.5, -0.5) * transformations::scaling(0.5, 0.5, 0.5);
     right_sphere.material.color = Color::new(0.5, 1, 0.1);
     right_sphere.material.diffuse = 0.7;
     right_sphere.material.specular = 0.3;
 
     let mut left_sphere = Sphere::default();
-    left_sphere.transformation = transformations::translation(-1.5, 0.33, -0.75) *
-        transformations::scaling(0.33, 0.33, 0.33);
+    left_sphere.transformation = transformations::translation(-1.5, 0.33, -0.75)
+        * transformations::scaling(0.33, 0.33, 0.33);
     left_sphere.material.color = Color::new(1, 0.8, 0.1);
     left_sphere.material.diffuse = 0.7;
     left_sphere.material.specular = 0.3;
@@ -183,20 +183,23 @@ pub fn render_scene_parallel2(x: u32, y: u32) {
     let mut floor = Plane::default();
     floor.material.color = Color::new(1, 0.9, 0.9);
     floor.material.specular = 0.0;
-    floor.material.pattern = Some(Arc::new(RingPattern::new(Color::new(0.15, 0.15, 0.15), Color::new(0.85, 0.85, 0.85))));
+    floor.material.pattern = Some(Arc::new(RingPattern::new(
+        Color::new(0.15, 0.15, 0.15),
+        Color::new(0.85, 0.85, 0.85),
+    )));
 
     let mut left_wall = Sphere::default();
-    left_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(-PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    left_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(-PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     left_wall.material = floor.material.clone();
 
     let mut right_wall = Sphere::default();
-    right_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    right_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     right_wall.material = floor.material.clone();
 
     let mut middle_sphere = Sphere::default();
@@ -206,15 +209,15 @@ pub fn render_scene_parallel2(x: u32, y: u32) {
     middle_sphere.material.specular = 0.3;
 
     let mut right_sphere = Sphere::default();
-    right_sphere.transformation = transformations::translation(1.5, 0.5, -0.5) *
-        transformations::scaling(0.5, 0.5, 0.5);
+    right_sphere.transformation =
+        transformations::translation(1.5, 0.5, -0.5) * transformations::scaling(0.5, 0.5, 0.5);
     right_sphere.material.color = Color::new(0.5, 1, 0.1);
     right_sphere.material.diffuse = 0.7;
     right_sphere.material.specular = 0.3;
 
     let mut left_sphere = Sphere::default();
-    left_sphere.transformation = transformations::translation(-1.5, 0.33, -0.75) *
-        transformations::scaling(0.33, 0.33, 0.33);
+    left_sphere.transformation = transformations::translation(-1.5, 0.33, -0.75)
+        * transformations::scaling(0.33, 0.33, 0.33);
     left_sphere.material.color = Color::new(1, 0.8, 0.1);
     left_sphere.material.diffuse = 0.7;
     left_sphere.material.specular = 0.3;
@@ -244,20 +247,23 @@ pub fn render_scene_parallel3(x: u32, y: u32) {
     let mut floor = Plane::default();
     floor.material.color = Color::RED;
     floor.material.specular = 0.0;
-    floor.material.pattern = Some(Arc::new(CheckerPattern::new(Color::new(0.15, 0.15, 0.15), Color::new(0.85, 0.85, 0.85))));
+    floor.material.pattern = Some(Arc::new(CheckerPattern::new(
+        Color::new(0.15, 0.15, 0.15),
+        Color::new(0.85, 0.85, 0.85),
+    )));
 
     let mut left_wall = Sphere::default();
-    left_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(-PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    left_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(-PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     left_wall.material = floor.material.clone();
 
     let mut right_wall = Sphere::default();
-    right_wall.transformation = transformations::translation(0, 0, 5) *
-        transformations::rotation_y(PI / 4.0) *
-        transformations::rotation_x(PI / 2.0) *
-        transformations::scaling(10, 0.01, 10);
+    right_wall.transformation = transformations::translation(0, 0, 5)
+        * transformations::rotation_y(PI / 4.0)
+        * transformations::rotation_x(PI / 2.0)
+        * transformations::scaling(10, 0.01, 10);
     right_wall.material = floor.material.clone();
 
     let mut middle_sphere = Sphere::default();
@@ -268,25 +274,26 @@ pub fn render_scene_parallel3(x: u32, y: u32) {
     middle_sphere.material.shininess = 150.0;
 
     let mut right_sphere = Sphere::default();
-    right_sphere.transformation = transformations::translation(1.5, 0.5, -0.5) *
-        transformations::scaling(0.5, 0.5, 0.5);
+    right_sphere.transformation =
+        transformations::translation(1.5, 0.5, -0.5) * transformations::scaling(0.5, 0.5, 0.5);
     right_sphere.material.color = Color::new(0.5, 1, 0.1);
     right_sphere.material.diffuse = 0.7;
     right_sphere.material.specular = 0.3;
 
     let mut left_sphere = Sphere::default();
-    left_sphere.transformation = transformations::translation(-1.5, 0.5, -0.75) *
-        transformations::scaling(0.33, 0.33, 0.33);
+    left_sphere.transformation =
+        transformations::translation(-1.5, 0.5, -0.75) * transformations::scaling(0.33, 0.33, 0.33);
     left_sphere.material.color = Color::new(1, 0.8, 0.1);
     left_sphere.material.diffuse = 0.7;
     left_sphere.material.specular = 0.3;
 
     let mut cone = Cone::default();
     cone.closed = true;
-    cone.maximum = 1.0;
-    cone.minimum = 0.0;
-    cone.set_transformation(transformations::translation(0, 0.2, -1.5) *
-        transformations::scaling(0.5, 0.5, 0.5));
+    cone.max = 1.0;
+    cone.min = 0.0;
+    cone.set_transformation(
+        transformations::translation(0, 0.2, -1.5) * transformations::scaling(0.5, 0.5, 0.5),
+    );
     let mut material = Material::default();
     material.diffuse = 0.2;
     material.ambient = 0.0;
@@ -300,8 +307,9 @@ pub fn render_scene_parallel3(x: u32, y: u32) {
     cone.set_material(material);
 
     let mut cone2 = cone.clone();
-    cone2.set_transformation(transformations::translation(0, 0.25, -1.5) *
-        transformations::scaling(0.4, 0.4, 0.4));
+    cone2.set_transformation(
+        transformations::translation(0, 0.25, -1.5) * transformations::scaling(0.4, 0.4, 0.4),
+    );
 
     let mut world = World::default();
     world.shapes = vec![
@@ -330,20 +338,34 @@ pub fn render_refraction_test() {
     let light = Light::new(Point::new(2, 10, -5), Color::new(0.9, 0.9, 0.9));
     let material = Material::new(
         Color::new(0, 0, 0),
-        Some(Arc::new(CheckerPattern::new(Color::new(0.15, 0.15, 0.15), Color::new(0.85, 0.85, 0.85)))),
+        Some(Arc::new(CheckerPattern::new(
+            Color::new(0.15, 0.15, 0.15),
+            Color::new(0.85, 0.85, 0.85),
+        ))),
         0.8,
         0.2,
         0,
         0,
         0,
         0,
-        0
+        0,
     );
-    let transformation = transformations::translation(0, 0, 10) * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
+    let transformation = transformations::translation(0, 0, 10)
+        * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
     let wall = Plane::new(material, transformation);
     let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.5);
     let ball = Sphere::new(material, transformations::IDENTITY);
-    let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.0000034);
+    let material = Material::new(
+        Color::new(1, 1, 1),
+        None,
+        0,
+        0,
+        0.9,
+        300,
+        0.9,
+        0.9,
+        1.0000034,
+    );
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);
     let mut objects: Vec<Box<dyn Shape>> = Vec::new();
@@ -365,13 +387,34 @@ pub fn render_refraction_test2() {
     let light = Light::new(Point::new(2, 10, -5), Color::new(0.9, 0.9, 0.9));
     let material = Material::new(
         Color::new(0, 0, 0),
-        Some(Arc::new(CheckerPattern::new(Color::new(0.15, 0.15, 0.15), Color::new(0.85, 0.85, 0.85)))),
-        0.8, 0.2, 0, 0, 0, 0, 0);
-    let transformation = transformations::translation(0, 0, 10) * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
+        Some(Arc::new(CheckerPattern::new(
+            Color::new(0.15, 0.15, 0.15),
+            Color::new(0.85, 0.85, 0.85),
+        ))),
+        0.8,
+        0.2,
+        0,
+        0,
+        0,
+        0,
+        0,
+    );
+    let transformation = transformations::translation(0, 0, 10)
+        * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
     let wall = Plane::new(material, transformation);
-    let material = Material::new( Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.5);
+    let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.5);
     let ball = Sphere::new(material, transformations::IDENTITY);
-    let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.0000034);
+    let material = Material::new(
+        Color::new(1, 1, 1),
+        None,
+        0,
+        0,
+        0.9,
+        300,
+        0.9,
+        0.9,
+        1.0000034,
+    );
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);
     let mut objects: Vec<Box<dyn Shape>> = Vec::new();

@@ -1,11 +1,14 @@
-use std::ops::Mul;
 use crate::consts::EPSILON;
-use crate::primitives::Color;
 use crate::primitives::transformations;
+use crate::primitives::Color;
 use crate::shapes::Sphere;
+use std::ops::Mul;
 
 /// Trait for imprecise comparison between floats
-pub trait CoarseEq where Self: Sized {
+pub trait CoarseEq
+where
+    Self: Sized,
+{
     const EPSILON: Self;
 
     fn coarse_eq(&self, rhs: Self) -> bool;
@@ -30,14 +33,14 @@ impl CoarseEq for f64 {
 }
 
 /// Trait for efficiently squaring value
-pub trait Squared: Copy + Mul<Self, Output=Self> {
+pub trait Squared: Copy + Mul<Self, Output = Self> {
     #[inline(always)]
     fn squared(self) -> Self {
         return self * self;
     }
 }
 
-impl<T> Squared for T where T: Copy + Mul<Self, Output=Self> {}
+impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
 
 #[inline(always)]
 pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
@@ -55,10 +58,7 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
 #[inline(always)]
 pub fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
     return unsafe {
-        core::slice::from_raw_parts(
-            (value as *const T) as *const u8,
-            core::mem::size_of::<T>(),
-        )
+        core::slice::from_raw_parts((value as *const T) as *const u8, core::mem::size_of::<T>())
     };
 }
 

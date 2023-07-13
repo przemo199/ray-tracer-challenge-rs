@@ -1,4 +1,4 @@
-use bincode::config::{Configuration, standard};
+use bincode::config::{standard, Configuration};
 
 /// Value for calculating smallest difference between floats
 pub const EPSILON: f64 = 0.00000008;

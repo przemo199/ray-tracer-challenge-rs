@@ -1,6 +1,5 @@
+use crate::composites::Intersection;
 use std::ops::Index;
-
-use crate::intersection::Intersection;
 
 #[derive(Clone, Debug)]
 pub struct Intersections<'a> {
@@ -9,11 +8,15 @@ pub struct Intersections<'a> {
 
 impl<'a> Intersections<'a> {
     pub fn new() -> Intersections<'a> {
-        return Intersections { intersections: Vec::new() };
+        return Intersections {
+            intersections: Vec::new(),
+        };
     }
 
     pub fn with<const T: usize>(elements: [Intersection<'a>; T]) -> Intersections<'a> {
-        return Intersections { intersections: Vec::from(elements) };
+        return Intersections {
+            intersections: Vec::from(elements),
+        };
     }
 
     pub fn add(&mut self, item: Intersection<'a>) {
@@ -65,9 +68,10 @@ impl<'a> Index<usize> for Intersections<'a> {
 
 impl<'a> PartialEq for Intersections<'a> {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.len() == rhs.len() && self.into_iter().all(|intersection| {
-            return rhs.intersections.contains(&intersection);
-        });
+        return self.len() == rhs.len()
+            && self.into_iter().all(|intersection| {
+                return rhs.intersections.contains(&intersection);
+            });
     }
 }
 

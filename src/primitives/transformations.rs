@@ -62,7 +62,7 @@ pub fn shearing_matrix(
     yx: impl Into<f64>,
     yz: impl Into<f64>,
     zx: impl Into<f64>,
-    zy: impl Into<f64>
+    zy: impl Into<f64>,
 ) -> Transformation {
     let mut result = IDENTITY;
     result.set_index(0, 1, xy.into());
@@ -83,7 +83,7 @@ pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
         [left_vector.x, left_vector.y, left_vector.z, 0.0],
         [true_up.x, true_up.y, true_up.z, 0.0],
         [-forward.x, -forward.y, -forward.z, 0.0],
-        [0.0, 0.0, 0.0, 1.0]
+        [0.0, 0.0, 0.0, 1.0],
     ]);
     return orientation * translation(-from.x, -from.y, -from.z);
 }
@@ -148,7 +148,10 @@ mod tests {
         let point = Point::new(0, 1, 0);
         let half_quarter_rotation = rotation_x(PI / 4.0);
         let full_quarter_rotation = rotation_x(PI / 2.0);
-        assert_eq!(half_quarter_rotation * point, Point::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(
+            half_quarter_rotation * point,
+            Point::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
+        );
         assert_eq!(full_quarter_rotation * point, Point::new(0, 0, 1));
     }
 
@@ -156,7 +159,10 @@ mod tests {
     fn point_rotation_inverse_around_x() {
         let point = Point::new(0, 1, 0);
         let full_quarter_rotation_inverse = rotation_x(PI / 4.0).inverse();
-        assert_eq!(full_quarter_rotation_inverse * point, Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
+        assert_eq!(
+            full_quarter_rotation_inverse * point,
+            Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0)
+        );
     }
 
     #[test]
@@ -164,7 +170,10 @@ mod tests {
         let point = Point::new(0, 0, 1);
         let half_quarter_rotation1 = rotation_y(PI / 4.0);
         let full_quarter_rotation1 = rotation_y(PI / 2.0);
-        assert_eq!(half_quarter_rotation1 * point, Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(
+            half_quarter_rotation1 * point,
+            Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0)
+        );
         assert_eq!(full_quarter_rotation1 * point, Point::new(1, 0, 0));
     }
 
@@ -173,7 +182,10 @@ mod tests {
         let point = Point::new(0, 1, 0);
         let half_quarter_rotation1 = rotation_z(PI / 4.0);
         let full_quarter_rotation1 = rotation_z(PI / 2.0);
-        assert_eq!(half_quarter_rotation1 * point, Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0));
+        assert_eq!(
+            half_quarter_rotation1 * point,
+            Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0)
+        );
         assert_eq!(full_quarter_rotation1 * point, Point::new(-1, 0, 0));
     }
 
@@ -256,10 +268,25 @@ mod tests {
         let up = Vector::new(1, 1, 0);
         let orientation = view_transform(from, to, up);
         let result = Transformation::new([
-            [-0.5070925528371099, 0.5070925528371099, 0.6761234037828132, -2.366431913239846],
-            [0.7677159338596801, 0.6060915267313263, 0.12121830534626524, -2.8284271247461894],
-            [-0.35856858280031806, 0.5976143046671968, -0.7171371656006361, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
+            [
+                -0.5070925528371099,
+                0.5070925528371099,
+                0.6761234037828132,
+                -2.366431913239846,
+            ],
+            [
+                0.7677159338596801,
+                0.6060915267313263,
+                0.12121830534626524,
+                -2.8284271247461894,
+            ],
+            [
+                -0.35856858280031806,
+                0.5976143046671968,
+                -0.7171371656006361,
+                0.0,
+            ],
+            [0.0, 0.0, 0.0, 1.0],
         ]);
         assert_eq!(orientation, result);
     }

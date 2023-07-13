@@ -1,13 +1,11 @@
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
-
-use bincode::Encode;
-
-use crate::computed_hit::ComputedHit;
+use crate::composites::ComputedHit;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
+use bincode::Encode;
+use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Encode)]
 pub struct Material {
@@ -32,7 +30,7 @@ impl Material {
         shininess: impl Into<f64>,
         reflectiveness: impl Into<f64>,
         transparency: impl Into<f64>,
-        refractive_index: impl Into<f64>
+        refractive_index: impl Into<f64>,
     ) -> Material {
         return Material {
             color,
@@ -51,12 +49,20 @@ impl Material {
         return Material::new(Color::BLACK, None, 0, 0, 0, 0, 0, 0, 1);
     }
 
-    pub fn lighting(&self, shape: &dyn Shape, light: &Light, point: &Point, camera_vector: &Vector, normal_vector: &Vector, is_shadowed: &bool) -> Color {
+    pub fn lighting(
+        &self,
+        shape: &dyn Shape,
+        light: &Light,
+        point: &Point,
+        camera_vector: &Vector,
+        normal_vector: &Vector,
+        is_shadowed: &bool,
+    ) -> Color {
         let diffuse: Color;
         let specular: Color;
         let color = match &self.pattern {
             Some(pattern) => pattern.color_at_shape(shape, point),
-            None => self.color
+            None => self.color,
         };
         let effective_color = color * light.intensity;
         let ambient = effective_color * self.ambient;
@@ -86,30 +92,33 @@ impl Material {
         return ambient + diffuse + specular;
     }
 
-    pub fn lighting_from_computed_hit(&self, computed_hit: &ComputedHit, light: &Light, is_shadowed: &bool) -> Color {
-        return self.lighting(computed_hit.object, light, &computed_hit.point, &computed_hit.camera_vector, &computed_hit.normal_vector, is_shadowed);
+    pub fn lighting_from_computed_hit(
+        &self,
+        computed_hit: &ComputedHit,
+        light: &Light,
+        is_shadowed: &bool,
+    ) -> Color {
+        return self.lighting(
+            computed_hit.object,
+            light,
+            &computed_hit.point,
+            &computed_hit.camera_vector,
+            &computed_hit.normal_vector,
+            is_shadowed,
+        );
     }
 }
 
 impl Default for Material {
     fn default() -> Material {
-        return Material::new(
-            Color::WHITE,
-            None,
-            0.1,
-            0.9,
-            0.9,
-            200,
-            0,
-            0,
-            1
-        );
+        return Material::new(Color::WHITE, None, 0.1, 0.9, 0.9, 200, 0, 0, 1);
     }
 }
 
 impl Display for Material {
     fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        return formatter.debug_struct("Material")
+        return formatter
+            .debug_struct("Material")
             .field("color", &self.color)
             .field("pattern", &self.pattern)
             .field("ambient", &self.ambient)
@@ -125,15 +134,15 @@ impl Display for Material {
 
 impl PartialEq for Material {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.color == rhs.color &&
-            self.pattern == rhs.pattern &&
-            self.ambient.coarse_eq(rhs.ambient) &&
-            self.diffuse.coarse_eq(rhs.diffuse) &&
-            self.specular.coarse_eq(rhs.specular) &&
-            self.shininess.coarse_eq(rhs.shininess) &&
-            self.reflectiveness.coarse_eq(rhs.reflectiveness) &&
-            self.refractive_index.coarse_eq(rhs.refractive_index) &&
-            self.transparency.coarse_eq(rhs.transparency);
+        return self.color == rhs.color
+            && self.pattern == rhs.pattern
+            && self.ambient.coarse_eq(rhs.ambient)
+            && self.diffuse.coarse_eq(rhs.diffuse)
+            && self.specular.coarse_eq(rhs.specular)
+            && self.shininess.coarse_eq(rhs.shininess)
+            && self.reflectiveness.coarse_eq(rhs.reflectiveness)
+            && self.refractive_index.coarse_eq(rhs.refractive_index)
+            && self.transparency.coarse_eq(rhs.transparency);
     }
 }
 
@@ -164,7 +173,9 @@ mod tests {
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
 
@@ -175,7 +186,9 @@ mod tests {
         let camera = Vector::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(1, 1, 1));
     }
 
@@ -186,8 +199,13 @@ mod tests {
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
-        assert_eq!(result, Color::new(0.7363961030678927, 0.7363961030678927, 0.7363961030678927));
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &false);
+        assert_eq!(
+            result,
+            Color::new(0.7363961030678927, 0.7363961030678927, 0.7363961030678927)
+        );
     }
 
     #[test]
@@ -197,8 +215,13 @@ mod tests {
         let camera = Vector::new(0, -(2.0_f64.sqrt()) / 2.0, -(2.0_f64.sqrt()) / 2.0);
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
-        assert_eq!(result, Color::new(1.6363961030678928, 1.6363961030678928, 1.6363961030678928));
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &false);
+        assert_eq!(
+            result,
+            Color::new(1.6363961030678928, 1.6363961030678928, 1.6363961030678928)
+        );
     }
 
     #[test]
@@ -208,7 +231,9 @@ mod tests {
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, 10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &false);
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 
@@ -219,7 +244,9 @@ mod tests {
         let camera = Vector::BACKWARD;
         let normal = Vector::BACKWARD;
         let light = Light::new(Point::new(0, 0, -10), Color::WHITE);
-        let result = shape.material.lighting(&shape, &light, &position, &camera, &normal, &true);
+        let result = shape
+            .material
+            .lighting(&shape, &light, &position, &camera, &normal, &true);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 }
