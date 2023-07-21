@@ -73,6 +73,7 @@ mod tests {
     use super::*;
     use crate::composites::{Intersection, Intersections, Ray};
     use crate::shapes::Sphere;
+    use crate::utils::CoarseEq;
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
@@ -112,6 +113,6 @@ mod tests {
         let boxed_shape = Box::new(shape);
         intersections.add(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        assert_eq!(computed_hit.schlick(), 0.4887308101221217);
+        assert!(computed_hit.schlick().coarse_eq(0.4887308101221217));
     }
 }
