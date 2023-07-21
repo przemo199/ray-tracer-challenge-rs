@@ -23,7 +23,7 @@ Arguments:
   <IMAGE_OUTPUT_PATH>
 
 Options:
-  -r, --rendering-mode <RENDERING_MODE>  [default: serial] [possible values: serial, parallel]
+  -r, --rendering-mode <RENDERING_MODE>  [default: parallel] [possible values: serial, parallel]
   -h, --help                             Print help
   -V, --version                          Print version
 ```
