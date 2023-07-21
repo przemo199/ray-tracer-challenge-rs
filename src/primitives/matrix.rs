@@ -1,9 +1,9 @@
 use crate::consts::EPSILON;
 use crate::primitives::{Point, Vector};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
-use std::mem;
-use std::ops::Mul;
+use core::fmt::{Display, Formatter};
+use core::mem;
+use core::ops::Mul;
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Matrix<const SIDE_LENGTH: usize> {
@@ -11,7 +11,7 @@ pub struct Matrix<const SIDE_LENGTH: usize> {
 }
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
-    pub const EMPTY: Matrix<SIDE_LENGTH> = Matrix {
+    pub const EMPTY: Matrix<SIDE_LENGTH> = Self {
         elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH],
     };
 
@@ -27,11 +27,11 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         result
     };
 
-    pub fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
-        return Matrix { elements };
+    pub const fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
+        return Self { elements };
     }
 
-    pub fn get_index(&self, row: usize, column: usize) -> f64 {
+    pub const fn get_index(&self, row: usize, column: usize) -> f64 {
         return self.elements[row][column];
     }
 
@@ -58,7 +58,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
 
 impl Matrix<2> {
     #[inline(always)]
-    pub fn submatrix(&self, row: usize, column: usize) -> f64 {
+    pub const fn submatrix(&self, row: usize, column: usize) -> f64 {
         return self.elements[row][column];
     }
 
@@ -68,7 +68,7 @@ impl Matrix<2> {
             - self.elements[0][1] * self.elements[1][0];
     }
 
-    pub fn minor(&self, row: usize, column: usize) -> f64 {
+    pub const fn minor(&self, row: usize, column: usize) -> f64 {
         return self.submatrix(row, column);
     }
 
@@ -271,7 +271,7 @@ impl<const SIDE_LENGTH: usize> Default for Matrix<SIDE_LENGTH> {
 }
 
 impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
         return formatter
             .debug_struct("Matrix")
             .field("elements", &self.elements)

@@ -3,7 +3,7 @@ use crate::patterns::pattern::Pattern;
 use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct CheckerPattern {
@@ -13,10 +13,10 @@ pub struct CheckerPattern {
 }
 
 impl CheckerPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = "CheckerPattern".as_bytes();
+    const PATTERN_IDENTIFIER: &'static [u8] = b"CheckerPattern";
 
-    pub fn new(color_a: Color, color_b: Color) -> CheckerPattern {
-        return CheckerPattern {
+    pub const fn new(color_a: Color, color_b: Color) -> Self {
+        return Self {
             color_a,
             color_b,
             transformation: transformations::IDENTITY,
@@ -52,7 +52,7 @@ impl Pattern for CheckerPattern {
 }
 
 impl Display for CheckerPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("CheckerPattern")
             .field("color_a", &self.color_a)

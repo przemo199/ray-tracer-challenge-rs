@@ -13,17 +13,17 @@ pub struct Canvas {
 
 impl Canvas {
     /// Creates new instance of struct Canvas
-    pub fn new(width: u32, height: u32) -> Canvas {
+    pub fn new(width: u32, height: u32) -> Self {
         let pixel_count = (width * height) as usize;
         let pixels = vec![Color::BLACK; pixel_count];
-        return Canvas {
+        return Self {
             width,
             height,
             pixels,
         };
     }
 
-    fn coords_to_index(&self, x: u32, y: u32) -> usize {
+    const fn coords_to_index(&self, x: u32, y: u32) -> usize {
         return (x + (y * self.width)) as usize;
     }
 
@@ -37,8 +37,8 @@ impl Canvas {
     }
 
     fn get_header(&self) -> Vec<String> {
-        let identifier = "P3".to_string();
-        let color_range = "255".to_string();
+        let identifier = "P3".to_owned();
+        let color_range = "255".to_owned();
         let image_size = [self.width.to_string(), self.height.to_string()].join(" ");
         return vec![identifier, image_size, color_range];
     }
@@ -87,7 +87,7 @@ impl Canvas {
         let mut buffer: Vec<u8> = Vec::with_capacity(self.pixels.len() * 3);
         self.prepare_file(&file_name);
 
-        for pixel in self.pixels.iter() {
+        for pixel in &self.pixels {
             for color in pixel.get_channels() {
                 buffer.push((color * 255.0).round() as u8);
             }
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(canvas.height, 20);
         assert_eq!(canvas.pixels.len(), 200);
         let black = Color::BLACK;
-        for pixel in canvas.pixels.iter() {
+        for pixel in &canvas.pixels {
             assert_eq!(pixel, &black);
         }
     }
@@ -151,7 +151,7 @@ mod tests {
         canvas.set_pixel(0, 0, color_1);
         canvas.set_pixel(2, 1, color_2);
         canvas.set_pixel(4, 2, color_3);
-        let ppm: Vec<String> = canvas.to_ppm().lines().map(|x| x.to_string()).collect();
+        let ppm: Vec<String> = canvas.to_ppm().lines().map(str::to_owned).collect();
         assert_eq!(ppm[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
         assert_eq!(ppm[4], "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0");
         assert_eq!(ppm[5], "0 0 0 0 0 0 0 0 0 0 0 0 0 0 255");

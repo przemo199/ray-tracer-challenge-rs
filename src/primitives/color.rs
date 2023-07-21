@@ -1,7 +1,7 @@
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
-use std::ops::{Add, Mul, Sub};
+use core::fmt::{Display, Formatter};
+use core::ops::{Add, Mul, Sub};
 
 /// Struct representing RGB values of a color
 #[derive(Clone, Copy, Debug, Encode)]
@@ -12,31 +12,31 @@ pub struct Color {
 }
 
 impl Color {
-    pub const WHITE: Color = Color {
+    pub const WHITE: Self = Self {
         red: 1.0,
         green: 1.0,
         blue: 1.0,
     };
 
-    pub const BLACK: Color = Color {
+    pub const BLACK: Self = Self {
         red: 0.0,
         green: 0.0,
         blue: 0.0,
     };
 
-    pub const RED: Color = Color {
+    pub const RED: Self = Self {
         red: 1.0,
         green: 0.0,
         blue: 0.0,
     };
 
-    pub const GREEN: Color = Color {
+    pub const GREEN: Self = Self {
         red: 0.0,
         green: 1.0,
         blue: 0.0,
     };
 
-    pub const BLUE: Color = Color {
+    pub const BLUE: Self = Self {
         red: 0.0,
         green: 0.0,
         blue: 1.0,
@@ -53,8 +53,8 @@ impl Color {
     /// assert_eq!(color.green, 0.5);
     /// assert_eq!(color.blue, 0.0);
     /// ```
-    pub fn new(red: impl Into<f64>, green: impl Into<f64>, blue: impl Into<f64>) -> Color {
-        return Color {
+    pub fn new(red: impl Into<f64>, green: impl Into<f64>, blue: impl Into<f64>) -> Self {
+        return Self {
             red: red.into(),
             green: green.into(),
             blue: blue.into(),
@@ -70,19 +70,19 @@ impl Color {
     ///
     ///  assert_eq!(color.get_channels(), [1.0, 0.5, 0.0]);
     /// ```
-    pub fn get_channels(&self) -> [f64; 3] {
+    pub const fn get_channels(&self) -> [f64; 3] {
         return [self.red, self.green, self.blue];
     }
 }
 
 impl Default for Color {
-    fn default() -> Color {
+    fn default() -> Self {
         return Color::BLACK;
     }
 }
 
 impl Display for Color {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Color")
             .field("red", &self.red)
@@ -93,7 +93,7 @@ impl Display for Color {
 }
 
 impl PartialEq for Color {
-    fn eq(&self, rhs: &Color) -> bool {
+    fn eq(&self, rhs: &Self) -> bool {
         return self.red.coarse_eq(rhs.red)
             && self.green.coarse_eq(rhs.green)
             && self.blue.coarse_eq(rhs.blue);
@@ -103,8 +103,8 @@ impl PartialEq for Color {
 impl Add for Color {
     type Output = Self;
 
-    fn add(self, rhs: Color) -> Self::Output {
-        return Color::new(
+    fn add(self, rhs: Self) -> Self::Output {
+        return Self::new(
             self.red + rhs.red,
             self.green + rhs.green,
             self.blue + rhs.blue,
@@ -115,8 +115,8 @@ impl Add for Color {
 impl Sub for Color {
     type Output = Self;
 
-    fn sub(self, rhs: Color) -> Self::Output {
-        return Color::new(
+    fn sub(self, rhs: Self) -> Self::Output {
+        return Self::new(
             self.red - rhs.red,
             self.green - rhs.green,
             self.blue - rhs.blue,
@@ -127,8 +127,8 @@ impl Sub for Color {
 impl Mul for Color {
     type Output = Self;
 
-    fn mul(self, rhs: Color) -> Self::Output {
-        return Color::new(
+    fn mul(self, rhs: Self) -> Self::Output {
+        return Self::new(
             self.red * rhs.red,
             self.green * rhs.green,
             self.blue * rhs.blue,
@@ -140,7 +140,7 @@ impl Mul<f64> for Color {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Color::new(self.red * rhs, self.green * rhs, self.blue * rhs);
+        return Self::new(self.red * rhs, self.green * rhs, self.blue * rhs);
     }
 }
 

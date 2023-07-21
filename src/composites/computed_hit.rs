@@ -14,26 +14,26 @@ pub struct ComputedHit<'a> {
     pub normal_vector: Vector,
     pub reflection_vector: Vector,
     pub is_inside: bool,
-    pub n1: f64,
-    pub n2: f64,
+    pub refractive_index_1: f64,
+    pub refractive_index_2: f64,
 }
 
 impl<'a> ComputedHit<'a> {
     pub fn new(
-        distance: f64,
+        distance: impl Into<f64>,
         object: &dyn Shape,
         point: Point,
         camera_vector: Vector,
         normal_vector: Vector,
         reflection_vector: Vector,
         is_inside: bool,
-        n1: f64,
-        n2: f64,
+        refractive_index_1: impl Into<f64>,
+        refractive_index_2: impl Into<f64>,
     ) -> ComputedHit {
         let over_point = point + normal_vector * EPSILON;
         let under_point = point - normal_vector * EPSILON;
         return ComputedHit {
-            distance,
+            distance: distance.into(),
             object,
             point,
             over_point,
@@ -42,16 +42,16 @@ impl<'a> ComputedHit<'a> {
             normal_vector,
             reflection_vector,
             is_inside,
-            n1,
-            n2,
+            refractive_index_1: refractive_index_1.into(),
+            refractive_index_2: refractive_index_2.into(),
         };
     }
 
     pub fn schlick(&self) -> f64 {
         let mut cos = self.camera_vector.dot(&self.normal_vector);
 
-        if self.n1 > self.n2 {
-            let n = self.n1 / self.n2;
+        if self.refractive_index_1 > self.refractive_index_2 {
+            let n = self.refractive_index_1 / self.refractive_index_2;
             let sin2_t = n.squared() * (1.0 - cos.squared());
 
             if sin2_t > 1.0 {
@@ -61,17 +61,18 @@ impl<'a> ComputedHit<'a> {
             cos = (1.0 - sin2_t).sqrt();
         }
 
-        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).squared();
-        return r0 + (1.0 - r0) * (1.0 - cos).powf(5.0);
+        let r0 = ((self.refractive_index_1 - self.refractive_index_2)
+            / (self.refractive_index_1 + self.refractive_index_2))
+            .squared();
+        return (1.0 - r0).mul_add((1.0 - cos).powi(5), r0);
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::composites::{Intersection, Intersections, Ray};
     use crate::shapes::Sphere;
-
-    use super::*;
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
@@ -111,6 +112,6 @@ mod tests {
         let boxed_shape = Box::new(shape);
         intersections.add(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        assert_eq!(computed_hit.schlick(), 0.48873081012212183);
+        assert_eq!(computed_hit.schlick(), 0.4887308101221217);
     }
 }

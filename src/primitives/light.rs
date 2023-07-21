@@ -1,5 +1,5 @@
 use crate::primitives::{Color, Point};
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Light {
@@ -18,8 +18,8 @@ impl Light {
     /// assert_eq!(light.position, Point::default());
     /// assert_eq!(light.intensity, Color::BLACK);
     /// ```
-    pub fn new(position: Point, intensity: Color) -> Light {
-        return Light {
+    pub const fn new(position: Point, intensity: Color) -> Self {
+        return Self {
             position,
             intensity,
         };
@@ -28,12 +28,12 @@ impl Light {
 
 impl Default for Light {
     fn default() -> Self {
-        return Light::new(Point::new(-10, 10, -10), Color::WHITE);
+        return Self::new(Point::new(-10, 10, -10), Color::WHITE);
     }
 }
 
 impl Display for Light {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Light")
             .field("position", &self.position)

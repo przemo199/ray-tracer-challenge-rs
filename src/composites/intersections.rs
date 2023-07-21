@@ -1,5 +1,5 @@
 use crate::composites::Intersection;
-use std::ops::Index;
+use core::ops::Index;
 
 #[derive(Clone, Debug)]
 pub struct Intersections<'a> {
@@ -7,7 +7,7 @@ pub struct Intersections<'a> {
 }
 
 impl<'a> Intersections<'a> {
-    pub fn new() -> Intersections<'a> {
+    pub const fn new() -> Intersections<'a> {
         return Intersections {
             intersections: Vec::new(),
         };
@@ -31,11 +31,15 @@ impl<'a> Intersections<'a> {
         return self.intersections.len();
     }
 
+    pub fn is_empty(&self) -> bool {
+        return self.intersections.len() == 0;
+    }
+
     pub fn hit(&self) -> Option<&Intersection> {
         let mut maybe_hit = None;
         let mut hit_distance = f64::INFINITY;
         for intersection in &self.intersections {
-            if intersection.distance < hit_distance && intersection.distance >= 0.0 {
+            if intersection.is_within_distance(hit_distance) {
                 maybe_hit = Some(intersection);
                 hit_distance = intersection.distance;
             }
@@ -43,12 +47,13 @@ impl<'a> Intersections<'a> {
         return maybe_hit;
     }
 
+    pub fn sort_by_distance(&mut self) {
+        self.intersections
+            .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+    }
+
     pub fn into_option(self) -> Option<Intersections<'a>> {
-        if self.len() > 0 {
-            return Some(self);
-        } else {
-            return None;
-        }
+        return if self.is_empty() { None } else { Some(self) };
     }
 }
 
@@ -70,14 +75,14 @@ impl<'a> PartialEq for Intersections<'a> {
     fn eq(&self, rhs: &Self) -> bool {
         return self.len() == rhs.len()
             && self.into_iter().all(|intersection| {
-                return rhs.intersections.contains(&intersection);
+                return rhs.intersections.contains(intersection);
             });
     }
 }
 
 impl<'a> IntoIterator for &'a Intersections<'a> {
     type Item = &'a Intersection<'a>;
-    type IntoIter = std::slice::Iter<'a, Intersection<'a>>;
+    type IntoIter = core::slice::Iter<'a, Intersection<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         return self.intersections.iter();
@@ -86,20 +91,19 @@ impl<'a> IntoIterator for &'a Intersections<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::shapes::{Shape, Sphere};
-
     use super::*;
+    use crate::shapes::{Shape, Sphere};
 
     #[test]
     fn hit_when_all_intersections_positive() {
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(1, boxed_shape.as_ref());
-        let intersection2 = Intersection::new(2, boxed_shape.as_ref());
-        intersections.add(intersection1.clone());
-        intersections.add(intersection2);
-        assert_eq!(intersections.hit().unwrap(), &intersection1);
+        let intersection_1 = Intersection::new(1, boxed_shape.as_ref());
+        let intersection_2 = Intersection::new(2, boxed_shape.as_ref());
+        intersections.add(intersection_1.clone());
+        intersections.add(intersection_2);
+        assert_eq!(intersections.hit().unwrap(), &intersection_1);
     }
 
     #[test]
@@ -107,11 +111,11 @@ mod tests {
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-1, boxed_shape.as_ref());
-        let intersection2 = Intersection::new(1, boxed_shape.as_ref());
-        intersections.add(intersection1);
-        intersections.add(intersection2.clone());
-        assert_eq!(intersections.hit().unwrap(), &intersection2);
+        let intersection_1 = Intersection::new(-1, boxed_shape.as_ref());
+        let intersection_2 = Intersection::new(1, boxed_shape.as_ref());
+        intersections.add(intersection_1);
+        intersections.add(intersection_2.clone());
+        assert_eq!(intersections.hit().unwrap(), &intersection_2);
     }
 
     #[test]
@@ -119,10 +123,10 @@ mod tests {
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(-2, boxed_shape.as_ref());
-        let intersection2 = Intersection::new(-1, boxed_shape.as_ref());
-        intersections.add(intersection1);
-        intersections.add(intersection2);
+        let intersection_1 = Intersection::new(-2, boxed_shape.as_ref());
+        let intersection_2 = Intersection::new(-1, boxed_shape.as_ref());
+        intersections.add(intersection_1);
+        intersections.add(intersection_2);
         assert_eq!(intersections.hit(), None);
     }
 
@@ -131,14 +135,14 @@ mod tests {
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let mut intersections = Intersections::new();
-        let intersection1 = Intersection::new(5, boxed_shape.as_ref());
-        let intersection2 = Intersection::new(7, boxed_shape.as_ref());
-        let intersection3 = Intersection::new(-3, boxed_shape.as_ref());
-        let intersection4 = Intersection::new(2, boxed_shape.as_ref());
-        intersections.add(intersection1);
-        intersections.add(intersection2);
-        intersections.add(intersection3);
-        intersections.add(intersection4.clone());
-        assert_eq!(intersections.hit().unwrap(), &intersection4);
+        let intersection_1 = Intersection::new(5, boxed_shape.as_ref());
+        let intersection_2 = Intersection::new(7, boxed_shape.as_ref());
+        let intersection_3 = Intersection::new(-3, boxed_shape.as_ref());
+        let intersection_4 = Intersection::new(2, boxed_shape.as_ref());
+        intersections.add(intersection_1);
+        intersections.add(intersection_2);
+        intersections.add(intersection_3);
+        intersections.add(intersection_4.clone());
+        assert_eq!(intersections.hit().unwrap(), &intersection_4);
     }
 }

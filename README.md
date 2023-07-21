@@ -36,4 +36,12 @@ Options:
 
 ![](./rendered_images/refraction.png)
 
+![](./rendered_images/metal.png)
+
+![](./rendered_images/cylinders.png)
+
+![](./rendered_images/table.png)
+
 ![](./rendered_images/three_sphere_scene.png)
+
+![](./rendered_images/shadow_puppets.png)

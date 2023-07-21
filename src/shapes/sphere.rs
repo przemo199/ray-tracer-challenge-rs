@@ -5,7 +5,7 @@ use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Point, Vector};
 use crate::utils::solve_quadratic;
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Sphere {
@@ -14,15 +14,15 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(material: Material, transformation: Transformation) -> Sphere {
-        return Sphere {
+    pub const fn new(material: Material, transformation: Transformation) -> Self {
+        return Self {
             material,
             transformation,
         };
     }
 
-    pub fn glass() -> Sphere {
-        let mut sphere = Sphere::default();
+    pub fn glass() -> Self {
+        let mut sphere = Self::default();
         let mut material = Material::default();
         material.transparency = 1.0;
         material.refractive_index = 1.5;
@@ -40,12 +40,12 @@ impl Shape for Sphere {
         return Vector::new(point.x, point.y, point.z);
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
-        self.material = material
+        self.material = material;
     }
 
     fn transformation(&self) -> Transformation {
@@ -77,10 +77,10 @@ impl Shape for Sphere {
 }
 
 impl Default for Sphere {
-    fn default() -> Sphere {
+    fn default() -> Self {
         let material = Material::default();
         let transformation = transformations::IDENTITY;
-        return Sphere {
+        return Self {
             material,
             transformation,
         };
@@ -88,7 +88,7 @@ impl Default for Sphere {
 }
 
 impl Display for Sphere {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Sphere")
             .field("material", &self.material)
@@ -99,10 +99,8 @@ impl Display for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::composites::Material;
-    use crate::consts::PI;
-
     use super::*;
+    use crate::consts::PI;
 
     #[test]
     fn default_transformation() {
@@ -162,15 +160,15 @@ mod tests {
         sphere.transformation = transformations::translation(0, 1, 0);
         let normal = sphere.normal_at(Point::new(
             0.0,
-            1.0 + std::f64::consts::FRAC_1_SQRT_2,
-            -std::f64::consts::FRAC_1_SQRT_2,
+            1.0 + core::f64::consts::FRAC_1_SQRT_2,
+            -core::f64::consts::FRAC_1_SQRT_2,
         ));
         assert_eq!(
             normal,
             Vector::new(
                 0,
-                std::f64::consts::FRAC_1_SQRT_2,
-                -std::f64::consts::FRAC_1_SQRT_2
+                core::f64::consts::FRAC_1_SQRT_2,
+                -core::f64::consts::FRAC_1_SQRT_2
             )
         );
     }

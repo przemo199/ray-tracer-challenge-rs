@@ -1,7 +1,7 @@
 use crate::utils::{CoarseEq, Squared};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use core::fmt::{Display, Formatter};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -11,43 +11,43 @@ pub struct Vector {
 }
 
 impl Vector {
-    pub const ZERO: Vector = Vector {
+    pub const ZERO: Self = Self {
         x: 0.0,
         y: 0.0,
         z: 0.0,
     };
 
-    pub const UP: Vector = Vector {
+    pub const UP: Self = Self {
         x: 0.0,
         y: 1.0,
         z: 0.0,
     };
 
-    pub const DOWN: Vector = Vector {
+    pub const DOWN: Self = Self {
         x: 0.0,
         y: -1.0,
         z: 0.0,
     };
 
-    pub const RIGHT: Vector = Vector {
+    pub const RIGHT: Self = Self {
         x: 1.0,
         y: 0.0,
         z: 0.0,
     };
 
-    pub const LEFT: Vector = Vector {
+    pub const LEFT: Self = Self {
         x: -1.0,
         y: 0.0,
         z: 0.0,
     };
 
-    pub const FORWARD: Vector = Vector {
+    pub const FORWARD: Self = Self {
         x: 0.0,
         y: 0.0,
         z: 1.0,
     };
 
-    pub const BACKWARD: Vector = Vector {
+    pub const BACKWARD: Self = Self {
         x: 0.0,
         y: 0.0,
         z: -1.0,
@@ -62,52 +62,57 @@ impl Vector {
     /// assert_eq!(vector.y, 0.5);
     /// assert_eq!(vector.z, 0.0);
     /// ```
-    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Vector {
-        return Vector {
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
+        return Self {
             x: x.into(),
             y: y.into(),
             z: z.into(),
         };
     }
 
-    pub fn get_values(&self) -> [f64; 4] {
+    pub const fn get_values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 0.0];
     }
 
+    #[inline(always)]
     pub fn magnitude(&self) -> f64 {
         return (self.x.squared() + self.y.squared() + self.z.squared()).sqrt();
     }
 
-    pub fn normalized(&self) -> Vector {
+    #[inline(always)]
+    pub fn normalized(&self) -> Self {
         let magnitude = self.magnitude();
-        return Vector::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
+        return Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
     }
 
-    pub fn dot(&self, rhs: &Vector) -> f64 {
-        return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
+    #[inline(always)]
+    pub fn dot(&self, rhs: &Self) -> f64 {
+        return self.z.mul_add(rhs.z, self.x.mul_add(rhs.x, self.y * rhs.y));
     }
 
-    pub fn cross(&self, rhs: &Vector) -> Vector {
-        return Vector::new(
-            self.y * rhs.z - self.z * rhs.y,
-            self.z * rhs.x - self.x * rhs.z,
-            self.x * rhs.y - self.y * rhs.x,
+    #[inline(always)]
+    pub fn cross(&self, rhs: &Self) -> Self {
+        return Self::new(
+            self.y.mul_add(rhs.z, -self.z * rhs.y),
+            self.z.mul_add(rhs.x, -self.x * rhs.z),
+            self.x.mul_add(rhs.y, -self.y * rhs.x),
         );
     }
 
-    pub fn reflect(&self, normal: &Vector) -> Vector {
+    #[inline(always)]
+    pub fn reflect(&self, normal: &Self) -> Self {
         return *self - *normal * 2.0_f64 * self.dot(normal);
     }
 }
 
 impl Default for Vector {
     fn default() -> Self {
-        return Vector::ZERO;
+        return Self::ZERO;
     }
 }
 
 impl Display for Vector {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
         return formatter
             .debug_struct("Vector")
             .field("x", &self.x)
@@ -118,58 +123,56 @@ impl Display for Vector {
 }
 
 impl PartialEq for Vector {
-    fn eq(&self, rhs: &Vector) -> bool {
+    fn eq(&self, rhs: &Self) -> bool {
         return self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
     }
 }
 
 impl Add for Vector {
-    type Output = Vector;
+    type Output = Self;
 
-    fn add(self, rhs: Vector) -> Self::Output {
-        return Vector::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
+    fn add(self, rhs: Self) -> Self::Output {
+        return Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
 }
 
 impl Sub for Vector {
-    type Output = Vector;
+    type Output = Self;
 
-    fn sub(self, rhs: Vector) -> Self::Output {
-        return Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
+    fn sub(self, rhs: Self) -> Self::Output {
+        return Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 
 impl Mul<f64> for Vector {
-    type Output = Vector;
+    type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Vector::new(self.x * rhs, self.y * rhs, self.z * rhs);
+        return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
     }
 }
 
 impl Div<f64> for Vector {
-    type Output = Vector;
+    type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        return Vector::new(self.x / rhs, self.y / rhs, self.z / rhs);
+        return Self::new(self.x / rhs, self.y / rhs, self.z / rhs);
     }
 }
 
 impl Neg for Vector {
-    type Output = Vector;
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
-        return Vector::new(-self.x, -self.y, -self.z);
+        return Self::new(-self.x, -self.y, -self.z);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
-
-    use crate::consts::EPSILON;
-
     use super::*;
+    use crate::consts::EPSILON;
+    use rstest::rstest;
 
     #[test]
     fn new_vector() {

@@ -1,7 +1,7 @@
 use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 #[derive(Clone, Debug)]
 pub struct Intersection<'a> {
@@ -34,8 +34,8 @@ impl<'a> Intersection<'a> {
         let reflection_vector = ray.direction.reflect(&normal_vector);
 
         let mut containers: Vec<usize> = Vec::new();
-        let mut n1: f64 = 1.0;
-        let mut n2: f64 = 1.0;
+        let mut refractive_index_1: f64 = 1.0;
+        let mut refractive_index_2: f64 = 1.0;
 
         let encoded_objects: Vec<_> = intersections
             .into_iter()
@@ -45,9 +45,9 @@ impl<'a> Intersection<'a> {
         for (index, intersection) in intersections.intersections.iter().enumerate() {
             if intersection == self {
                 if containers.is_empty() {
-                    n1 = 1.0;
+                    refractive_index_1 = 1.0;
                 } else {
-                    n1 = intersections[*containers.last().unwrap()]
+                    refractive_index_1 = intersections[*containers.last().unwrap()]
                         .object
                         .material()
                         .refractive_index;
@@ -62,9 +62,9 @@ impl<'a> Intersection<'a> {
 
             if intersection == self {
                 if containers.is_empty() {
-                    n2 = 1.0;
+                    refractive_index_2 = 1.0;
                 } else {
-                    n2 = intersections[*containers.last().unwrap()]
+                    refractive_index_2 = intersections[*containers.last().unwrap()]
                         .object
                         .material()
                         .refractive_index;
@@ -81,9 +81,13 @@ impl<'a> Intersection<'a> {
             normal_vector,
             reflection_vector,
             is_inside,
-            n1,
-            n2,
+            refractive_index_1,
+            refractive_index_2,
         );
+    }
+
+    pub fn is_within_distance(&self, distance: impl Into<f64>) -> bool {
+        return self.distance >= 0.0 && self.distance < distance.into();
     }
 }
 
@@ -96,13 +100,12 @@ impl<'a> PartialEq<Intersection<'a>> for Intersection<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::composites::{Intersections, Ray};
     use crate::consts::EPSILON;
     use crate::primitives::transformations;
     use crate::primitives::{Point, Vector};
     use crate::shapes::{Plane, Shape, Sphere};
-
-    use super::*;
 
     #[test]
     fn new_intersection() {
@@ -133,9 +136,9 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
-        let intersection1 = Intersection::new(4, boxed_shape.as_ref());
+        let intersection = Intersection::new(4, boxed_shape.as_ref());
         let intersections = Intersections::new();
-        let computations = intersection1.prepare_computations(&ray, &intersections);
+        let computations = intersection.prepare_computations(&ray, &intersections);
         assert!(!computations.is_inside);
     }
 
@@ -144,9 +147,9 @@ mod tests {
         let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
-        let intersection1 = Intersection::new(1, boxed_shape.as_ref());
+        let intersection = Intersection::new(1, boxed_shape.as_ref());
         let intersections = Intersections::new();
-        let computations = intersection1.prepare_computations(&ray, &intersections);
+        let computations = intersection.prepare_computations(&ray, &intersections);
         assert!(computations.is_inside);
         assert_eq!(computations.point, Point::new(0, 0, 1));
         assert_eq!(computations.camera_vector, Vector::BACKWARD);
@@ -222,8 +225,8 @@ mod tests {
             .zip(n_1s.iter().zip(n_2s.iter()))
         {
             let prepared_computations = intersection.prepare_computations(&ray, &intersections);
-            assert_eq!(prepared_computations.n1, *n_1);
-            assert_eq!(prepared_computations.n2, *n_2);
+            assert_eq!(prepared_computations.refractive_index_1, *n_1);
+            assert_eq!(prepared_computations.refractive_index_2, *n_2);
         }
     }
 

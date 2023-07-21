@@ -4,7 +4,7 @@ use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Point, Vector};
 use bincode::Encode;
-use std::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
@@ -19,11 +19,11 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(vertex_1: Point, vertex_2: Point, vertex_3: Point) -> Triangle {
+    pub fn new(vertex_1: Point, vertex_2: Point, vertex_3: Point) -> Self {
         let edge_1 = vertex_2 - vertex_1;
         let edge_2 = vertex_3 - vertex_1;
         let normal = (edge_2.cross(&edge_1)).normalized();
-        return Triangle {
+        return Self {
             material: Material::default(),
             transformation: transformations::IDENTITY,
             vertex_1,
@@ -41,8 +41,8 @@ impl Shape for Triangle {
         return self.normal;
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
@@ -85,7 +85,7 @@ impl Shape for Triangle {
 }
 
 impl Display for Triangle {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
         return formatter
             .debug_struct("Triangle")
             .field("p1", &self.vertex_1)

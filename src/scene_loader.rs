@@ -211,6 +211,10 @@ fn parse_material(yaml: &Yaml, definitions: &Definitions) -> Material {
         material.refractive_index = parse_f64(&yaml["refractive-index"]);
     }
 
+    if let Yaml::Boolean(value) = yaml["casts-shadow"] {
+        material.casts_shadow = value;
+    }
+
     return material;
 }
 
@@ -395,20 +399,40 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
                 "cone" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Cone {
+                    let mut cone = Cone {
                         material,
                         transformation,
                         ..Default::default()
-                    }));
+                    };
+                    if let Yaml::Boolean(value) = &entry["closed"] {
+                        cone.closed = *value;
+                    }
+                    if entry["max"] != BadValue {
+                        cone.max = parse_f64(&entry["max"]);
+                    }
+                    if entry["min"] != BadValue {
+                        cone.min = parse_f64(&entry["min"]);
+                    }
+                    world.shapes.push(Box::new(cone));
                 }
                 "cylinder" => {
                     let material = parse_material(&entry["material"], definitions);
                     let transformation = parse_transformation(&entry[TRANSFORMATION], definitions);
-                    world.shapes.push(Box::new(Cylinder {
+                    let mut cylinder = Cylinder {
                         material,
                         transformation,
                         ..Default::default()
-                    }));
+                    };
+                    if let Yaml::Boolean(value) = &entry["closed"] {
+                        cylinder.closed = *value;
+                    }
+                    if entry["max"] != BadValue {
+                        cylinder.max = parse_f64(&entry["max"]);
+                    }
+                    if entry["min"] != BadValue {
+                        cylinder.min = parse_f64(&entry["min"]);
+                    }
+                    world.shapes.push(Box::new(cylinder));
                 }
                 _ => (),
             }
@@ -421,7 +445,6 @@ fn parse_scene(yaml: &Yaml, definitions: &Definitions) -> (World, Camera) {
 mod tests {
     use super::*;
     use rstest::rstest;
-    use yaml_rust::{Yaml, YamlLoader};
 
     fn parse_yaml(value: &str) -> Yaml {
         return YamlLoader::load_from_str(value).unwrap().remove(0);

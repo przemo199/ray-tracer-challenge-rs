@@ -1,6 +1,6 @@
 use crate::composites::{Intersections, Material, Ray};
 use crate::primitives::{Point, Transformation, Vector};
-use std::fmt::{Debug, Display};
+use core::fmt::{Debug, Display};
 
 pub trait Shape: Debug + Display + Send + Sync {
     fn normal_at(&self, point: Point) -> Vector {
@@ -13,7 +13,7 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn local_normal_at(&self, point: Point) -> Vector;
 
-    fn material(&self) -> Material;
+    fn material(&self) -> &Material;
 
     fn set_material(&mut self, material: Material);
 
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn default_material() {
         let shape = Sphere::default();
-        assert_eq!(shape.material(), Material::default());
+        assert_eq!(shape.material(), &Material::default());
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
         let mut material = Material::default();
         material.color = Color::new(0.8, 1, 0.6);
         shape.set_material(material.clone());
-        assert_eq!(shape.material(), material);
+        assert_eq!(shape.material(), &material);
     }
 
     #[test]

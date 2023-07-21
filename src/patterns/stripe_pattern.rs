@@ -3,7 +3,7 @@ use crate::patterns::Pattern;
 use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct StripePattern {
@@ -13,10 +13,10 @@ pub struct StripePattern {
 }
 
 impl StripePattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = "StripePattern".as_bytes();
+    const PATTERN_IDENTIFIER: &'static [u8] = b"StripePattern";
 
-    pub fn new(color_a: Color, color_b: Color) -> StripePattern {
-        return StripePattern {
+    pub const fn new(color_a: Color, color_b: Color) -> Self {
+        return Self {
             color_a,
             color_b,
             transformation: transformations::IDENTITY,
@@ -50,7 +50,7 @@ impl Pattern for StripePattern {
 }
 
 impl Display for StripePattern {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("StripePattern")
             .field("color_a", &self.color_a)
@@ -62,12 +62,11 @@ impl Display for StripePattern {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::composites::Material;
     use crate::primitives::{Light, Vector};
     use crate::shapes::{Shape, Sphere};
     use std::sync::Arc;
-
-    use super::*;
 
     #[test]
     fn stripe_pattern_alternates_in_x() {
@@ -115,7 +114,7 @@ mod tests {
             &Point::new(0.9, 0, 0),
             &camera,
             &normal,
-            &false,
+            false,
         );
         let color2 = material.lighting(
             &object,
@@ -123,7 +122,7 @@ mod tests {
             &Point::new(1.1, 0, 0),
             &camera,
             &normal,
-            &false,
+            false,
         );
         assert_eq!(color1, Color::WHITE);
         assert_eq!(color2, Color::BLACK);

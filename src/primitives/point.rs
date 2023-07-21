@@ -1,8 +1,8 @@
 use crate::primitives::Vector;
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use core::fmt::{Display, Formatter};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Struct representing point in three dimensional space
 #[derive(Clone, Copy, Debug, Encode)]
@@ -13,7 +13,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub const ORIGIN: Point = Point {
+    pub const ORIGIN: Self = Self {
         x: 0.0,
         y: 0.0,
         z: 0.0,
@@ -30,8 +30,8 @@ impl Point {
     /// assert_eq!(point.y, 0.5);
     /// assert_eq!(point.z, 0.0);
     /// ```
-    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Point {
-        return Point {
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
+        return Self {
             x: x.into(),
             y: y.into(),
             z: z.into(),
@@ -42,23 +42,24 @@ impl Point {
         return [self.x, self.y, self.z, 1.0];
     }
 
-    fn cross(&self, rhs: &Point) -> Point {
-        return Point::new(
-            self.y * rhs.z - self.z * rhs.y,
-            self.z * rhs.x - self.x * rhs.z,
-            self.x * rhs.y - self.y * rhs.x,
+    #[inline(always)]
+    fn cross(&self, rhs: &Self) -> Self {
+        return Self::new(
+            self.y.mul_add(rhs.z, -self.z * rhs.y),
+            self.z.mul_add(rhs.x, -self.x * rhs.z),
+            self.x.mul_add(rhs.y, -self.y * rhs.x),
         );
     }
 }
 
 impl Default for Point {
     fn default() -> Self {
-        return Point::ORIGIN;
+        return Self::ORIGIN;
     }
 }
 
 impl Display for Point {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Point")
             .field("x", &self.x)
@@ -69,64 +70,63 @@ impl Display for Point {
 }
 
 impl PartialEq for Point {
-    fn eq(&self, rhs: &Point) -> bool {
+    fn eq(&self, rhs: &Self) -> bool {
         return self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
     }
 }
 
 impl Add<Vector> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn add(self, rhs: Vector) -> Self::Output {
-        return Point::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
+        return Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
 }
 
 impl Sub for Point {
     type Output = Vector;
 
-    fn sub(self, rhs: Point) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         return Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 
 impl Sub<Vector> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn sub(self, rhs: Vector) -> Self::Output {
-        return Point::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
+        return Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 
 impl Mul<f64> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Point::new(self.x * rhs, self.y * rhs, self.z * rhs);
+        return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
     }
 }
 
 impl Div<f64> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        return Point::new(self.x / rhs, self.y / rhs, self.z / rhs);
+        return Self::new(self.x / rhs, self.y / rhs, self.z / rhs);
     }
 }
 
 impl Neg for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
-        return Point::new(-self.x, -self.y, -self.z);
+        return Self::new(-self.x, -self.y, -self.z);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::EPSILON;
-
     use super::*;
+    use crate::consts::EPSILON;
 
     #[test]
     fn new_point() {

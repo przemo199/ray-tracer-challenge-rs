@@ -1,9 +1,9 @@
 use crate::composites::{ComputedHit, Intersections, Ray};
-use crate::consts::{EPSILON, MAX_REFLECTION_ITERATIONS};
+use crate::consts::MAX_REFLECTION_ITERATIONS;
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct World {
@@ -12,8 +12,8 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(lights: Vec<Light>, objects: Vec<Box<dyn Shape>>) -> World {
-        return World {
+    pub const fn new(lights: Vec<Light>, objects: Vec<Box<dyn Shape>>) -> Self {
+        return Self {
             lights,
             shapes: objects,
         };
@@ -27,9 +27,7 @@ impl World {
             }
         }
         if !result.intersections.is_empty() {
-            result
-                .intersections
-                .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+            result.sort_by_distance();
         }
         return result;
     }
@@ -40,8 +38,8 @@ impl World {
             .lights
             .iter()
             .map(|light| {
-                let is_shadowed = &self.is_shadowed(light, &computed_hit.over_point);
-                return material.lighting_from_computed_hit(computed_hit, light, is_shadowed);
+                let in_shadow = self.is_in_shadow(light, &computed_hit.over_point);
+                return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
             .fold(Color::BLACK, |acc, color| acc + color);
 
@@ -62,29 +60,29 @@ impl World {
         let intersections = self.intersections(ray);
         let maybe_hit = intersections.hit();
 
-        return match maybe_hit {
-            Some(hit) => {
-                let computed_hit = hit.prepare_computations(ray, &intersections);
-                self.shade_hit(&computed_hit, remaining_iterations)
-            }
-            None => Color::BLACK,
-        };
+        return maybe_hit.map_or(Color::BLACK, |hit| {
+            let computed_hit = hit.prepare_computations(ray, &intersections);
+            return self.shade_hit(&computed_hit, remaining_iterations);
+        });
     }
 
     pub fn color_at(&self, ray: &Ray) -> Color {
         return self.internal_color_at(ray, MAX_REFLECTION_ITERATIONS);
     }
 
-    pub fn is_shadowed(&self, light: &Light, point: &Point) -> bool {
+    /// Returns whether between the [Light] and [Point] is and object casting shadow
+    fn is_in_shadow(&self, light: &Light, point: &Point) -> bool {
         let point_to_light_vector = light.position - *point;
         let distance_to_light = point_to_light_vector.magnitude();
         let shadow_ray = Ray::new(*point, point_to_light_vector.normalized());
-        let intersections = self.intersections(&shadow_ray);
-        let maybe_hit = intersections.hit();
-        return match maybe_hit {
-            Some(hit) => hit.distance < distance_to_light,
-            None => false,
-        };
+        return self
+            .intersections(&shadow_ray)
+            .intersections
+            .into_iter()
+            .any(|intersection| {
+                intersection.is_within_distance(distance_to_light)
+                    && intersection.object.material().casts_shadow
+            });
     }
 
     fn reflected_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
@@ -102,17 +100,17 @@ impl World {
             return Color::BLACK;
         }
 
-        let n_ratio = computed_hit.n1 / computed_hit.n2;
+        let n_ratio = computed_hit.refractive_index_1 / computed_hit.refractive_index_2;
         let cos_i = computed_hit.camera_vector.dot(&computed_hit.normal_vector);
         let sin2_t = n_ratio.squared() * (1.0 - cos_i.squared());
-        let is_total_internal_reflection = sin2_t + EPSILON > 1.0;
+        let is_total_internal_reflection = sin2_t > 1.0;
 
         if is_total_internal_reflection {
             return Color::BLACK;
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = computed_hit.normal_vector * (n_ratio * cos_i - cos_t)
+        let direction = computed_hit.normal_vector * n_ratio.mul_add(cos_i, -cos_t)
             - (computed_hit.camera_vector * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color = self.internal_color_at(&refracted_ray, remaining_iterations - 1);
@@ -122,13 +120,13 @@ impl World {
 }
 
 impl Default for World {
-    fn default() -> World {
+    fn default() -> Self {
         let light = Light::default();
         let objects: Vec<Box<dyn Shape>> = vec![
             Box::new(world_default_sphere_1()),
             Box::new(world_default_sphere_2()),
         ];
-        return World::new(vec![light], objects);
+        return Self::new(vec![light], objects);
     }
 }
 
@@ -138,15 +136,16 @@ impl PartialEq for World {
             && self.lights.iter().all(|light| rhs.lights.contains(light))
             && self.shapes.len() == rhs.shapes.len()
             && self.shapes.iter().all(|object| {
-                rhs.shapes
+                return rhs
+                    .shapes
                     .iter()
-                    .any(|entry| entry.as_ref() == object.as_ref())
+                    .any(|entry| entry.as_ref() == object.as_ref());
             });
     }
 }
 
 impl Display for World {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("World")
             .field("light", &self.lights)
@@ -157,6 +156,7 @@ impl Display for World {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::composites::{Intersection, Intersections, Material, Ray};
     use crate::consts::PI;
     use crate::patterns::TestPattern;
@@ -164,8 +164,6 @@ mod tests {
     use crate::primitives::Vector;
     use crate::shapes::{Plane, Sphere};
     use std::sync::Arc;
-
-    use super::*;
 
     #[test]
     fn default_world() {
@@ -280,13 +278,13 @@ mod tests {
         let mut world = World::default();
 
         let mut sphere1 = world_default_sphere_1();
-        let mut material1 = sphere1.material();
+        let mut material1 = sphere1.material().clone();
         material1.ambient = 1.0;
         sphere1.set_material(material1);
         world.shapes[0] = Box::new(sphere1);
 
         let mut sphere2 = world_default_sphere_2();
-        let mut material2 = sphere2.material();
+        let mut material2 = sphere2.material().clone();
         material2.ambient = 1.0;
         sphere2.set_material(material2);
         world.shapes[1] = Box::new(sphere2);
@@ -300,28 +298,28 @@ mod tests {
     fn no_shadow_when_nothing_obscures_light() {
         let world = World::default();
         let point = Point::new(0, 10, 0);
-        assert!(!world.is_shadowed(&world.lights[0], &point));
+        assert!(!world.is_in_shadow(&world.lights[0], &point));
     }
 
     #[test]
     fn no_shadow_when_light_is_behind_point() {
         let world = World::default();
         let point = Point::new(-20, 20, -20);
-        assert!(!world.is_shadowed(&world.lights[0], &point));
+        assert!(!world.is_in_shadow(&world.lights[0], &point));
     }
 
     #[test]
     fn no_shadow_when_object_is_behind_point() {
         let world = World::default();
         let point = Point::new(-2, 2, -2);
-        assert!(!world.is_shadowed(&world.lights[0], &point));
+        assert!(!world.is_in_shadow(&world.lights[0], &point));
     }
 
     #[test]
     fn shadow_when_object_is_between_hit_and_light() {
         let world = World::default();
         let point = Point::new(10, -10, 10);
-        assert!(world.is_shadowed(&world.lights[0], &point));
+        assert!(world.is_in_shadow(&world.lights[0], &point));
     }
 
     #[test]
@@ -348,7 +346,7 @@ mod tests {
         let mut world = World::default();
         let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let mut sphere1 = world_default_sphere_2();
-        let mut material = sphere1.material();
+        let mut material = sphere1.material().clone();
         material.ambient = 1.0;
         sphere1.set_material(material);
         world.shapes[0] = Box::new(sphere1);
@@ -363,7 +361,7 @@ mod tests {
     fn reflected_color_for_reflective_material() {
         let mut world = World::default();
         let mut shape = Plane::default();
-        let mut material = shape.material();
+        let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
@@ -391,7 +389,7 @@ mod tests {
     fn shade_hit_with_reflective_material() {
         let mut world = World::default();
         let mut shape = Plane::default();
-        let mut material = shape.material();
+        let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
@@ -434,7 +432,7 @@ mod tests {
     fn reflected_color_at_max_recursion_depth() {
         let mut world = World::default();
         let mut shape = Plane::default();
-        let mut material = shape.material();
+        let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.set_material(material);
         shape.set_transformation(transformations::translation(0, -1, 0));
@@ -471,7 +469,7 @@ mod tests {
     fn refracted_color_at_max_recursion_depth() {
         let mut world = World::default();
         let mut sphere1 = world_default_sphere_1();
-        let mut material = sphere1.material();
+        let mut material = sphere1.material().clone();
         material.transparency = 1.0;
         material.refractive_index = 1.5;
         sphere1.set_material(material);
@@ -490,7 +488,7 @@ mod tests {
     fn refracted_color_under_total_internal_reflection() {
         let mut world = World::default();
         let mut sphere1 = world_default_sphere_1();
-        let mut material = sphere1.material();
+        let mut material = sphere1.material().clone();
         material.transparency = 1.0;
         material.refractive_index = 1.5;
         sphere1.set_material(material);
@@ -515,13 +513,13 @@ mod tests {
     fn refracted_color_with_refracted_ray() {
         let mut world = World::default();
         let mut sphere1 = world_default_sphere_1();
-        let mut material1 = sphere1.material();
+        let mut material1 = sphere1.material().clone();
         material1.ambient = 1.0;
         material1.pattern = Some(Arc::new(TestPattern::new()));
         sphere1.set_material(material1);
         world.shapes[0] = Box::new(sphere1);
         let mut sphere2 = world_default_sphere_2();
-        let mut material2 = sphere2.material();
+        let mut material2 = sphere2.material().clone();
         material2.transparency = 1.0;
         material2.refractive_index = 1.5;
         sphere2.set_material(material2);

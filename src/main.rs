@@ -11,8 +11,8 @@ fn main() {
     let (world, camera) = load_scene_description(args.scene_path);
     let now = Instant::now();
     let canvas = match args.rendering_mode {
-        RenderingMode::SERIAL => camera.render(&world),
-        RenderingMode::PARALLEL => camera.render_parallel(&world),
+        RenderingMode::Serial => camera.render(&world),
+        RenderingMode::Parallel => camera.render_parallel(&world),
     };
     let elapsed = now.elapsed();
     println!("Rendered in: {:.3?}s", elapsed.as_secs_f64());

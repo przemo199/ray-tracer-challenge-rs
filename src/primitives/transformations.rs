@@ -90,9 +90,8 @@ pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::PI;
-
     use super::*;
+    use crate::consts::PI;
 
     #[test]
     fn point_translation() {
@@ -168,25 +167,25 @@ mod tests {
     #[test]
     fn point_rotation_around_y() {
         let point = Point::new(0, 0, 1);
-        let half_quarter_rotation1 = rotation_y(PI / 4.0);
-        let full_quarter_rotation1 = rotation_y(PI / 2.0);
+        let half_quarter_rotation = rotation_y(PI / 4.0);
+        let full_quarter_rotation = rotation_y(PI / 2.0);
         assert_eq!(
-            half_quarter_rotation1 * point,
+            half_quarter_rotation * point,
             Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0)
         );
-        assert_eq!(full_quarter_rotation1 * point, Point::new(1, 0, 0));
+        assert_eq!(full_quarter_rotation * point, Point::new(1, 0, 0));
     }
 
     #[test]
     fn point_rotation_around_z() {
         let point = Point::new(0, 1, 0);
-        let half_quarter_rotation1 = rotation_z(PI / 4.0);
-        let full_quarter_rotation1 = rotation_z(PI / 2.0);
+        let half_quarter_rotation = rotation_z(PI / 4.0);
+        let full_quarter_rotation = rotation_z(PI / 2.0);
         assert_eq!(
-            half_quarter_rotation1 * point,
+            half_quarter_rotation * point,
             Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0)
         );
-        assert_eq!(full_quarter_rotation1 * point, Point::new(-1, 0, 0));
+        assert_eq!(full_quarter_rotation * point, Point::new(-1, 0, 0));
     }
 
     #[test]

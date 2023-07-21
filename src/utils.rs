@@ -2,7 +2,7 @@ use crate::consts::EPSILON;
 use crate::primitives::transformations;
 use crate::primitives::Color;
 use crate::shapes::Sphere;
-use std::ops::Mul;
+use core::ops::Mul;
 
 /// Trait for imprecise comparison between floats
 pub trait CoarseEq
@@ -11,24 +11,15 @@ where
 {
     const EPSILON: Self;
 
-    fn coarse_eq(&self, rhs: Self) -> bool;
-}
-
-impl CoarseEq for f32 {
-    const EPSILON: f32 = EPSILON as f32;
-
-    #[inline(always)]
-    fn coarse_eq(&self, rhs: Self) -> bool {
-        return (self - rhs).abs() < CoarseEq::EPSILON;
-    }
+    fn coarse_eq(&self, rhs: impl Into<Self>) -> bool;
 }
 
 impl CoarseEq for f64 {
-    const EPSILON: f64 = EPSILON;
+    const EPSILON: Self = EPSILON;
 
     #[inline(always)]
-    fn coarse_eq(&self, rhs: Self) -> bool {
-        return (self - rhs).abs() < CoarseEq::EPSILON;
+    fn coarse_eq(&self, rhs: impl Into<Self>) -> bool {
+        return (self - rhs.into()).abs() < CoarseEq::EPSILON;
     }
 }
 
@@ -44,7 +35,7 @@ impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
 
 #[inline(always)]
 pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
-    let discriminant = b.squared() - 4.0 * a * c;
+    let discriminant = (4.0 * a).mul_add(-c, b.squared());
     if discriminant < 0.0 {
         return None;
     }
@@ -56,7 +47,7 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
 }
 
 #[inline(always)]
-pub fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
+pub const fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
     return unsafe {
         core::slice::from_raw_parts((value as *const T) as *const u8, core::mem::size_of::<T>())
     };

@@ -4,7 +4,7 @@ use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cube {
@@ -13,8 +13,8 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn new(material: Material, transformation: Matrix<4>) -> Cube {
-        return Cube {
+    pub const fn new(material: Material, transformation: Transformation) -> Self {
+        return Self {
             material,
             transformation,
         };
@@ -37,7 +37,7 @@ impl Cube {
         }
 
         if distance_min > distance_max {
-            std::mem::swap(&mut distance_min, &mut distance_max);
+            core::mem::swap(&mut distance_min, &mut distance_max);
         }
 
         return (distance_min, distance_max);
@@ -58,8 +58,8 @@ impl Shape for Cube {
         return Vector::new(0, 0, point.z);
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
@@ -75,9 +75,9 @@ impl Shape for Cube {
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
-        let (x_distance_min, x_distance_max) = Cube::check_axis(ray.origin.x, ray.direction.x);
-        let (y_distance_min, y_distance_max) = Cube::check_axis(ray.origin.y, ray.direction.y);
-        let (z_distance_min, z_distance_max) = Cube::check_axis(ray.origin.z, ray.direction.z);
+        let (x_distance_min, x_distance_max) = Self::check_axis(ray.origin.x, ray.direction.x);
+        let (y_distance_min, y_distance_max) = Self::check_axis(ray.origin.y, ray.direction.y);
+        let (z_distance_min, z_distance_max) = Self::check_axis(ray.origin.z, ray.direction.z);
 
         let distance_min = [x_distance_min, y_distance_min, z_distance_min]
             .iter()
@@ -110,7 +110,7 @@ impl Default for Cube {
 }
 
 impl Display for Cube {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Cube")
             .field("material", &self.material)

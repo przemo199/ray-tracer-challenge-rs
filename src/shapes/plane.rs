@@ -2,9 +2,9 @@ use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Point, Vector};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Plane {
@@ -14,9 +14,9 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(material: Material, transformation: Matrix<4>) -> Plane {
+    pub const fn new(material: Material, transformation: Transformation) -> Self {
         let normal = Vector::UP;
-        return Plane {
+        return Self {
             material,
             transformation,
             normal,
@@ -29,8 +29,8 @@ impl Shape for Plane {
         return self.normal;
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
@@ -66,7 +66,7 @@ impl Default for Plane {
 }
 
 impl Display for Plane {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
         return formatter
             .debug_struct("Plane")
             .field("material", &self.material)

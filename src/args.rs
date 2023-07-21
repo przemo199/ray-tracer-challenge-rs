@@ -6,12 +6,12 @@ pub struct Args {
     pub scene_path: String,
     pub image_output_path: String,
 
-    #[arg(value_enum, short, long, default_value_t = RenderingMode::PARALLEL)]
+    #[arg(value_enum, short, long, default_value_t = RenderingMode::Parallel)]
     pub rendering_mode: RenderingMode,
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum RenderingMode {
-    SERIAL,
-    PARALLEL,
+    Serial,
+    Parallel,
 }

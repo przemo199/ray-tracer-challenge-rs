@@ -1,7 +1,7 @@
 use crate::composites::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::shapes::Shape;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Ray {
@@ -21,8 +21,8 @@ impl Ray {
     /// assert_eq!(ray.origin, Point::ORIGIN);
     /// assert_eq!(ray.direction, Vector::FORWARD);
     /// ```
-    pub fn new(origin: Point, direction: Vector) -> Ray {
-        return Ray { origin, direction };
+    pub const fn new(origin: Point, direction: Vector) -> Self {
+        return Self { origin, direction };
     }
 
     pub fn position(&self, distance: impl Into<f64>) -> Point {
@@ -34,15 +34,15 @@ impl Ray {
         return shape.local_intersect(&local_ray);
     }
 
-    pub fn transform(&self, transformation: Transformation) -> Ray {
+    pub fn transform(&self, transformation: Transformation) -> Self {
         let new_origin = transformation * self.origin;
         let new_direction = transformation * self.direction;
-        return Ray::new(new_origin, new_direction);
+        return Self::new(new_origin, new_direction);
     }
 }
 
 impl Display for Ray {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Ray")
             .field("origin", &self.origin)
@@ -53,10 +53,9 @@ impl Display for Ray {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::primitives::transformations;
     use crate::shapes::Sphere;
-
-    use super::*;
 
     #[test]
     fn creating_and_inspecting_ray() {

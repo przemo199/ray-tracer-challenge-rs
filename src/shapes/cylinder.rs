@@ -1,11 +1,11 @@
+use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
-use crate::shapes::Shape;
 use crate::utils::{solve_quadratic, Squared};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
@@ -23,8 +23,8 @@ impl Cylinder {
         min: impl Into<f64>,
         max: impl Into<f64>,
         closed: bool,
-    ) -> Cylinder {
-        return Cylinder {
+    ) -> Self {
+        return Self {
             material,
             transformation,
             min: min.into(),
@@ -35,8 +35,8 @@ impl Cylinder {
 
     fn check_cap(ray: &Ray, distance: impl Into<f64>) -> bool {
         let distance = distance.into();
-        let x = ray.origin.x + ray.direction.x * distance;
-        let z = ray.origin.z + ray.direction.z * distance;
+        let x = ray.direction.x.mul_add(distance, ray.origin.x);
+        let z = ray.direction.z.mul_add(distance, ray.origin.z);
         return (x.squared() + z.squared()) <= 1.0;
     }
 
@@ -72,8 +72,8 @@ impl Shape for Cylinder {
         return Vector::new(point.x, 0, point.z);
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
@@ -93,20 +93,24 @@ impl Shape for Cylinder {
 
         let mut intersections = Intersections::new();
         if a.abs() > 0.0 {
-            let b = 2.0 * (ray.origin.x * ray.direction.x + ray.origin.z * ray.direction.z);
+            let b = 2.0
+                * ray
+                    .origin
+                    .x
+                    .mul_add(ray.direction.x, ray.origin.z * ray.direction.z);
             let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
 
             if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
                 if distance_1 > distance_2 {
-                    std::mem::swap(&mut distance_1, &mut distance_2);
+                    core::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y1 = ray.origin.y + distance_1 * ray.direction.y;
+                let y1 = distance_1.mul_add(ray.direction.y, ray.origin.y);
                 if self.min < y1 && y1 < self.max {
                     intersections.add(Intersection::new(distance_1, self));
                 }
 
-                let y2 = ray.origin.y + distance_2 * ray.direction.y;
+                let y2 = distance_2.mul_add(ray.direction.y, ray.origin.y);
                 if self.min < y2 && y2 < self.max {
                     intersections.add(Intersection::new(distance_2, self));
                 }
@@ -137,7 +141,7 @@ impl Default for Cylinder {
 }
 
 impl Display for Cylinder {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Cylinder")
             .field("min", &self.min)
@@ -177,7 +181,7 @@ mod tests {
     #[rstest]
     #[case(Point::new(1, 0, -5), Vector::FORWARD, 5.0, 5.0)]
     #[case(Point::new(0, 0, -5), Vector::FORWARD, 4.0, 6.0)]
-    #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.80798191702732, 7.088723439378861)]
+    #[case(Point::new(0.5, 0, -5), Vector::new(0.1, 1, 1), 6.807981917027314, 7.088723439378867)]
     fn ray_intersects_cylinder(
         #[case] origin: Point,
         #[case] direction: Vector,

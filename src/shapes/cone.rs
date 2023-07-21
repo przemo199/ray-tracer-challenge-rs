@@ -5,7 +5,7 @@ use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::utils::{solve_quadratic, CoarseEq, Squared};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, Encode)]
 pub struct Cone {
@@ -23,8 +23,8 @@ impl Cone {
         min: impl Into<f64>,
         max: impl Into<f64>,
         closed: bool,
-    ) -> Cone {
-        return Cone {
+    ) -> Self {
+        return Self {
             transformation,
             material,
             min: min.into(),
@@ -35,9 +35,9 @@ impl Cone {
 
     fn check_caps(ray: &Ray, distance: impl Into<f64>) -> bool {
         let distance = distance.into();
-        let x = ray.origin.x + ray.direction.x * distance;
-        let z = ray.origin.z + ray.direction.z * distance;
-        return x.squared() + z.squared() <= (ray.origin.y + ray.direction.y * distance).abs();
+        let x = ray.direction.x.mul_add(distance, ray.origin.x);
+        let z = ray.direction.z.mul_add(distance, ray.origin.z);
+        return x.squared() + z.squared() <= ray.direction.y.mul_add(distance, ray.origin.y).abs();
     }
 
     fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
@@ -46,12 +46,12 @@ impl Cone {
         }
 
         let distance = (self.min - ray.origin.y) / ray.direction.y;
-        if Cone::check_caps(ray, distance) {
+        if Self::check_caps(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.max - ray.origin.y) / ray.direction.y;
-        if Cone::check_caps(ray, distance) {
+        if Self::check_caps(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
     }
@@ -77,8 +77,8 @@ impl Shape for Cone {
         return Vector::new(point.x, y, point.z);
     }
 
-    fn material(&self) -> Material {
-        return self.material.clone();
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn set_material(&mut self, material: Material) {
@@ -96,8 +96,12 @@ impl Shape for Cone {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let a = ray.direction.x.squared() - ray.direction.y.squared() + ray.direction.z.squared();
         let b = 2.0
-            * ((ray.origin.x * ray.direction.x) - (ray.origin.y * ray.direction.y)
-                + (ray.origin.z * ray.direction.z));
+            * ray.origin.z.mul_add(
+                ray.direction.z,
+                ray.origin
+                    .x
+                    .mul_add(ray.direction.x, -ray.origin.y * ray.direction.y),
+            );
         let c = ray.origin.x.squared() - ray.origin.y.squared() + ray.origin.z.squared();
 
         let mut intersections = Intersections::new();
@@ -106,15 +110,15 @@ impl Shape for Cone {
             intersections.add(Intersection::new(distance, self));
         } else if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
             if distance_1 > distance_2 {
-                std::mem::swap(&mut distance_1, &mut distance_2);
+                core::mem::swap(&mut distance_1, &mut distance_2);
             }
 
-            let y1 = ray.origin.y + ray.direction.y * distance_1;
+            let y1 = ray.direction.y.mul_add(distance_1, ray.origin.y);
             if self.min < y1 && y1 < self.max {
                 intersections.add(Intersection::new(distance_1, self));
             }
 
-            let y2 = ray.origin.y + ray.direction.y * distance_2;
+            let y2 = ray.direction.y.mul_add(distance_2, ray.origin.y);
             if self.min < y2 && y2 < self.max {
                 intersections.add(Intersection::new(distance_2, self));
             }
@@ -142,7 +146,7 @@ impl Default for Cone {
 }
 
 impl Display for Cone {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("Cone")
             .field("min", &self.min)
@@ -179,8 +183,8 @@ mod tests {
 
     #[rstest]
     #[case(Point::new(0, 0, -5), Vector::FORWARD, 5.0, 5.0)]
-    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254037844386, 8.660254037844386)]
-    #[case(Point::new(1, 1, -5), Vector::new(-0.5, -1, 1), 4.550055679356349, 49.449944320643645)]
+    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254015492644, 8.660254060196127)]
+    #[case(Point::new(1, 1, -5), Vector::new(-0.5, -1, 1), 4.550055679356354, 49.44994432064365)]
     fn intersecting_ray_with_cone(
         #[case] origin: Point,
         #[case] direction: Vector,
@@ -196,48 +200,48 @@ mod tests {
         assert_eq!(intersections[1].distance, distance_2);
     }
 
-    // #[test]
-    // fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
-    //     let cone = Cone::default();
-    //     let boxed_shape: Box<dyn Shape> = Box::new(cone);
-    //     let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
-    //     let intersections = boxed_shape.local_intersect(&ray).unwrap();
-    //     assert_eq!(intersections.len(), 1);
-    //     assert_eq!(intersections[0].distance, 0.3535533905932738);
-    // }
-    //
-    // #[rstest]
-    // #[case(Point::new(0, 0, -5), Vector::UP, 0)]
-    // #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 1), 2)]
-    // #[case(Point::new(0, 0, -0.25), Vector::UP, 4)]
-    // fn intersecting_ray_with_cone_caps(
-    //     #[case] origin: Point,
-    //     #[case] direction: Vector,
-    //     #[case] count: usize,
-    // ) {
-    //     let cone = Cone {
-    //         min: -0.5,
-    //         max: 0.5,
-    //         closed: true,
-    //         ..Default::default()
-    //     };
-    //     let boxed_shape: Box<dyn Shape> = Box::new(cone);
-    //     let ray = Ray::new(origin, direction.normalized());
-    //     let intersections = boxed_shape.local_intersect(&ray);
-    //     if count > 0 {
-    //         assert_eq!(intersections.unwrap().len(), count);
-    //     } else {
-    //         assert_eq!(intersections, None);
-    //     }
-    // }
-    //
-    // #[rstest]
-    // #[case(Point::ORIGIN, Vector::ZERO)]
-    // #[case(Point::new(1, 1, 1), Vector::new(1, -(2.0_f64.sqrt()), 1))]
-    // #[case(Point::new(-1, -1, 0), Vector::new(-1, 1, 0))]
-    // fn computing_normal_vector_on_cone(#[case] point: Point, #[case] expected_normal: Vector) {
-    //     let cone = Cone::default();
-    //     let normal = cone.local_normal_at(point);
-    //     assert_eq!(normal, expected_normal);
-    // }
+    #[test]
+    fn intersecting_ray_with_cone_parallel_to_one_of_cone_halves() {
+        let cone = Cone::default();
+        let boxed_shape: Box<dyn Shape> = Box::new(cone);
+        let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
+        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        assert_eq!(intersections.len(), 1);
+        assert_eq!(intersections[0].distance, 0.3535533905932738);
+    }
+
+    #[rstest]
+    #[case(Point::new(0, 0, -5), Vector::UP, 0)]
+    #[case(Point::new(0, 0, -0.25), Vector::new(0, 1, 1), 2)]
+    #[case(Point::new(0, 0, -0.25), Vector::UP, 4)]
+    fn intersecting_ray_with_cone_caps(
+        #[case] origin: Point,
+        #[case] direction: Vector,
+        #[case] count: usize,
+    ) {
+        let cone = Cone {
+            min: -0.5,
+            max: 0.5,
+            closed: true,
+            ..Default::default()
+        };
+        let boxed_shape: Box<dyn Shape> = Box::new(cone);
+        let ray = Ray::new(origin, direction.normalized());
+        let intersections = boxed_shape.local_intersect(&ray);
+        if count > 0 {
+            assert_eq!(intersections.unwrap().len(), count);
+        } else {
+            assert_eq!(intersections, None);
+        }
+    }
+
+    #[rstest]
+    #[case(Point::ORIGIN, Vector::ZERO)]
+    #[case(Point::new(1, 1, 1), Vector::new(1, -(2.0_f64.sqrt()), 1))]
+    #[case(Point::new(-1, -1, 0), Vector::new(-1, 1, 0))]
+    fn computing_normal_vector_on_cone(#[case] point: Point, #[case] expected_normal: Vector) {
+        let cone = Cone::default();
+        let normal = cone.local_normal_at(point);
+        assert_eq!(normal, expected_normal);
+    }
 }

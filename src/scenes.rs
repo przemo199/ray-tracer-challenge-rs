@@ -110,7 +110,7 @@ pub fn raytrace_shaded_sphere_parallel() {
                     *pixel = hit
                         .object
                         .material()
-                        .lighting(hit.object, &light, &point, &camera, &normal, &false);
+                        .lighting(hit.object, &light, &point, &camera, &normal, false);
                 }
             }
         });
@@ -349,11 +349,23 @@ pub fn render_refraction_test() {
         0,
         0,
         0,
+        true,
     );
     let transformation = transformations::translation(0, 0, 10)
-        * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
+        * transformations::rotation_x(core::f64::consts::FRAC_PI_2);
     let wall = Plane::new(material, transformation);
-    let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.5);
+    let material = Material::new(
+        Color::new(1, 1, 1),
+        None,
+        0,
+        0,
+        0.9,
+        300,
+        0.9,
+        0.9,
+        1.5,
+        true,
+    );
     let ball = Sphere::new(material, transformations::IDENTITY);
     let material = Material::new(
         Color::new(1, 1, 1),
@@ -365,6 +377,7 @@ pub fn render_refraction_test() {
         0.9,
         0.9,
         1.0000034,
+        true,
     );
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);
@@ -398,11 +411,23 @@ pub fn render_refraction_test2() {
         0,
         0,
         0,
+        true,
     );
     let transformation = transformations::translation(0, 0, 10)
-        * transformations::rotation_x(std::f64::consts::FRAC_PI_2);
+        * transformations::rotation_x(core::f64::consts::FRAC_PI_2);
     let wall = Plane::new(material, transformation);
-    let material = Material::new(Color::new(1, 1, 1), None, 0, 0, 0.9, 300, 0.9, 0.9, 1.5);
+    let material = Material::new(
+        Color::new(1, 1, 1),
+        None,
+        0,
+        0,
+        0.9,
+        300,
+        0.9,
+        0.9,
+        1.5,
+        true,
+    );
     let ball = Sphere::new(material, transformations::IDENTITY);
     let material = Material::new(
         Color::new(1, 1, 1),
@@ -414,6 +439,7 @@ pub fn render_refraction_test2() {
         0.9,
         0.9,
         1.0000034,
+        true,
     );
     let transformation = transformations::scaling(0.5, 0.5, 0.5);
     let ball2 = Sphere::new(material, transformation);

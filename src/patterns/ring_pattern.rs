@@ -4,7 +4,7 @@ use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
 use crate::utils::Squared;
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct RingPattern {
@@ -14,10 +14,10 @@ pub struct RingPattern {
 }
 
 impl RingPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = "RingPattern".as_bytes();
+    const PATTERN_IDENTIFIER: &'static [u8] = b"RingPattern";
 
-    pub fn new(color_a: Color, color_b: Color) -> RingPattern {
-        return RingPattern {
+    pub const fn new(color_a: Color, color_b: Color) -> Self {
+        return Self {
             color_a,
             color_b,
             transformation: transformations::IDENTITY,
@@ -51,7 +51,7 @@ impl Pattern for RingPattern {
 }
 
 impl Display for RingPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("CircularPattern")
             .field("color_a", &self.color_a)

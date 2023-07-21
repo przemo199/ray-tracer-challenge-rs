@@ -6,7 +6,7 @@ use bincode::enc::write::Writer;
 use bincode::enc::Encoder;
 use bincode::error::EncodeError;
 use bincode::Encode;
-use std::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter};
 
 pub trait Pattern: Debug + Display + Sync + Send {
     fn color_at(&self, point: &Point) -> Color;
@@ -42,10 +42,10 @@ pub struct TestPattern {
 }
 
 impl TestPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = "TestPattern".as_bytes();
+    const PATTERN_IDENTIFIER: &'static [u8] = b"TestPattern";
 
-    pub fn new() -> TestPattern {
-        return TestPattern {
+    pub const fn new() -> TestPattern {
+        return Self {
             transformation: transformations::IDENTITY,
         };
     }
@@ -72,7 +72,7 @@ impl Pattern for TestPattern {
 }
 
 impl Display for TestPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("TestPattern")
             .field("transformation", &self.transformation)
@@ -82,10 +82,9 @@ impl Display for TestPattern {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::primitives::{Color, Point};
     use crate::shapes::Sphere;
-
-    use super::*;
 
     #[test]
     fn default_test_pattern_transformation() {

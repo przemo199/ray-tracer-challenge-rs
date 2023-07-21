@@ -3,7 +3,7 @@ use crate::patterns::Pattern;
 use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
 use bincode::Encode;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Encode)]
@@ -14,10 +14,10 @@ pub struct ComplexPattern {
 }
 
 impl ComplexPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = "ComplexPattern".as_bytes();
+    const PATTERN_IDENTIFIER: &'static [u8] = b"ComplexPattern";
 
-    pub fn new(pattern_a: Arc<dyn Pattern>, pattern_b: Arc<dyn Pattern>) -> ComplexPattern {
-        return ComplexPattern {
+    pub const fn new(pattern_a: Arc<dyn Pattern>, pattern_b: Arc<dyn Pattern>) -> Self {
+        return Self {
             pattern_a,
             pattern_b,
             transformation: transformations::IDENTITY,
@@ -51,7 +51,7 @@ impl Pattern for ComplexPattern {
 }
 
 impl Display for ComplexPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("ComplexPattern")
             .field("pattern_a", &self.pattern_a)

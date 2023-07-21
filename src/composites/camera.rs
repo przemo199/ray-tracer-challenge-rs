@@ -1,4 +1,5 @@
 use crate::composites::{Canvas, Ray, World};
+use crate::consts::PROGRESS_TEMPLATE;
 use crate::primitives::Point;
 use crate::primitives::{transformations, Transformation};
 use crate::utils::CoarseEq;
@@ -18,10 +19,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    const PROGRESS_TEMPLATE: &'static str =
-        "[{elapsed_precise}] {bar:50.white/gray}{percent}% {human_pos}/{human_len}";
-
-    pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: impl Into<f64>) -> Camera {
+    pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: impl Into<f64>) -> Self {
         let field_of_view = field_of_view.into();
         let half_view = (field_of_view / 2.0).tan();
         let aspect = horizontal_size as f64 / vertical_size as f64;
@@ -35,7 +33,7 @@ impl Camera {
             half_height = half_view;
         }
         let pixel_size = (half_width * 2.0) / (horizontal_size as f64);
-        return Camera {
+        return Self {
             horizontal_size,
             vertical_size,
             field_of_view,
@@ -66,9 +64,8 @@ impl Camera {
     }
 
     pub fn render(&self, world: &World) -> Canvas {
-        assert!(!world.lights.is_empty());
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        let style = ProgressStyle::with_template(Camera::PROGRESS_TEMPLATE).unwrap();
+        let style = ProgressStyle::with_template(PROGRESS_TEMPLATE).unwrap();
         canvas
             .pixels
             .iter_mut()
@@ -85,7 +82,7 @@ impl Camera {
 
     pub fn render_parallel(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        let style = ProgressStyle::with_template(Camera::PROGRESS_TEMPLATE).unwrap();
+        let style = ProgressStyle::with_template(PROGRESS_TEMPLATE).unwrap();
         canvas
             .pixels
             .par_iter_mut()
@@ -115,11 +112,9 @@ impl PartialEq for Camera {
 
 #[cfg(test)]
 mod tests {
-    use crate::composites::World;
+    use super::*;
     use crate::consts::PI;
     use crate::primitives::{Color, Vector};
-
-    use super::*;
 
     #[test]
     fn constructing_camera() {
