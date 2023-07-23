@@ -35,24 +35,7 @@ impl SceneParser {
             transformations: HashMap::<String, Transformation>::new(),
         };
     }
-}
 
-fn load_file_to_yaml<P: AsRef<Path>>(path: P) -> Yaml {
-    let file = fs::read_to_string(path).unwrap();
-    let mut docs = YamlLoader::load_from_str(&file).unwrap();
-    assert_eq!(docs.len(), 1, "Incorrect yaml format");
-    return docs.remove(0);
-}
-
-pub fn load_scene_description<P: AsRef<Path>>(path: P) -> (World, Camera) {
-    let yaml = load_file_to_yaml(path);
-    let mut scene_parser = SceneParser::new();
-
-    scene_parser.process_definitions(&yaml);
-    return scene_parser.parse_scene(&yaml);
-}
-
-impl SceneParser {
     fn process_definitions(&mut self, yaml: &Yaml) {
         for entry in yaml.clone() {
             if let Yaml::String(name) = &entry[DEFINE] {
@@ -435,6 +418,21 @@ fn parse_f64(yaml: &Yaml) -> f64 {
 fn parse_array_of_3(slice: &[Yaml]) -> [f64; 3] {
     let values: Vec<f64> = slice.iter().take(3).map(parse_f64).collect();
     return [values[0], values[1], values[2]];
+}
+
+fn load_file_to_yaml<P: AsRef<Path>>(path: P) -> Yaml {
+    let file = fs::read_to_string(path).unwrap();
+    let mut docs = YamlLoader::load_from_str(&file).unwrap();
+    assert_eq!(docs.len(), 1, "Incorrect yaml format");
+    return docs.remove(0);
+}
+
+pub fn load_scene_description<P: AsRef<Path>>(path: P) -> (World, Camera) {
+    let yaml = load_file_to_yaml(path);
+    let mut scene_parser = SceneParser::new();
+
+    scene_parser.process_definitions(&yaml);
+    return scene_parser.parse_scene(&yaml);
 }
 
 #[cfg(test)]
