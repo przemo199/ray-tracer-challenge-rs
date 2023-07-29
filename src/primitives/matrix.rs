@@ -1,5 +1,5 @@
-use crate::consts::EPSILON;
 use crate::primitives::{Point, Vector};
+use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 use core::mem;
@@ -283,7 +283,7 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     fn eq(&self, rhs: &Matrix<SIDE_LENGTH>) -> bool {
         for (self_row, rhs_row) in self.elements.iter().zip(rhs.elements.iter()) {
             for (self_value, rhs_value) in self_row.iter().zip(rhs_row.iter()) {
-                if (self_value - rhs_value).abs() > EPSILON {
+                if !self_value.coarse_eq(*rhs_value) {
                     return false;
                 }
             }

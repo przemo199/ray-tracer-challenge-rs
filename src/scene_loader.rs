@@ -44,11 +44,11 @@ impl SceneParser {
                     self.colors.insert(name.clone(), color);
                     continue;
                 } else if name.ends_with("-material") {
-                    let material = self.parse_material_definition(&entry);
+                    let material = self.parse_material(&entry);
                     self.materials.insert(name.clone(), material);
                     continue;
                 } else if name.ends_with("-transform") || name.ends_with("-object") {
-                    let transformation = self.parse_transformation_definition(&entry);
+                    let transformation = self.parse_transformation(&entry);
                     self.transformations.insert(name.clone(), transformation);
                 }
             }
@@ -77,63 +77,22 @@ impl SceneParser {
         }
     }
 
-    fn parse_material_definition(&self, yaml: &Yaml) -> Material {
-        let mut material = if yaml[EXTEND] == BadValue {
-            Material::default()
-        } else {
-            self.materials[yaml["extend"].as_str().unwrap()].clone()
-        };
-
-        let yaml = &yaml[VALUE];
-        if yaml[COLOR] != BadValue {
-            material.color = self.parse_color(&yaml[COLOR]);
-        }
-
-        if yaml["pattern"] != BadValue {
-            material.pattern = Some(self.parse_pattern(&yaml["pattern"]));
-        }
-
-        if yaml["ambient"] != BadValue {
-            material.ambient = parse_f64(&yaml["ambient"]);
-        }
-
-        if yaml["diffuse"] != BadValue {
-            material.diffuse = parse_f64(&yaml["diffuse"]);
-        }
-
-        if yaml["specular"] != BadValue {
-            material.specular = parse_f64(&yaml["specular"]);
-        }
-
-        if yaml["shininess"] != BadValue {
-            material.shininess = parse_f64(&yaml["shininess"]);
-        }
-
-        if yaml["reflective"] != BadValue {
-            material.reflectiveness = parse_f64(&yaml["reflective"]);
-        }
-
-        if yaml["transparency"] != BadValue {
-            material.transparency = parse_f64(&yaml["transparency"]);
-        }
-
-        if yaml["refractive-index"] != BadValue {
-            material.refractive_index = parse_f64(&yaml["refractive-index"]);
-        }
-
-        return material;
-    }
-
     fn parse_material(&self, yaml: &Yaml) -> Material {
         if let Yaml::String(name) = yaml {
             return self.materials[name].clone();
         }
+
         let mut material = if yaml[EXTEND] == BadValue {
             Material::default()
         } else {
             self.materials[yaml[EXTEND].as_str().unwrap()].clone()
         };
 
+        let yaml = if yaml[VALUE] != BadValue {
+            &yaml[VALUE]
+        } else {
+            yaml
+        };
         if yaml[COLOR] != BadValue {
             material.color = self.parse_color(&yaml[COLOR]);
         }
@@ -221,48 +180,14 @@ impl SceneParser {
         };
     }
 
-    fn parse_transformation_definition(&self, yaml: &Yaml) -> Transformation {
-        let mut transformation = transformations::IDENTITY;
-        let yaml = &yaml[VALUE];
-
-        for transform in yaml.clone().into_iter() {
-            match transform {
-                Yaml::String(value) => {
-                    transformation = transformation * self.transformations[&value.clone()];
-                }
-                Yaml::Array(values) => match values[0].as_str().unwrap() {
-                    "scale" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation =
-                            transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "translate" => {
-                        let vals = parse_array_of_3(&values[1..4]);
-                        transformation = transformations::translation(vals[0], vals[1], vals[2])
-                            * transformation;
-                    }
-                    "rotate-x" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_x(vals) * transformation;
-                    }
-                    "rotate-y" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_y(vals) * transformation;
-                    }
-                    "rotate-z" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_z(vals) * transformation;
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
-        }
-        return transformation;
-    }
-
     fn parse_transformation(&self, yaml: &Yaml) -> Transformation {
         let mut transformation = transformations::IDENTITY;
+
+        let yaml = if yaml[VALUE] != BadValue {
+            &yaml[VALUE]
+        } else {
+            yaml
+        };
 
         for transform in yaml.clone().into_iter() {
             match transform {

@@ -126,7 +126,7 @@ impl Material {
         return self.lighting(
             computed_hit.object,
             light,
-            &computed_hit.point,
+            &computed_hit.over_point,
             &computed_hit.camera_vector,
             &computed_hit.normal_vector,
             in_shadow,
