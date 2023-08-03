@@ -135,16 +135,16 @@ mod tests {
     fn ray_intersects_cube(
         #[case] origin: Point,
         #[case] direction: Vector,
-        #[case] t_1: impl Into<f64>,
-        #[case] t_2: impl Into<f64>,
+        #[case] distance_1: impl Into<f64>,
+        #[case] distance_2: impl Into<f64>,
     ) {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
         let intersections = boxed_shape.local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 2);
-        assert_eq!(intersections[0].distance, t_1.into());
-        assert_eq!(intersections[1].distance, t_2.into());
+        assert_eq!(intersections[0].distance, distance_1.into());
+        assert_eq!(intersections[1].distance, distance_2.into());
     }
 
     #[rstest]

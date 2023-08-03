@@ -1,4 +1,4 @@
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::BINCODE_CONFIG;
 use crate::patterns::pattern::Pattern;
 use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
@@ -26,9 +26,7 @@ impl CheckerPattern {
 
 impl Pattern for CheckerPattern {
     fn color_at(&self, point: &Point) -> Color {
-        let distance = ((point.x + EPSILON).floor()
-            + (point.y + EPSILON).floor()
-            + (point.z + EPSILON).floor()) as i64;
+        let distance = (point.x.floor() + point.y.floor() + point.z.floor()) as i64;
         return if distance % 2 == 0 {
             self.color_a
         } else {

@@ -3,6 +3,7 @@ use crate::consts::PROGRESS_TEMPLATE;
 use crate::primitives::Point;
 use crate::primitives::{transformations, Transformation};
 use crate::utils::CoarseEq;
+use core::fmt::{Display, Formatter};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::*;
@@ -57,8 +58,8 @@ impl Camera {
         // using the camera matrix, transform the canvas point and the origin
         // and then compute the ray's direction vector
         // (remember that the canvas is at z = -1)
-        let pixel = self.transformation.inverse() * Point::new(world_x, world_y, -1.0);
-        let origin = self.transformation.inverse() * Point::new(0.0, 0.0, 0.0);
+        let pixel = self.transformation.inverse() * Point::new(world_x, world_y, -1);
+        let origin = self.transformation.inverse() * Point::new(0, 0, 0);
         let direction = (pixel - origin).normalized();
         return Ray::new(origin, direction);
     }
@@ -107,6 +108,21 @@ impl PartialEq for Camera {
             && self.half_width.coarse_eq(rhs.half_width)
             && self.half_height.coarse_eq(rhs.half_height)
             && self.pixel_size.coarse_eq(rhs.pixel_size);
+    }
+}
+
+impl Display for Camera {
+    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+        return formatter
+            .debug_struct("Camera")
+            .field("horizontal_size", &self.horizontal_size)
+            .field("vertical_size", &self.vertical_size)
+            .field("field_of_view", &self.field_of_view)
+            .field("half_width", &self.half_width)
+            .field("half_height", &self.half_height)
+            .field("pixel_size", &self.pixel_size)
+            .field("transformation", &self.transformation)
+            .finish();
     }
 }
 

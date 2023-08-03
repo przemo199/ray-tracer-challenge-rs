@@ -21,15 +21,6 @@ impl Sphere {
         };
     }
 
-    pub fn glass() -> Self {
-        let mut sphere = Self::default();
-        let mut material = Material::default();
-        material.transparency = 1.0;
-        material.refractive_index = 1.5;
-        sphere.set_material(material);
-        return sphere;
-    }
-
     fn mut_material(&mut self) -> &mut Material {
         return &mut self.material;
     }
@@ -56,11 +47,10 @@ impl Shape for Sphere {
         self.transformation = transformation;
     }
 
-    fn local_intersect(&self, local_ray: &Ray) -> Option<Intersections> {
-        let sphere_to_ray_distance =
-            Vector::new(local_ray.origin.x, local_ray.origin.y, local_ray.origin.z);
-        let a = local_ray.direction.dot(&local_ray.direction);
-        let b = 2.0 * local_ray.direction.dot(&sphere_to_ray_distance);
+    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
+        let sphere_to_ray_distance = Vector::new(ray.origin.x, ray.origin.y, ray.origin.z);
+        let a = ray.direction.dot(&ray.direction);
+        let b = 2.0 * ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
 
         return solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
@@ -101,6 +91,7 @@ impl Display for Sphere {
 mod tests {
     use super::*;
     use crate::consts::PI;
+    use core::default::Default;
 
     #[test]
     fn default_transformation() {
@@ -198,12 +189,5 @@ mod tests {
         material.ambient = 1.0;
         sphere.material = material.clone();
         assert_eq!(sphere.material, material);
-    }
-
-    #[test]
-    fn glass_sphere() {
-        let glass_sphere = Sphere::glass();
-        assert_eq!(glass_sphere.material.transparency, 1.0);
-        assert_eq!(glass_sphere.material.refractive_index, 1.5);
     }
 }

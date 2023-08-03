@@ -32,7 +32,7 @@ impl<'a> Intersections<'a> {
     }
 
     pub fn is_empty(&self) -> bool {
-        return self.intersections.len() == 0;
+        return self.intersections.is_empty();
     }
 
     pub fn hit(&self) -> Option<&Intersection> {

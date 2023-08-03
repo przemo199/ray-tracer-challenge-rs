@@ -11,7 +11,7 @@ pub struct ComputedHit<'a> {
     pub over_point: Point,
     pub under_point: Point,
     pub camera_vector: Vector,
-    pub normal_vector: Vector,
+    pub normal: Vector,
     pub reflection_vector: Vector,
     pub is_inside: bool,
     pub refractive_index_1: f64,
@@ -24,14 +24,14 @@ impl<'a> ComputedHit<'a> {
         object: &dyn Shape,
         point: Point,
         camera_vector: Vector,
-        normal_vector: Vector,
+        normal: Vector,
         reflection_vector: Vector,
         is_inside: bool,
         refractive_index_1: impl Into<f64>,
         refractive_index_2: impl Into<f64>,
     ) -> ComputedHit {
-        let over_point = point + normal_vector * EPSILON;
-        let under_point = point - normal_vector * EPSILON;
+        let over_point = point + (normal * EPSILON);
+        let under_point = point - (normal * EPSILON);
         return ComputedHit {
             distance: distance.into(),
             object,
@@ -39,7 +39,7 @@ impl<'a> ComputedHit<'a> {
             over_point,
             under_point,
             camera_vector,
-            normal_vector,
+            normal,
             reflection_vector,
             is_inside,
             refractive_index_1: refractive_index_1.into(),
@@ -48,11 +48,11 @@ impl<'a> ComputedHit<'a> {
     }
 
     pub fn schlick(&self) -> f64 {
-        let mut cos = self.camera_vector.dot(&self.normal_vector);
+        let mut cos = self.camera_vector.dot(&self.normal);
 
         if self.refractive_index_1 > self.refractive_index_2 {
-            let n = self.refractive_index_1 / self.refractive_index_2;
-            let sin2_t = n.squared() * (1.0 - cos.squared());
+            let refraction_ratio = self.refractive_index_1 / self.refractive_index_2;
+            let sin2_t = refraction_ratio.squared() * (1.0 - cos.squared());
 
             if sin2_t > 1.0 {
                 return 1.0;
@@ -71,13 +71,16 @@ impl<'a> ComputedHit<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::composites::{Intersection, Intersections, Ray};
+    use crate::composites::{Intersection, Intersections, Material, Ray};
     use crate::shapes::Sphere;
     use crate::utils::CoarseEq;
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
-        let shape = Sphere::glass();
+        let shape = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
@@ -95,7 +98,10 @@ mod tests {
 
     #[test]
     fn schlick_approximation_perpendicular_to_viewing_angle() {
-        let shape = Sphere::glass();
+        let shape = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
@@ -107,7 +113,10 @@ mod tests {
 
     #[test]
     fn schlick_approximation_with_small_angle() {
-        let shape = Sphere::glass();
+        let shape = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         let ray = Ray::new(Point::new(0, 0.99, -2), Vector::FORWARD);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);

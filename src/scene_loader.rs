@@ -16,6 +16,7 @@ const VALUE: &str = "value";
 const TYPE: &str = "type";
 const DEFINE: &str = "define";
 const EXTEND: &str = "extend";
+const MATERIAL: &str = "material";
 const TRANSFORMATION: &str = "transform";
 
 #[derive(Debug)]
@@ -42,11 +43,9 @@ impl SceneParser {
                 if name.ends_with("-color") {
                     let color = self.parse_color(&entry);
                     self.colors.insert(name.clone(), color);
-                    continue;
                 } else if name.ends_with("-material") {
                     let material = self.parse_material(&entry);
                     self.materials.insert(name.clone(), material);
-                    continue;
                 } else if name.ends_with("-transform") || name.ends_with("-object") {
                     let transformation = self.parse_transformation(&entry);
                     self.transformations.insert(name.clone(), transformation);
@@ -58,11 +57,13 @@ impl SceneParser {
     fn parse_color(&self, yaml: &Yaml) -> Color {
         match yaml {
             Yaml::Hash(_) => {
-                if yaml[COLOR] == BadValue {
-                    return self.parse_color(&yaml[VALUE]);
-                } else {
-                    return self.parse_color(&yaml[COLOR]);
-                }
+                return self.parse_color(
+                    &yaml[if yaml[COLOR] == BadValue {
+                        VALUE
+                    } else {
+                        COLOR
+                    }],
+                );
             }
             Yaml::Array(color_values) => {
                 let color_channels = parse_array_of_3(color_values);
@@ -196,26 +197,26 @@ impl SceneParser {
                 }
                 Yaml::Array(values) => match values[0].as_str().unwrap() {
                     "scale" => {
-                        let vals = parse_array_of_3(&values[1..4]);
+                        let vals = parse_array_of_3(&values[1..]);
                         transformation =
                             transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
                     }
                     "translate" => {
-                        let vals = parse_array_of_3(&values[1..4]);
+                        let vals = parse_array_of_3(&values[1..]);
                         transformation = transformations::translation(vals[0], vals[1], vals[2])
                             * transformation;
                     }
                     "rotate-x" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_x(vals) * transformation;
+                        let value = parse_f64(&values[1]);
+                        transformation = transformations::rotation_x(value) * transformation;
                     }
                     "rotate-y" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_y(vals) * transformation;
+                        let value = parse_f64(&values[1]);
+                        transformation = transformations::rotation_y(value) * transformation;
                     }
                     "rotate-z" => {
-                        let vals = parse_f64(&values[1]);
-                        transformation = transformations::rotation_z(vals) * transformation;
+                        let value = parse_f64(&values[1]);
+                        transformation = transformations::rotation_z(value) * transformation;
                     }
                     _ => {}
                 },
@@ -225,17 +226,15 @@ impl SceneParser {
         return transformation;
     }
 
+    fn parse_material_and_transformation(&self, yaml: &Yaml) -> (Material, Transformation) {
+        let material = self.parse_material(&yaml[MATERIAL]);
+        let transformation = self.parse_transformation(&yaml[TRANSFORMATION]);
+        return (material, transformation);
+    }
+
     fn parse_scene(&self, yaml: &Yaml) -> (World, Camera) {
         let mut world = World::new(Vec::new(), Vec::new());
-        let mut camera: Camera = Camera {
-            horizontal_size: 0,
-            vertical_size: 0,
-            field_of_view: 0.0,
-            half_width: 0.0,
-            half_height: 0.0,
-            pixel_size: 0.0,
-            transformation: Default::default(),
-        };
+        let mut camera = Camera::new(0, 0, 0);
         for entry in yaml.clone().into_iter() {
             if let Yaml::String(name) = &entry[ADD] {
                 match name.as_str() {
@@ -244,11 +243,11 @@ impl SceneParser {
                         let vertical_size = parse_f64(&entry["height"]) as u32;
                         let fov = parse_f64(&entry["field-of-view"]);
                         let from = parse_array_of_3(entry["from"].as_vec().unwrap());
-                        let from = Point::new(from[0], from[1], from[2]);
+                        let from = Point::from(from);
                         let to = parse_array_of_3(entry["to"].as_vec().unwrap());
-                        let to = Point::new(to[0], to[1], to[2]);
+                        let to = Point::from(to);
                         let up = parse_array_of_3(entry["up"].as_vec().unwrap());
-                        let up = Vector::new(up[0], up[1], up[2]);
+                        let up = Vector::from(up);
                         camera = Camera::new(horizontal_size, vertical_size, fov);
                         camera.transformation = transformations::view_transform(from, to, up);
                     }
@@ -260,29 +259,29 @@ impl SceneParser {
                         world.lights.push(Light::new(position, intensity));
                     }
                     "plane" => {
-                        let material = self.parse_material(&entry["material"]);
-                        let transformation = self.parse_transformation(&entry[TRANSFORMATION]);
+                        let (material, transformation) =
+                            self.parse_material_and_transformation(&entry);
                         world
                             .shapes
                             .push(Box::new(Plane::new(material, transformation)));
                     }
                     "sphere" => {
-                        let material = self.parse_material(&entry["material"]);
-                        let transformation = self.parse_transformation(&entry[TRANSFORMATION]);
+                        let (material, transformation) =
+                            self.parse_material_and_transformation(&entry);
                         world
                             .shapes
                             .push(Box::new(Sphere::new(material, transformation)));
                     }
                     "cube" => {
-                        let material = self.parse_material(&entry["material"]);
-                        let transformation = self.parse_transformation(&entry[TRANSFORMATION]);
+                        let (material, transformation) =
+                            self.parse_material_and_transformation(&entry);
                         world
                             .shapes
                             .push(Box::new(Cube::new(material, transformation)));
                     }
                     "cone" => {
-                        let material = self.parse_material(&entry["material"]);
-                        let transformation = self.parse_transformation(&entry[TRANSFORMATION]);
+                        let (material, transformation) =
+                            self.parse_material_and_transformation(&entry);
                         let mut cone = Cone {
                             material,
                             transformation,
@@ -300,8 +299,8 @@ impl SceneParser {
                         world.shapes.push(Box::new(cone));
                     }
                     "cylinder" => {
-                        let material = self.parse_material(&entry["material"]);
-                        let transformation = self.parse_transformation(&entry[TRANSFORMATION]);
+                        let (material, transformation) =
+                            self.parse_material_and_transformation(&entry);
                         let mut cylinder = Cylinder {
                             material,
                             transformation,

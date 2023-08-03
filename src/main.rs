@@ -1,13 +1,13 @@
-use crate::args::{Args, RenderingMode};
+use crate::cli_arguments::{CliArguments, RenderingMode};
 use clap::Parser;
 use raytracer::scene_loader::load_scene_description;
 use std::time::Instant;
 
-mod args;
+mod cli_arguments;
 mod scenes;
 
 fn main() {
-    let args = Args::parse();
+    let args = CliArguments::parse();
     let (world, camera) = load_scene_description(args.scene_path);
     let now = Instant::now();
     let canvas = match args.rendering_mode {

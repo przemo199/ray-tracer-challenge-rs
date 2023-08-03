@@ -100,41 +100,49 @@
   transform:
     - medium-object
     - [ translate, 4, 0, 0 ]
+
 - add: cube
   material: blue-material
   transform:
     - large-object
     - [ translate, 8.5, 1.5, -0.5 ]
+
 - add: cube
   material: red-material
   transform:
     - large-object
     - [ translate, 0, 0, 4 ]
+
 - add: cube
   material: white-material
   transform:
     - small-object
     - [ translate, 4, 0, 4 ]
+
 - add: cube
   material: purple-material
   transform:
     - medium-object
     - [ translate, 7.5, 0.5, 4 ]
+
 - add: cube
   material: white-material
   transform:
     - medium-object
     - [ translate, -0.25, 0.25, 8 ]
+
 - add: cube
   material: blue-material
   transform:
     - large-object
     - [ translate, 4, 1, 7.5 ]
+
 - add: cube
   material: red-material
   transform:
     - medium-object
     - [ translate, 10, 2, 7.5 ]
+
 - add: cube
   material: white-material
   transform:
@@ -146,36 +154,43 @@
   transform:
     - small-object
     - [ translate, 20, 1, 9 ]
+
 - add: cube
   material: blue-material
   transform:
     - large-object
     - [ translate, -0.5, -5, 0.25 ]
+
 - add: cube
   material: red-material
   transform:
     - large-object
     - [ translate, 4, -4, 0 ]
+
 - add: cube
   material: white-material
   transform:
     - large-object
     - [ translate, 8.5, -4, 0 ]
+
 - add: cube
   material: white-material
   transform:
     - large-object
     - [ translate, 0, -4, 4 ]
+
 - add: cube
   material: purple-material
   transform:
     - large-object
     - [ translate, -0.5, -4.5, 8 ]
+
 - add: cube
   material: white-material
   transform:
     - large-object
     - [ translate, 0, -8, 4 ]
+
 - add: cube
   material: white-material
   transform:

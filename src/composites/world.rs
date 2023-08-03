@@ -26,13 +26,11 @@ impl World {
                 result.add_all(intersections);
             }
         }
-        if !result.intersections.is_empty() {
-            result.sort_by_distance();
-        }
+        result.sort_by_distance();
         return result;
     }
 
-    pub fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
+    fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
         let material = computed_hit.object.material();
         let surface_color = self
             .lights
@@ -101,7 +99,7 @@ impl World {
         }
 
         let n_ratio = computed_hit.refractive_index_1 / computed_hit.refractive_index_2;
-        let cos_i = computed_hit.camera_vector.dot(&computed_hit.normal_vector);
+        let cos_i = computed_hit.camera_vector.dot(&computed_hit.normal);
         let sin2_t = n_ratio.squared() * (1.0 - cos_i.squared());
         let is_total_internal_reflection = sin2_t > 1.0;
 
@@ -110,7 +108,7 @@ impl World {
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = computed_hit.normal_vector * n_ratio.mul_add(cos_i, -cos_t)
+        let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
             - (computed_hit.camera_vector * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color = self.internal_color_at(&refracted_ray, remaining_iterations - 1);
@@ -353,7 +351,7 @@ mod tests {
         let intersection = Intersection::new(1.0, world.shapes[1].as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.reflected_color(&computed_hit, 0);
+        let color = world.reflected_color(&computed_hit, 1);
         assert_eq!(color, Color::BLACK);
     }
 
@@ -410,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn avoid_infinite_recursion_in_reflections() {
+    fn no_infinite_recursion_in_reflections() {
         let mut world = World::default();
         world.shapes = Vec::new();
         world.lights = vec![Light::new(Point::ORIGIN, Color::new(1, 1, 1))];
@@ -445,21 +443,18 @@ mod tests {
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 0);
-        assert_eq!(
-            color,
-            Color::new(0.6864253889815014, 0.6864253889815014, 0.6864253889815014)
-        );
+        let color = world.reflected_color(&computed_hit, 0);
+        assert_eq!(color, Color::BLACK);
     }
 
     #[test]
     fn refracted_color_with_opaque_material() {
         let world = World::default();
         let shape = world.shapes[0].as_ref();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(4, shape));
         intersections.add(Intersection::new(6, shape));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
         assert_eq!(color, Color::BLACK);
@@ -541,11 +536,10 @@ mod tests {
     #[test]
     fn shade_hit_with_transparent_material() {
         let mut world = World::default();
-        let floor_transformation = transformations::translation(0, -1, 0);
         let mut floor_material = Material::default();
         floor_material.transparency = 0.5;
         floor_material.refractive_index = 1.5;
-        let floor = Plane::new(floor_material, floor_transformation);
+        let floor = Plane::new(floor_material, transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(floor.clone()));
         let mut ball_material = Material::default();
         ball_material.color = Color::RED;
@@ -559,8 +553,8 @@ mod tests {
             Vector::new(0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let mut intersections = Intersections::new();
-        let floor = Box::new(floor);
-        intersections.add(Intersection::new(2.0_f64.sqrt(), floor.as_ref()));
+        let arc_floor = Box::new(floor);
+        intersections.add(Intersection::new(2.0_f64.sqrt(), arc_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 5);
         assert_eq!(

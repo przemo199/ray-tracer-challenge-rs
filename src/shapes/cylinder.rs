@@ -61,11 +61,11 @@ impl Shape for Cylinder {
     fn local_normal_at(&self, point: Point) -> Vector {
         let distance = point.x.squared() + point.z.squared();
 
-        if distance < 1.0 && point.y >= self.max - EPSILON {
+        if distance < 1.0 && point.y >= (self.max - EPSILON) {
             return Vector::UP;
         }
 
-        if distance < 1.0 && point.y <= self.min + EPSILON {
+        if distance < 1.0 && point.y <= (self.min + EPSILON) {
             return Vector::DOWN;
         }
 
@@ -114,8 +114,6 @@ impl Shape for Cylinder {
                 if self.min < y2 && y2 < self.max {
                     intersections.add(Intersection::new(distance_2, self));
                 }
-                self.intersect_caps(ray, &mut intersections);
-                return intersections.into_option();
             }
         }
 
@@ -202,10 +200,10 @@ mod tests {
     #[case(Point::new(0, 5, -1), Vector::BACKWARD)]
     #[case(Point::new(0, -2, 1), Vector::FORWARD)]
     #[case(Point::new(-1, 1, 0), Vector::LEFT)]
-    fn normal_vector_on_cylinder(#[case] point: Point, #[case] normal: Vector) {
+    fn normal_vector_on_cylinder(#[case] point: Point, #[case] expected_normal: Vector) {
         let cylinder = Cylinder::default();
-        let local_normal = cylinder.local_normal_at(point);
-        assert_eq!(local_normal, normal);
+        let normal = cylinder.local_normal_at(point);
+        assert_eq!(normal, expected_normal);
     }
 
     #[rstest]

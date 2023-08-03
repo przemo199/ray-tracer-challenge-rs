@@ -128,9 +128,17 @@ impl Material {
             light,
             &computed_hit.over_point,
             &computed_hit.camera_vector,
-            &computed_hit.normal_vector,
+            &computed_hit.normal,
             in_shadow,
         );
+    }
+
+    pub fn glass() -> Self {
+        return Self {
+            transparency: 1.0,
+            refractive_index: 1.5,
+            ..Default::default()
+        };
     }
 }
 
@@ -176,6 +184,7 @@ mod tests {
     use super::*;
     use crate::primitives::Light;
     use crate::shapes::Sphere;
+    use core::default::Default;
 
     #[test]
     fn default_material() {

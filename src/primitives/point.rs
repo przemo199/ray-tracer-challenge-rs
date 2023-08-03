@@ -38,7 +38,7 @@ impl Point {
         };
     }
 
-    pub fn get_values(&self) -> [f64; 4] {
+    pub fn values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 1.0];
     }
 
@@ -120,6 +120,20 @@ impl Neg for Point {
 
     fn neg(self) -> Self::Output {
         return Self::new(-self.x, -self.y, -self.z);
+    }
+}
+
+impl<T: Into<f64>> From<[T; 3]> for Point {
+    fn from(value: [T; 3]) -> Self {
+        let [x, y, z] = value;
+        return Self::new(x, y, z);
+    }
+}
+
+impl<T: Into<f64>> From<[T; 4]> for Point {
+    fn from(value: [T; 4]) -> Self {
+        let [x, y, z, ..] = value;
+        return Self::new(x, y, z);
     }
 }
 

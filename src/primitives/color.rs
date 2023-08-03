@@ -144,6 +144,20 @@ impl Mul<f64> for Color {
     }
 }
 
+impl<T: Into<f64>> From<[T; 3]> for Color {
+    fn from(value: [T; 3]) -> Self {
+        let [x, y, z] = value;
+        return Self::new(x, y, z);
+    }
+}
+
+impl<T: Into<f64>> From<[T; 4]> for Color {
+    fn from(value: [T; 4]) -> Self {
+        let [x, y, z, ..] = value;
+        return Self::new(x, y, z);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

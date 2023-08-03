@@ -23,15 +23,15 @@ impl<'a> Intersection<'a> {
         intersections: &'a Intersections<'a>,
     ) -> ComputedHit<'a> {
         let point = ray.position(self.distance);
-        let mut normal_vector = self.object.normal_at(point);
+        let mut normal = self.object.normal_at(point);
         let camera_vector = -ray.direction;
-        let is_inside = normal_vector.dot(&camera_vector) < 0.0;
+        let is_inside = normal.dot(&camera_vector) < 0.0;
 
         if is_inside {
-            normal_vector = -normal_vector;
+            normal = -normal;
         }
 
-        let reflection_vector = ray.direction.reflect(&normal_vector);
+        let reflection_vector = ray.direction.reflect(&normal);
 
         let mut containers: Vec<usize> = Vec::new();
         let mut refractive_index_1: f64 = 1.0;
@@ -78,7 +78,7 @@ impl<'a> Intersection<'a> {
             self.object,
             point,
             camera_vector,
-            normal_vector,
+            normal,
             reflection_vector,
             is_inside,
             refractive_index_1,
@@ -101,7 +101,7 @@ impl<'a> PartialEq<Intersection<'a>> for Intersection<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::composites::{Intersections, Ray};
+    use crate::composites::{Intersections, Material, Ray};
     use crate::consts::EPSILON;
     use crate::primitives::transformations;
     use crate::primitives::{Point, Vector};
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(computed_hit.object, boxed_shape.as_ref());
         assert_eq!(computed_hit.point, Point::new(0, 0, -1));
         assert_eq!(computed_hit.camera_vector, Vector::BACKWARD);
-        assert_eq!(computed_hit.normal_vector, Vector::BACKWARD);
+        assert_eq!(computed_hit.normal, Vector::BACKWARD);
     }
 
     #[test]
@@ -188,26 +188,36 @@ mod tests {
     }
 
     #[test]
-    fn finding_n1_and_n2() {
-        let mut sphere1 = Sphere::glass();
+    fn finding_refractive_indexes() {
+        let mut sphere1 = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         sphere1.set_transformation(transformations::scaling(2, 2, 2));
         let mut material1 = sphere1.material.clone();
         material1.refractive_index = 1.5;
         sphere1.set_material(material1);
         let boxed_shape1: Box<dyn Shape> = Box::new(sphere1);
-        let mut sphere2 = Sphere::glass();
+
+        let mut sphere2 = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         sphere2.set_transformation(transformations::translation(0, 0, -0.25));
         let mut material2 = sphere2.material.clone();
         material2.refractive_index = 2.0;
         sphere2.set_material(material2);
         let boxed_shape2: Box<dyn Shape> = Box::new(sphere2);
-        let mut sphere3 = Sphere::glass();
+
+        let mut sphere3 = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         sphere3.set_transformation(transformations::translation(0, 0, 0.25));
         let mut material3 = sphere3.material.clone();
         material3.refractive_index = 2.5;
         sphere3.set_material(material3);
         let boxed_shape3: Box<dyn Shape> = Box::new(sphere3);
-        let ray = Ray::new(Point::new(0, 0, -4), Vector::FORWARD);
 
         let mut intersections = Intersections::new();
         intersections.add(Intersection::new(2, boxed_shape1.as_ref()));
@@ -217,28 +227,33 @@ mod tests {
         intersections.add(Intersection::new(5.25, boxed_shape3.as_ref()));
         intersections.add(Intersection::new(6, boxed_shape1.as_ref()));
 
-        let n_1s = [1.0, 1.5, 2.0, 2.5, 2.5, 1.5];
-        let n_2s = [1.5, 2.0, 2.5, 2.5, 1.5, 1.0];
-        for (intersection, (n_1, n_2)) in intersections
+        let refractive_indexes_1 = [1.0, 1.5, 2.0, 2.5, 2.5, 1.5];
+        let refractive_indexes_2 = [1.5, 2.0, 2.5, 2.5, 1.5, 1.0];
+        let ray = Ray::new(Point::new(0, 0, -4), Vector::FORWARD);
+
+        for (intersection, (refractive_index_1, refractive_index_2)) in intersections
             .intersections
             .iter()
-            .zip(n_1s.iter().zip(n_2s.iter()))
+            .zip(refractive_indexes_1.iter().zip(refractive_indexes_2.iter()))
         {
-            let prepared_computations = intersection.prepare_computations(&ray, &intersections);
-            assert_eq!(prepared_computations.refractive_index_1, *n_1);
-            assert_eq!(prepared_computations.refractive_index_2, *n_2);
+            let computed_hit = intersection.prepare_computations(&ray, &intersections);
+            assert_eq!(computed_hit.refractive_index_1, *refractive_index_1);
+            assert_eq!(computed_hit.refractive_index_2, *refractive_index_2);
         }
     }
 
     #[test]
     fn under_point_is_below_surface() {
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let mut sphere = Sphere::glass();
+        let mut sphere = Sphere {
+            material: Material::glass(),
+            ..Default::default()
+        };
         sphere.set_transformation(transformations::translation(0, 0, 1));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let mut intersections = Intersections::new();
         intersections.add(intersection.clone());
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         assert!(computed_hit.under_point.z > EPSILON / 2.0);
         assert!(computed_hit.point.z < computed_hit.under_point.z);

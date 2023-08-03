@@ -108,7 +108,7 @@ mod tests {
         sphere.set_transformation(transformations::scaling(2, 2, 2));
         let pattern = TestPattern::new();
         let color = pattern.color_at_shape(&sphere, &Point::new(2, 3, 4));
-        assert_eq!(color, Color::new(1.0, 1.5, 2.0));
+        assert_eq!(color, Color::new(1, 1.5, 2));
     }
 
     #[test]

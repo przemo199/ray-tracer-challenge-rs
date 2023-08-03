@@ -70,7 +70,7 @@ impl Vector {
         };
     }
 
-    pub const fn get_values(&self) -> [f64; 4] {
+    pub const fn values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 0.0];
     }
 
@@ -165,6 +165,20 @@ impl Neg for Vector {
 
     fn neg(self) -> Self::Output {
         return Self::new(-self.x, -self.y, -self.z);
+    }
+}
+
+impl<T: Into<f64>> From<[T; 3]> for Vector {
+    fn from(value: [T; 3]) -> Self {
+        let [x, y, z] = value;
+        return Self::new(x, y, z);
+    }
+}
+
+impl<T: Into<f64>> From<[T; 4]> for Vector {
+    fn from(value: [T; 4]) -> Self {
+        let [x, y, z, ..] = value;
+        return Self::new(x, y, z);
     }
 }
 
