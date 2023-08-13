@@ -4,9 +4,9 @@ use crate::shapes::Shape;
 use crate::utils::Squared;
 
 #[derive(Clone, Debug)]
-pub struct ComputedHit<'a> {
+pub struct ComputedHit<'shape> {
     pub distance: f64,
-    pub object: &'a dyn Shape,
+    pub object: &'shape dyn Shape,
     pub point: Point,
     pub over_point: Point,
     pub under_point: Point,
@@ -18,7 +18,7 @@ pub struct ComputedHit<'a> {
     pub refractive_index_2: f64,
 }
 
-impl<'a> ComputedHit<'a> {
+impl ComputedHit<'_> {
     pub fn new(
         distance: impl Into<f64>,
         object: &dyn Shape,

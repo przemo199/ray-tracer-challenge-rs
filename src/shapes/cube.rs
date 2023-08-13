@@ -88,7 +88,7 @@ impl Shape for Cube {
             .copied()
             .fold(f64::INFINITY, f64::min);
 
-        if distance_min > distance_max {
+        if distance_min > distance_max || distance_max < 0.0 {
             return None;
         } else {
             return Some(Intersections::with([
@@ -154,6 +154,7 @@ mod tests {
     #[case(Point::new(2, 0, 2), Vector::BACKWARD)]
     #[case(Point::new(0, 2, 2), Vector::DOWN)]
     #[case(Point::new(2, 2, 0), Vector::LEFT)]
+    #[case(Point::new(0, 0, 2), Vector::new(0, 0, 1))]
     fn ray_misses_cube(#[case] origin: Point, #[case] direction: Vector) {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);

@@ -40,18 +40,22 @@ impl Cylinder {
         return (x.squared() + z.squared()) <= 1.0;
     }
 
-    fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
+    fn intersect_caps<'intersections>(
+        &'intersections self,
+        ray: &Ray,
+        intersections: &mut Intersections<'intersections>,
+    ) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
 
         let distance = (self.min - ray.origin.y) / ray.direction.y;
-        if Cylinder::check_cap(ray, distance) {
+        if Self::check_cap(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.max - ray.origin.y) / ray.direction.y;
-        if Cylinder::check_cap(ray, distance) {
+        if Self::check_cap(ray, distance) {
             intersections.add(Intersection::new(distance, self));
         }
     }

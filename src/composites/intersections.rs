@@ -2,28 +2,30 @@ use crate::composites::Intersection;
 use core::ops::Index;
 
 #[derive(Clone, Debug)]
-pub struct Intersections<'a> {
-    pub intersections: Vec<Intersection<'a>>,
+pub struct Intersections<'intersections> {
+    pub intersections: Vec<Intersection<'intersections>>,
 }
 
-impl<'a> Intersections<'a> {
-    pub const fn new() -> Intersections<'a> {
+impl<'intersections> Intersections<'intersections> {
+    pub const fn new() -> Intersections<'intersections> {
         return Intersections {
             intersections: Vec::new(),
         };
     }
 
-    pub fn with<const T: usize>(elements: [Intersection<'a>; T]) -> Intersections<'a> {
+    pub fn with<const T: usize>(
+        elements: [Intersection<'intersections>; T],
+    ) -> Intersections<'intersections> {
         return Intersections {
             intersections: Vec::from(elements),
         };
     }
 
-    pub fn add(&mut self, item: Intersection<'a>) {
+    pub fn add(&mut self, item: Intersection<'intersections>) {
         self.intersections.push(item);
     }
 
-    pub fn add_all(&mut self, intersections: Intersections<'a>) {
+    pub fn add_all(&mut self, intersections: Intersections<'intersections>) {
         self.intersections.extend(intersections.intersections);
     }
 
@@ -52,26 +54,26 @@ impl<'a> Intersections<'a> {
             .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
     }
 
-    pub fn into_option(self) -> Option<Intersections<'a>> {
+    pub fn into_option(self) -> Option<Intersections<'intersections>> {
         return if self.is_empty() { None } else { Some(self) };
     }
 }
 
-impl<'a> Default for Intersections<'a> {
+impl Default for Intersections<'_> {
     fn default() -> Self {
         return Intersections::new();
     }
 }
 
-impl<'a> Index<usize> for Intersections<'a> {
-    type Output = Intersection<'a>;
+impl<'intersection> Index<usize> for Intersections<'intersection> {
+    type Output = Intersection<'intersection>;
 
     fn index(&self, index: usize) -> &Self::Output {
         return &self.intersections[index];
     }
 }
 
-impl<'a> PartialEq for Intersections<'a> {
+impl PartialEq for Intersections<'_> {
     fn eq(&self, rhs: &Self) -> bool {
         return self.len() == rhs.len()
             && self.into_iter().all(|intersection| {
@@ -80,9 +82,9 @@ impl<'a> PartialEq for Intersections<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a Intersections<'a> {
-    type Item = &'a Intersection<'a>;
-    type IntoIter = core::slice::Iter<'a, Intersection<'a>>;
+impl<'intersections> IntoIterator for &'intersections Intersections<'intersections> {
+    type Item = &'intersections Intersection<'intersections>;
+    type IntoIter = core::slice::Iter<'intersections, Intersection<'intersections>>;
 
     fn into_iter(self) -> Self::IntoIter {
         return self.intersections.iter();

@@ -33,25 +33,29 @@ impl Cone {
         };
     }
 
-    fn check_caps(ray: &Ray, distance: impl Into<f64>) -> bool {
+    fn check_caps(ray: &Ray, distance: impl Into<f64>, radius: impl Into<f64>) -> bool {
         let distance = distance.into();
         let x = ray.direction.x.mul_add(distance, ray.origin.x);
         let z = ray.direction.z.mul_add(distance, ray.origin.z);
-        return x.squared() + z.squared() <= ray.direction.y.mul_add(distance, ray.origin.y).abs();
+        return x.squared() + z.squared() <= radius.into().squared();
     }
 
-    fn intersect_caps<'a>(&'a self, ray: &Ray, intersections: &mut Intersections<'a>) {
+    fn intersect_caps<'intersections>(
+        &'intersections self,
+        ray: &Ray,
+        intersections: &mut Intersections<'intersections>,
+    ) {
         if !self.closed || ray.direction.y.abs() < EPSILON {
             return;
         }
 
         let distance = (self.min - ray.origin.y) / ray.direction.y;
-        if Self::check_caps(ray, distance) {
+        if Self::check_caps(ray, distance, self.min) {
             intersections.add(Intersection::new(distance, self));
         }
 
         let distance = (self.max - ray.origin.y) / ray.direction.y;
-        if Self::check_caps(ray, distance) {
+        if Self::check_caps(ray, distance, self.max) {
             intersections.add(Intersection::new(distance, self));
         }
     }
@@ -61,11 +65,11 @@ impl Shape for Cone {
     fn local_normal_at(&self, point: Point) -> Vector {
         let distance = point.x.squared() + point.z.squared();
 
-        if distance < 1.0 && point.y >= (self.max - EPSILON) {
+        if distance < self.max.squared() && point.y >= (self.max - EPSILON) {
             return Vector::UP;
         }
 
-        if distance < 1.0 && point.y <= (self.min + EPSILON) {
+        if distance < self.min.squared() && point.y <= (self.min + EPSILON) {
             return Vector::DOWN;
         }
 

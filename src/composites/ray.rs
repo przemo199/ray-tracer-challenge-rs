@@ -29,7 +29,7 @@ impl Ray {
         return self.origin + self.direction * distance.into();
     }
 
-    pub fn intersect<'a>(&self, shape: &'a dyn Shape) -> Option<Intersections<'a>> {
+    pub fn intersect<'shape>(&self, shape: &'shape dyn Shape) -> Option<Intersections<'shape>> {
         let local_ray = self.transform(shape.transformation().inverse());
         return shape.local_intersect(&local_ray);
     }

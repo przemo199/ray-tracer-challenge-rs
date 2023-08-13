@@ -30,7 +30,7 @@ pub trait Shape: Debug + Display + Send + Sync {
     fn encoded(&self) -> Vec<u8>;
 }
 
-impl<'a> PartialEq for &'a dyn Shape {
+impl PartialEq for &'_ dyn Shape {
     fn eq(&self, rhs: &Self) -> bool {
         return self.encoded() == rhs.encoded();
     }
