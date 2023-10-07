@@ -15,11 +15,7 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn material(&self) -> &Material;
 
-    fn set_material(&mut self, material: Material);
-
     fn transformation(&self) -> Transformation;
-
-    fn set_transformation(&mut self, transformation: Transformation);
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections>;
 
@@ -87,7 +83,7 @@ mod tests {
         let mut shape = Sphere::default();
         let mut material = Material::default();
         material.color = Color::new(0.8, 1, 0.6);
-        shape.set_material(material.clone());
+        shape.material = material.clone();
         assert_eq!(shape.material(), &material);
     }
 

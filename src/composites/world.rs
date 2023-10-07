@@ -192,7 +192,7 @@ mod tests {
         assert_eq!(world_1, world_2);
         let sphere_1 = Sphere::default();
         let mut sphere_2 = Sphere::default();
-        sphere_2.set_transformation(transformations::rotation_z(PI));
+        sphere_2.transformation = transformations::rotation_z(PI);
         world_2.shapes.push(Box::new(sphere_2.clone()));
         assert_ne!(world_1, world_2);
         world_1.shapes.push(Box::new(sphere_1.clone()));
@@ -278,13 +278,13 @@ mod tests {
         let mut sphere1 = world_default_sphere_1();
         let mut material1 = sphere1.material().clone();
         material1.ambient = 1.0;
-        sphere1.set_material(material1);
+        sphere1.material = material1;
         world.shapes[0] = Box::new(sphere1);
 
         let mut sphere2 = world_default_sphere_2();
         let mut material2 = sphere2.material().clone();
         material2.ambient = 1.0;
-        sphere2.set_material(material2);
+        sphere2.material = material2;
         world.shapes[1] = Box::new(sphere2);
 
         let ray = Ray::new(Point::new(0, 0, 0.75), Vector::BACKWARD);
@@ -346,7 +346,7 @@ mod tests {
         let mut sphere1 = world_default_sphere_2();
         let mut material = sphere1.material().clone();
         material.ambient = 1.0;
-        sphere1.set_material(material);
+        sphere1.material = material;
         world.shapes[0] = Box::new(sphere1);
         let intersection = Intersection::new(1.0, world.shapes[1].as_ref());
         let intersections = Intersections::new();
@@ -361,8 +361,8 @@ mod tests {
         let mut shape = Plane::default();
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
-        shape.set_material(material);
-        shape.set_transformation(transformations::translation(0, -1, 0));
+        shape.material = material;
+        shape.transformation = transformations::translation(0, -1, 0);
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -389,8 +389,8 @@ mod tests {
         let mut shape = Plane::default();
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
-        shape.set_material(material);
-        shape.set_transformation(transformations::translation(0, -1, 0));
+        shape.material = material;
+        shape.transformation = transformations::translation(0, -1, 0);
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0.0, 0.0, -3.0),
@@ -432,8 +432,8 @@ mod tests {
         let mut shape = Plane::default();
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
-        shape.set_material(material);
-        shape.set_transformation(transformations::translation(0, -1, 0));
+        shape.material = material;
+        shape.transformation = transformations::translation(0, -1, 0);
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -467,7 +467,7 @@ mod tests {
         let mut material = sphere1.material().clone();
         material.transparency = 1.0;
         material.refractive_index = 1.5;
-        sphere1.set_material(material);
+        sphere1.material = material;
         world.shapes[0] = Box::new(sphere1.clone());
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
@@ -486,7 +486,7 @@ mod tests {
         let mut material = sphere1.material().clone();
         material.transparency = 1.0;
         material.refractive_index = 1.5;
-        sphere1.set_material(material);
+        sphere1.material = material;
         world.shapes[0] = Box::new(sphere1.clone());
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
@@ -511,13 +511,13 @@ mod tests {
         let mut material1 = sphere1.material().clone();
         material1.ambient = 1.0;
         material1.pattern = Some(Arc::new(TestPattern::new()));
-        sphere1.set_material(material1);
+        sphere1.material = material1;
         world.shapes[0] = Box::new(sphere1);
         let mut sphere2 = world_default_sphere_2();
         let mut material2 = sphere2.material().clone();
         material2.transparency = 1.0;
         material2.refractive_index = 1.5;
-        sphere2.set_material(material2);
+        sphere2.material = material2;
         world.shapes[1] = Box::new(sphere2);
         let ray = Ray::new(Point::new(0, 0, 0.1), Vector::UP);
         let mut intersections = Intersections::new();
@@ -545,8 +545,8 @@ mod tests {
         ball_material.color = Color::RED;
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
-        ball.set_material(ball_material);
-        ball.set_transformation(transformations::translation(0, -3.5, -0.5));
+        ball.material = ball_material;
+        ball.transformation = transformations::translation(0, -3.5, -0.5);
         world.shapes.push(Box::new(ball));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -577,8 +577,8 @@ mod tests {
         ball_material.color = Color::RED;
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
-        ball.set_material(ball_material);
-        ball.set_transformation(transformations::translation(0, -3.5, -0.5));
+        ball.material = ball_material;
+        ball.transformation = transformations::translation(0, -3.5, -0.5);
         world.shapes.push(Box::new(ball));
         let ray = Ray::new(
             Point::new(0, 0, -3),

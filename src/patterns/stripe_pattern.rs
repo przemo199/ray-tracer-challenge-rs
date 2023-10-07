@@ -1,6 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
-use crate::primitives::{transformations, Transformation};
+use crate::primitives::{transformations, Transformation, Vector};
 use crate::primitives::{Color, Point};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
@@ -9,7 +9,7 @@ use core::fmt::{Display, Formatter};
 pub struct StripePattern {
     color_a: Color,
     color_b: Color,
-    transformation: Transformation,
+    pub transformation: Transformation,
 }
 
 impl StripePattern {
@@ -38,10 +38,6 @@ impl Pattern for StripePattern {
         return self.transformation;
     }
 
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation = transformation;
-    }
-
     fn encoded(&self) -> Vec<u8> {
         let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
         encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
@@ -65,7 +61,7 @@ mod tests {
     use super::*;
     use crate::composites::Material;
     use crate::primitives::{Light, Vector};
-    use crate::shapes::{Shape, Sphere};
+    use crate::shapes::Sphere;
     use std::sync::Arc;
 
     #[test]
@@ -131,7 +127,7 @@ mod tests {
     #[test]
     fn stripe_pattern_with_object_transformation() {
         let mut sphere = Sphere::default();
-        sphere.set_transformation(transformations::scaling(2, 2, 2));
+        sphere.transformation = transformations::scaling(2, 2, 2);
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         let color = pattern.color_at_shape(&sphere, &Point::new(1.5, 0, 0));
         assert_eq!(color, Color::WHITE);
@@ -149,7 +145,7 @@ mod tests {
     #[test]
     fn stripe_pattern_with_pattern_and_object_transformations() {
         let mut sphere = Sphere::default();
-        sphere.set_transformation(transformations::scaling(2, 2, 2));
+        sphere.transformation = transformations::scaling(2, 2, 2);
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         pattern.transformation = transformations::translation(0.5, 0, 0);
         let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 0, 0));

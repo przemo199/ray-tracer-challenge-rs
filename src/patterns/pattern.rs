@@ -19,8 +19,6 @@ pub trait Pattern: Debug + Display + Sync + Send {
 
     fn transformation(&self) -> Transformation;
 
-    fn set_transformation(&mut self, transformation: Transformation);
-
     fn encoded(&self) -> Vec<u8>;
 }
 
@@ -58,10 +56,6 @@ impl Pattern for TestPattern {
 
     fn transformation(&self) -> Transformation {
         return self.transformation;
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation = transformation;
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -105,7 +99,7 @@ mod tests {
     #[test]
     fn test_pattern_with_object_transformation() {
         let mut sphere = Sphere::default();
-        sphere.set_transformation(transformations::scaling(2, 2, 2));
+        sphere.transformation = transformations::scaling(2, 2, 2);
         let pattern = TestPattern::new();
         let color = pattern.color_at_shape(&sphere, &Point::new(2, 3, 4));
         assert_eq!(color, Color::new(1, 1.5, 2));
@@ -123,7 +117,7 @@ mod tests {
     #[test]
     fn test_pattern_with_pattern_and_object_transformations() {
         let mut sphere = Sphere::default();
-        sphere.set_transformation(transformations::scaling(2, 2, 2));
+        sphere.transformation = transformations::scaling(2, 2, 2);
         let mut pattern = TestPattern::new();
         pattern.transformation = transformations::translation(0.5, 1, 1.5);
         let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 3, 3.5));

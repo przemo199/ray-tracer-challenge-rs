@@ -191,32 +191,29 @@ mod tests {
     fn finding_refractive_indexes() {
         let mut sphere1 = Sphere {
             material: Material::glass(),
-            ..Default::default()
+            transformation: transformations::scaling(2, 2, 2)
         };
-        sphere1.set_transformation(transformations::scaling(2, 2, 2));
         let mut material1 = sphere1.material.clone();
         material1.refractive_index = 1.5;
-        sphere1.set_material(material1);
+        sphere1.material = material1;
         let boxed_shape1: Box<dyn Shape> = Box::new(sphere1);
 
         let mut sphere2 = Sphere {
             material: Material::glass(),
-            ..Default::default()
+            transformation: transformations::translation(0, 0, -0.25)
         };
-        sphere2.set_transformation(transformations::translation(0, 0, -0.25));
         let mut material2 = sphere2.material.clone();
         material2.refractive_index = 2.0;
-        sphere2.set_material(material2);
+        sphere2.material = material2;
         let boxed_shape2: Box<dyn Shape> = Box::new(sphere2);
 
         let mut sphere3 = Sphere {
             material: Material::glass(),
-            ..Default::default()
+            transformation: transformations::translation(0, 0, 0.25)
         };
-        sphere3.set_transformation(transformations::translation(0, 0, 0.25));
         let mut material3 = sphere3.material.clone();
         material3.refractive_index = 2.5;
-        sphere3.set_material(material3);
+        sphere3.material = material3;
         let boxed_shape3: Box<dyn Shape> = Box::new(sphere3);
 
         let mut intersections = Intersections::new();
@@ -244,11 +241,10 @@ mod tests {
 
     #[test]
     fn under_point_is_below_surface() {
-        let mut sphere = Sphere {
+        let sphere = Sphere {
             material: Material::glass(),
-            ..Default::default()
+            transformation: transformations::translation(0, 0, 1)
         };
-        sphere.set_transformation(transformations::translation(0, 0, 1));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let mut intersections = Intersections::new();

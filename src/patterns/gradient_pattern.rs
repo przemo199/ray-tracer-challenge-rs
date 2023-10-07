@@ -9,7 +9,7 @@ use core::fmt::{Display, Formatter};
 pub struct GradientPattern {
     color_a: Color,
     color_b: Color,
-    transformation: Transformation,
+    pub transformation: Transformation,
 }
 
 impl GradientPattern {
@@ -36,10 +36,6 @@ impl Pattern for GradientPattern {
 
     fn transformation(&self) -> Transformation {
         return self.transformation;
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation = transformation;
     }
 
     fn encoded(&self) -> Vec<u8> {

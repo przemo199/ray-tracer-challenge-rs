@@ -10,12 +10,12 @@ use rayon::prelude::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    pub horizontal_size: u32,
-    pub vertical_size: u32,
-    pub field_of_view: f64,
-    pub half_width: f64,
-    pub half_height: f64,
-    pub pixel_size: f64,
+    horizontal_size: u32,
+    vertical_size: u32,
+    field_of_view: f64,
+    half_width: f64,
+    half_height: f64,
+    pixel_size: f64,
     pub transformation: Transformation,
 }
 
@@ -59,7 +59,7 @@ impl Camera {
         // and then compute the ray's direction vector
         // (remember that the canvas is at z = -1)
         let pixel = self.transformation.inverse() * Point::new(world_x, world_y, -1);
-        let origin = self.transformation.inverse() * Point::new(0, 0, 0);
+        let origin = self.transformation.inverse() * Point::ORIGIN;
         let direction = (pixel - origin).normalized();
         return Ray::new(origin, direction);
     }

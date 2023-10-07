@@ -291,9 +291,8 @@ pub fn render_scene_parallel3(x: u32, y: u32) {
     cone.closed = true;
     cone.max = 1.0;
     cone.min = 0.0;
-    cone.set_transformation(
-        transformations::translation(0, 0.2, -1.5) * transformations::scaling(0.5, 0.5, 0.5),
-    );
+    cone.transformation =
+        transformations::translation(0, 0.2, -1.5) * transformations::scaling(0.5, 0.5, 0.5);
     let mut material = Material::default();
     material.diffuse = 0.2;
     material.ambient = 0.0;
@@ -304,12 +303,11 @@ pub fn render_scene_parallel3(x: u32, y: u32) {
     material.refractive_index = 2.5;
     material.color = Color::new(1, 1, 1);
     // material.color = Color::new(0.373, 0.404, 0.550);
-    cone.set_material(material);
+    cone.material = material;
 
     let mut cone2 = cone.clone();
-    cone2.set_transformation(
-        transformations::translation(0, 0.25, -1.5) * transformations::scaling(0.4, 0.4, 0.4),
-    );
+    cone2.transformation =
+        transformations::translation(0, 0.25, -1.5) * transformations::scaling(0.4, 0.4, 0.4);
 
     let mut world = World::default();
     world.shapes = vec![

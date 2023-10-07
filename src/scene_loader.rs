@@ -150,28 +150,28 @@ impl SceneParser {
                 "stripes" => {
                     let mut pattern = StripePattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
+                        pattern.transformation = transformation;
                     }
                     Arc::new(pattern)
                 }
                 "gradient" => {
                     let mut pattern = GradientPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
+                        pattern.transformation = transformation;
                     }
                     Arc::new(pattern)
                 }
                 "rings" => {
                     let mut pattern = RingPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
+                        pattern.transformation = transformation;
                     }
                     Arc::new(pattern)
                 }
                 "checkers" => {
                     let mut pattern = CheckerPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
+                        pattern.transformation = transformation;
                     }
                     Arc::new(pattern)
                 }

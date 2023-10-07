@@ -10,7 +10,7 @@ use std::sync::Arc;
 pub struct ComplexPattern {
     pattern_a: Arc<dyn Pattern>,
     pattern_b: Arc<dyn Pattern>,
-    transformation: Transformation,
+    pub transformation: Transformation,
 }
 
 impl ComplexPattern {
@@ -37,10 +37,6 @@ impl Pattern for ComplexPattern {
 
     fn transformation(&self) -> Transformation {
         return self.transformation;
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation = transformation;
     }
 
     fn encoded(&self) -> Vec<u8> {

@@ -85,16 +85,8 @@ impl Shape for Cone {
         return &self.material;
     }
 
-    fn set_material(&mut self, material: Material) {
-        self.material = material;
-    }
-
     fn transformation(&self) -> Transformation {
         return self.transformation;
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation = transformation;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
