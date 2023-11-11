@@ -42,7 +42,7 @@ impl<'shape> Intersection<'shape> {
             .map(|intersection| intersection.object.encoded())
             .collect();
 
-        for (index, intersection) in intersections.intersections.iter().enumerate() {
+        for (index, intersection) in intersections.into_iter().enumerate() {
             if intersection == self {
                 if containers.is_empty() {
                     refractive_index_1 = 1.0;
@@ -54,9 +54,9 @@ impl<'shape> Intersection<'shape> {
                 }
             }
 
-            let len = containers.len();
+            let old_len = containers.len();
             containers.retain(|entry| encoded_objects[*entry] != encoded_objects[index]);
-            if len == containers.len() {
+            if old_len == containers.len() {
                 containers.push(index);
             }
 
@@ -191,7 +191,7 @@ mod tests {
     fn finding_refractive_indexes() {
         let mut sphere1 = Sphere {
             material: Material::glass(),
-            transformation: transformations::scaling(2, 2, 2)
+            transformation: transformations::scaling(2, 2, 2),
         };
         let mut material1 = sphere1.material.clone();
         material1.refractive_index = 1.5;
@@ -200,7 +200,7 @@ mod tests {
 
         let mut sphere2 = Sphere {
             material: Material::glass(),
-            transformation: transformations::translation(0, 0, -0.25)
+            transformation: transformations::translation(0, 0, -0.25),
         };
         let mut material2 = sphere2.material.clone();
         material2.refractive_index = 2.0;
@@ -209,7 +209,7 @@ mod tests {
 
         let mut sphere3 = Sphere {
             material: Material::glass(),
-            transformation: transformations::translation(0, 0, 0.25)
+            transformation: transformations::translation(0, 0, 0.25),
         };
         let mut material3 = sphere3.material.clone();
         material3.refractive_index = 2.5;
@@ -217,20 +217,19 @@ mod tests {
         let boxed_shape3: Box<dyn Shape> = Box::new(sphere3);
 
         let mut intersections = Intersections::new();
-        intersections.add(Intersection::new(2, boxed_shape1.as_ref()));
-        intersections.add(Intersection::new(2.75, boxed_shape2.as_ref()));
-        intersections.add(Intersection::new(3.25, boxed_shape3.as_ref()));
-        intersections.add(Intersection::new(4.75, boxed_shape2.as_ref()));
-        intersections.add(Intersection::new(5.25, boxed_shape3.as_ref()));
-        intersections.add(Intersection::new(6, boxed_shape1.as_ref()));
+        intersections.push(Intersection::new(2, boxed_shape1.as_ref()));
+        intersections.push(Intersection::new(2.75, boxed_shape2.as_ref()));
+        intersections.push(Intersection::new(3.25, boxed_shape3.as_ref()));
+        intersections.push(Intersection::new(4.75, boxed_shape2.as_ref()));
+        intersections.push(Intersection::new(5.25, boxed_shape3.as_ref()));
+        intersections.push(Intersection::new(6, boxed_shape1.as_ref()));
 
         let refractive_indexes_1 = [1.0, 1.5, 2.0, 2.5, 2.5, 1.5];
         let refractive_indexes_2 = [1.5, 2.0, 2.5, 2.5, 1.5, 1.0];
         let ray = Ray::new(Point::new(0, 0, -4), Vector::FORWARD);
 
         for (intersection, (refractive_index_1, refractive_index_2)) in intersections
-            .intersections
-            .iter()
+            .into_iter()
             .zip(refractive_indexes_1.iter().zip(refractive_indexes_2.iter()))
         {
             let computed_hit = intersection.prepare_computations(&ray, &intersections);
@@ -243,12 +242,12 @@ mod tests {
     fn under_point_is_below_surface() {
         let sphere = Sphere {
             material: Material::glass(),
-            transformation: transformations::translation(0, 0, 1)
+            transformation: transformations::translation(0, 0, 1),
         };
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let mut intersections = Intersections::new();
-        intersections.add(intersection.clone());
+        intersections.push(intersection.clone());
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         assert!(computed_hit.under_point.z > EPSILON / 2.0);

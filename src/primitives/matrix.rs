@@ -3,17 +3,13 @@ use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 use core::mem;
-use core::ops::Mul;
+use core::ops::{Deref, DerefMut, Mul};
 
 #[derive(Clone, Copy, Debug, Encode)]
-pub struct Matrix<const SIDE_LENGTH: usize> {
-    elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH],
-}
+pub struct Matrix<const SIDE_LENGTH: usize>([[f64; SIDE_LENGTH]; SIDE_LENGTH]);
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
-    pub const EMPTY: Matrix<SIDE_LENGTH> = Self {
-        elements: [[0.0; SIDE_LENGTH]; SIDE_LENGTH],
-    };
+    pub const EMPTY: Matrix<SIDE_LENGTH> = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
 
     pub const IDENTITY: Matrix<SIDE_LENGTH> = {
         let mut result = Self::EMPTY;
@@ -21,22 +17,22 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         while index < SIDE_LENGTH {
             let mut tmp_row = [0.0; SIDE_LENGTH];
             tmp_row[index] = 1.0;
-            result.elements[index] = tmp_row;
+            result.0[index] = tmp_row;
             index += 1;
         }
         result
     };
 
     pub const fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
-        return Self { elements };
+        return Self(elements);
     }
 
     pub const fn get_index(&self, row: usize, column: usize) -> f64 {
-        return self.elements[row][column];
+        return self.0[row][column];
     }
 
     pub fn set_index(&mut self, row: usize, column: usize, value: f64) {
-        self.elements[row][column] = value;
+        self[row][column] = value;
     }
 
     #[inline(always)]
@@ -44,7 +40,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         let mut result = *self;
         for row in 0..SIDE_LENGTH {
             let row_offset = row + 1;
-            let (upper_slice, lower_slice) = result.elements.split_at_mut(row_offset);
+            let (upper_slice, lower_slice) = result.split_at_mut(row_offset);
             for column in row_offset..SIDE_LENGTH {
                 mem::swap(
                     &mut upper_slice[row][column],
@@ -59,13 +55,12 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
 impl Matrix<2> {
     #[inline(always)]
     pub const fn submatrix(&self, row: usize, column: usize) -> f64 {
-        return self.elements[row][column];
+        return self.0[row][column];
     }
 
     #[inline(always)]
     fn determinant(&self) -> f64 {
-        return self.elements[0][0] * self.elements[1][1]
-            - self.elements[0][1] * self.elements[1][0];
+        return self[0][0] * self[1][1] - self[0][1] * self[1][0];
     }
 
     pub const fn minor(&self, row: usize, column: usize) -> f64 {
@@ -106,9 +101,9 @@ impl Matrix<3> {
     fn submatrix(&self, row: usize, column: usize) -> Matrix<2> {
         let mut result = Matrix::<2>::EMPTY;
 
-        for row_index in 0..self.elements.len() {
+        for row_index in 0..self.len() {
             if row_index != row {
-                for column_index in 0..self.elements.len() {
+                for column_index in 0..self.len() {
                     if column_index != column {
                         let new_row_index = if row_index < row {
                             row_index
@@ -120,8 +115,7 @@ impl Matrix<3> {
                         } else {
                             column_index - 1
                         };
-                        result.elements[new_row_index][new_column_index] =
-                            self.elements[row_index][column_index];
+                        result[new_row_index][new_column_index] = self[row_index][column_index];
                     }
                 }
             }
@@ -132,8 +126,8 @@ impl Matrix<3> {
     #[inline(always)]
     fn determinant(&self) -> f64 {
         let mut determinant = 0.0;
-        for column in 0..self.elements.len() {
-            determinant += self.elements[0][column] * self.cofactor(0, column);
+        for column in 0..self.len() {
+            determinant += self[0][column] * self.cofactor(0, column);
         }
         return determinant;
     }
@@ -176,9 +170,9 @@ impl Matrix<4> {
     fn submatrix(&self, row: usize, column: usize) -> Matrix<3> {
         let mut result = Matrix::<3>::EMPTY;
 
-        for row_index in 0..self.elements.len() {
+        for row_index in 0..self.len() {
             if row_index != row {
-                for column_index in 0..self.elements.len() {
+                for column_index in 0..self.len() {
                     if column_index != column {
                         let new_row_index = if row_index < row {
                             row_index
@@ -190,8 +184,7 @@ impl Matrix<4> {
                         } else {
                             column_index - 1
                         };
-                        result.elements[new_row_index][new_column_index] =
-                            self.elements[row_index][column_index];
+                        result[new_row_index][new_column_index] = self[row_index][column_index];
                     }
                 }
             }
@@ -202,8 +195,8 @@ impl Matrix<4> {
     #[inline(always)]
     fn determinant(&self) -> f64 {
         let mut determinant = 0.0;
-        for column in 0..self.elements.len() {
-            determinant += self.elements[0][column] * self.cofactor(0, column);
+        for column in 0..self.len() {
+            determinant += self[0][column] * self.cofactor(0, column);
         }
         return determinant;
     }
@@ -270,18 +263,32 @@ impl<const SIDE_LENGTH: usize> Default for Matrix<SIDE_LENGTH> {
     }
 }
 
+impl<const SIDE_LENGTH: usize> Deref for Matrix<SIDE_LENGTH> {
+    type Target = [[f64; SIDE_LENGTH]; SIDE_LENGTH];
+
+    fn deref(&self) -> &Self::Target {
+        return &self.0;
+    }
+}
+
+impl<const SIDE_LENGTH: usize> DerefMut for Matrix<SIDE_LENGTH> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        return &mut self.0;
+    }
+}
+
 impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
         return formatter
             .debug_struct("Matrix")
-            .field("elements", &self.elements)
+            .field("elements", &self)
             .finish();
     }
 }
 
 impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     fn eq(&self, rhs: &Matrix<SIDE_LENGTH>) -> bool {
-        for (self_row, rhs_row) in self.elements.iter().zip(rhs.elements.iter()) {
+        for (self_row, rhs_row) in self.iter().zip(rhs.iter()) {
             for (self_value, rhs_value) in self_row.iter().zip(rhs_row.iter()) {
                 if !self_value.coarse_eq(*rhs_value) {
                     return false;
@@ -307,7 +314,7 @@ impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
 
     fn mul(self, rhs: Matrix<SIDE_LENGTH>) -> Self::Output {
         let mut result = Matrix::<SIDE_LENGTH>::EMPTY;
-        for (row_index, row) in result.elements.iter_mut().enumerate() {
+        for (row_index, row) in result.iter_mut().enumerate() {
             for (column_index, value) in row.iter_mut().enumerate() {
                 let mut sum = 0.0;
                 for i in 0..SIDE_LENGTH {
@@ -359,6 +366,7 @@ impl Mul<Vector> for Matrix<4> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Point;
 
     #[test]
     fn matrix_indices() {

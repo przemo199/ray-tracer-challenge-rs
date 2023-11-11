@@ -83,7 +83,7 @@ impl Shape for Cube {
         if distance_min > distance_max || distance_max < 0.0 {
             return None;
         } else {
-            return Some(Intersections::with([
+            return Some(Intersections::from([
                 Intersection::new(distance_min, self),
                 Intersection::new(distance_max, self),
             ]));

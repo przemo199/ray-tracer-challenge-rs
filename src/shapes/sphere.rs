@@ -42,7 +42,7 @@ impl Shape for Sphere {
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
 
         return solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
-            return Intersections::with([
+            return Intersections::from([
                 Intersection::new(distance_1, self),
                 Intersection::new(distance_2, self),
             ]);

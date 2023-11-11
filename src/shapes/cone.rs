@@ -51,12 +51,12 @@ impl Cone {
 
         let distance = (self.min - ray.origin.y) / ray.direction.y;
         if Self::check_caps(ray, distance, self.min) {
-            intersections.add(Intersection::new(distance, self));
+            intersections.push(Intersection::new(distance, self));
         }
 
         let distance = (self.max - ray.origin.y) / ray.direction.y;
         if Self::check_caps(ray, distance, self.max) {
-            intersections.add(Intersection::new(distance, self));
+            intersections.push(Intersection::new(distance, self));
         }
     }
 }
@@ -103,7 +103,7 @@ impl Shape for Cone {
         let mut intersections = Intersections::new();
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
-            intersections.add(Intersection::new(distance, self));
+            intersections.push(Intersection::new(distance, self));
         } else if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
             if distance_1 > distance_2 {
                 core::mem::swap(&mut distance_1, &mut distance_2);
@@ -111,12 +111,12 @@ impl Shape for Cone {
 
             let y1 = ray.direction.y.mul_add(distance_1, ray.origin.y);
             if self.min < y1 && y1 < self.max {
-                intersections.add(Intersection::new(distance_1, self));
+                intersections.push(Intersection::new(distance_1, self));
             }
 
             let y2 = ray.direction.y.mul_add(distance_2, ray.origin.y);
             if self.min < y2 && y2 < self.max {
-                intersections.add(Intersection::new(distance_2, self));
+                intersections.push(Intersection::new(distance_2, self));
             }
         }
 

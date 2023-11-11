@@ -1,5 +1,6 @@
 use crate::composites::Intersection;
-use core::ops::Index;
+use core::ops::{Deref, DerefMut};
+use core::slice::Iter;
 
 #[derive(Clone, Debug)]
 pub struct Intersections<'intersections> {
@@ -13,34 +14,14 @@ impl<'intersections> Intersections<'intersections> {
         };
     }
 
-    pub fn with<const T: usize>(
-        elements: [Intersection<'intersections>; T],
-    ) -> Intersections<'intersections> {
-        return Intersections {
-            intersections: Vec::from(elements),
-        };
-    }
-
-    pub fn add(&mut self, item: Intersection<'intersections>) {
-        self.intersections.push(item);
-    }
-
-    pub fn add_all(&mut self, intersections: Intersections<'intersections>) {
-        self.intersections.extend(intersections.intersections);
-    }
-
-    pub fn len(&self) -> usize {
-        return self.intersections.len();
-    }
-
     pub fn is_empty(&self) -> bool {
-        return self.intersections.is_empty();
+        return self.len() == 0;
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
         let mut maybe_hit = None;
         let mut hit_distance = f64::INFINITY;
-        for intersection in &self.intersections {
+        for intersection in self {
             if intersection.is_within_distance(hit_distance) {
                 maybe_hit = Some(intersection);
                 hit_distance = intersection.distance;
@@ -50,8 +31,7 @@ impl<'intersections> Intersections<'intersections> {
     }
 
     pub fn sort_by_distance(&mut self) {
-        self.intersections
-            .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        self.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
     }
 
     pub fn into_option(self) -> Option<Intersections<'intersections>> {
@@ -65,11 +45,17 @@ impl Default for Intersections<'_> {
     }
 }
 
-impl<'intersection> Index<usize> for Intersections<'intersection> {
-    type Output = Intersection<'intersection>;
+impl<'intersections> Deref for Intersections<'intersections> {
+    type Target = Vec<Intersection<'intersections>>;
 
-    fn index(&self, index: usize) -> &Self::Output {
-        return &self.intersections[index];
+    fn deref(&self) -> &Self::Target {
+        return &(self.intersections);
+    }
+}
+
+impl<'intersections> DerefMut for Intersections<'intersections> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        return &mut (self.intersections);
     }
 }
 
@@ -77,17 +63,35 @@ impl PartialEq for Intersections<'_> {
     fn eq(&self, rhs: &Self) -> bool {
         return self.len() == rhs.len()
             && self.into_iter().all(|intersection| {
-                return rhs.intersections.contains(intersection);
+                return rhs.contains(intersection);
             });
     }
 }
 
 impl<'intersections> IntoIterator for &'intersections Intersections<'intersections> {
     type Item = &'intersections Intersection<'intersections>;
-    type IntoIter = core::slice::Iter<'intersections, Intersection<'intersections>>;
+    type IntoIter = Iter<'intersections, Intersection<'intersections>>;
 
     fn into_iter(self) -> Self::IntoIter {
         return self.intersections.iter();
+    }
+}
+
+impl<'intersection> From<Vec<Intersection<'intersection>>> for Intersections<'intersection> {
+    fn from(value: Vec<Intersection<'intersection>>) -> Self {
+        return Self {
+            intersections: value,
+        };
+    }
+}
+
+impl<'intersection, const SIZE: usize> From<[Intersection<'intersection>; SIZE]>
+    for Intersections<'intersection>
+{
+    fn from(value: [Intersection<'intersection>; SIZE]) -> Self {
+        return Self {
+            intersections: value.to_vec(),
+        };
     }
 }
 
@@ -103,8 +107,8 @@ mod tests {
         let mut intersections = Intersections::new();
         let intersection_1 = Intersection::new(1, boxed_shape.as_ref());
         let intersection_2 = Intersection::new(2, boxed_shape.as_ref());
-        intersections.add(intersection_1.clone());
-        intersections.add(intersection_2);
+        intersections.push(intersection_1.clone());
+        intersections.push(intersection_2);
         assert_eq!(intersections.hit().unwrap(), &intersection_1);
     }
 
@@ -115,8 +119,8 @@ mod tests {
         let mut intersections = Intersections::new();
         let intersection_1 = Intersection::new(-1, boxed_shape.as_ref());
         let intersection_2 = Intersection::new(1, boxed_shape.as_ref());
-        intersections.add(intersection_1);
-        intersections.add(intersection_2.clone());
+        intersections.push(intersection_1);
+        intersections.push(intersection_2.clone());
         assert_eq!(intersections.hit().unwrap(), &intersection_2);
     }
 
@@ -127,8 +131,8 @@ mod tests {
         let mut intersections = Intersections::new();
         let intersection_1 = Intersection::new(-2, boxed_shape.as_ref());
         let intersection_2 = Intersection::new(-1, boxed_shape.as_ref());
-        intersections.add(intersection_1);
-        intersections.add(intersection_2);
+        intersections.push(intersection_1);
+        intersections.push(intersection_2);
         assert_eq!(intersections.hit(), None);
     }
 
@@ -141,10 +145,10 @@ mod tests {
         let intersection_2 = Intersection::new(7, boxed_shape.as_ref());
         let intersection_3 = Intersection::new(-3, boxed_shape.as_ref());
         let intersection_4 = Intersection::new(2, boxed_shape.as_ref());
-        intersections.add(intersection_1);
-        intersections.add(intersection_2);
-        intersections.add(intersection_3);
-        intersections.add(intersection_4.clone());
+        intersections.push(intersection_1);
+        intersections.push(intersection_2);
+        intersections.push(intersection_3);
+        intersections.push(intersection_4.clone());
         assert_eq!(intersections.hit().unwrap(), &intersection_4);
     }
 }

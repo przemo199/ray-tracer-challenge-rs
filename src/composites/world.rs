@@ -23,7 +23,7 @@ impl World {
         let mut result = Intersections::new();
         for shape in &self.shapes {
             if let Some(intersections) = ray.intersect(shape.as_ref()) {
-                result.add_all(intersections);
+                result.extend(intersections.intersections);
             }
         }
         result.sort_by_distance();
@@ -75,7 +75,6 @@ impl World {
         let shadow_ray = Ray::new(*point, point_to_light_vector.normalized());
         return self
             .intersections(&shadow_ray)
-            .intersections
             .into_iter()
             .any(|intersection| {
                 intersection.is_within_distance(distance_to_light)
@@ -452,8 +451,8 @@ mod tests {
         let world = World::default();
         let shape = world.shapes[0].as_ref();
         let mut intersections = Intersections::new();
-        intersections.add(Intersection::new(4, shape));
-        intersections.add(Intersection::new(6, shape));
+        intersections.push(Intersection::new(4, shape));
+        intersections.push(Intersection::new(6, shape));
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
@@ -472,8 +471,8 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         let shape = Box::new(sphere1);
-        intersections.add(Intersection::new(4, shape.as_ref()));
-        intersections.add(Intersection::new(6, shape.as_ref()));
+        intersections.push(Intersection::new(4, shape.as_ref()));
+        intersections.push(Intersection::new(6, shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 0);
         assert_eq!(color, Color::BLACK);
@@ -491,11 +490,11 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(sphere1);
-        intersections.add(Intersection::new(
+        intersections.push(Intersection::new(
             -(2.0_f64.sqrt()) / 2.0,
             boxed_shape.as_ref(),
         ));
-        intersections.add(Intersection::new(
+        intersections.push(Intersection::new(
             2.0_f64.sqrt() / 2.0,
             boxed_shape.as_ref(),
         ));
@@ -521,10 +520,10 @@ mod tests {
         world.shapes[1] = Box::new(sphere2);
         let ray = Ray::new(Point::new(0, 0, 0.1), Vector::UP);
         let mut intersections = Intersections::new();
-        intersections.add(Intersection::new(-0.9899, world.shapes[0].as_ref()));
-        intersections.add(Intersection::new(-0.4899, world.shapes[1].as_ref()));
-        intersections.add(Intersection::new(0.4899, world.shapes[1].as_ref()));
-        intersections.add(Intersection::new(0.9899, world.shapes[0].as_ref()));
+        intersections.push(Intersection::new(-0.9899, world.shapes[0].as_ref()));
+        intersections.push(Intersection::new(-0.4899, world.shapes[1].as_ref()));
+        intersections.push(Intersection::new(0.4899, world.shapes[1].as_ref()));
+        intersections.push(Intersection::new(0.9899, world.shapes[0].as_ref()));
         let computed_hit = intersections[2].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
         assert_eq!(
@@ -554,7 +553,7 @@ mod tests {
         );
         let mut intersections = Intersections::new();
         let arc_floor = Box::new(floor);
-        intersections.add(Intersection::new(2.0_f64.sqrt(), arc_floor.as_ref()));
+        intersections.push(Intersection::new(2.0_f64.sqrt(), arc_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 5);
         assert_eq!(
@@ -586,7 +585,7 @@ mod tests {
         );
         let mut intersections = Intersections::new();
         let boxed_floor = Box::new(floor);
-        intersections.add(Intersection::new(2.0_f64.sqrt(), boxed_floor.as_ref()));
+        intersections.push(Intersection::new(2.0_f64.sqrt(), boxed_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.shade_hit(&computed_hit, 5);
         assert_eq!(

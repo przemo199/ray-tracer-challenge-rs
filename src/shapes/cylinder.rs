@@ -51,12 +51,12 @@ impl Cylinder {
 
         let distance = (self.min - ray.origin.y) / ray.direction.y;
         if Self::check_cap(ray, distance) {
-            intersections.add(Intersection::new(distance, self));
+            intersections.push(Intersection::new(distance, self));
         }
 
         let distance = (self.max - ray.origin.y) / ray.direction.y;
         if Self::check_cap(ray, distance) {
-            intersections.add(Intersection::new(distance, self));
+            intersections.push(Intersection::new(distance, self));
         }
     }
 }
@@ -103,12 +103,12 @@ impl Shape for Cylinder {
 
                 let y1 = distance_1.mul_add(ray.direction.y, ray.origin.y);
                 if self.min < y1 && y1 < self.max {
-                    intersections.add(Intersection::new(distance_1, self));
+                    intersections.push(Intersection::new(distance_1, self));
                 }
 
                 let y2 = distance_2.mul_add(ray.direction.y, ray.origin.y);
                 if self.min < y2 && y2 < self.max {
-                    intersections.add(Intersection::new(distance_2, self));
+                    intersections.push(Intersection::new(distance_2, self));
                 }
             }
         }

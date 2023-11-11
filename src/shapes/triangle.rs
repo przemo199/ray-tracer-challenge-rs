@@ -67,7 +67,7 @@ impl Shape for Triangle {
             return None;
         } else {
             let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
-            return Some(Intersections::with([Intersection::new(distance, self)]));
+            return Some(Intersections::from([Intersection::new(distance, self)]));
         }
     }
 

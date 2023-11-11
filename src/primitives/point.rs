@@ -137,6 +137,12 @@ impl<T: Into<f64>> From<[T; 4]> for Point {
     }
 }
 
+impl Into<[f64; 4]> for Point {
+    fn into(self) -> [f64; 4] {
+        return self.values();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

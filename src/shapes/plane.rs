@@ -42,7 +42,7 @@ impl Shape for Plane {
             return None;
         } else {
             let distance = -ray.origin.y / ray.direction.y;
-            return Some(Intersections::with([Intersection::new(distance, self)]));
+            return Some(Intersections::from([Intersection::new(distance, self)]));
         }
     }
 

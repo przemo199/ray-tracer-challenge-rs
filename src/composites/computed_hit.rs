@@ -84,11 +84,11 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
-        intersections.add(Intersection::new(
+        intersections.push(Intersection::new(
             -(2.0_f64.sqrt()) / 2.0,
             boxed_shape.as_ref(),
         ));
-        intersections.add(Intersection::new(
+        intersections.push(Intersection::new(
             2.0_f64.sqrt() / 2.0,
             boxed_shape.as_ref(),
         ));
@@ -105,8 +105,8 @@ mod tests {
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
-        intersections.add(Intersection::new(-1, boxed_shape.as_ref()));
-        intersections.add(Intersection::new(1, boxed_shape.as_ref()));
+        intersections.push(Intersection::new(-1, boxed_shape.as_ref()));
+        intersections.push(Intersection::new(1, boxed_shape.as_ref()));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.schlick(), 0.04000000000000001);
     }
@@ -120,7 +120,7 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0.99, -2), Vector::FORWARD);
         let mut intersections = Intersections::new();
         let boxed_shape = Box::new(shape);
-        intersections.add(Intersection::new(1.8589, boxed_shape.as_ref()));
+        intersections.push(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         assert!(computed_hit.schlick().coarse_eq(0.4887308101221217));
     }
