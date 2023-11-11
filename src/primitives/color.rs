@@ -158,9 +158,9 @@ impl<T: Into<f64>> From<[T; 4]> for Color {
     }
 }
 
-impl Into<[f64; 4]> for Color {
-    fn into(self) -> [f64; 4] {
-        return self.values();
+impl Into<[f64; 3]> for Color {
+    fn into(self) -> [f64; 3] {
+        return self.get_channels();
     }
 }
 

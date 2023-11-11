@@ -334,7 +334,7 @@ impl Mul<Point> for Matrix<4> {
     fn mul(self, rhs: Point) -> Self::Output {
         let mut result = [0.0; 4];
         let point_values = rhs.values();
-        for (index, row) in self.elements.iter().enumerate() {
+        for (index, row) in self.iter().enumerate() {
             let mut sum = 0.0;
             for (matrix_value, point_value) in row.iter().zip(point_values) {
                 sum += matrix_value * point_value;
@@ -351,7 +351,7 @@ impl Mul<Vector> for Matrix<4> {
     fn mul(self, rhs: Vector) -> Self::Output {
         let mut result = [0.0; 4];
         let vector_values = rhs.values();
-        for (index, row) in self.elements.iter().enumerate() {
+        for (index, row) in self.iter().enumerate() {
             let mut sum = 0.0;
             for (matrix_value, vector_value) in row.iter().zip(vector_values) {
                 sum += matrix_value * vector_value;
