@@ -124,13 +124,7 @@ impl Shape for Cylinder {
 
 impl Default for Cylinder {
     fn default() -> Cylinder {
-        return Cylinder::new(
-            Material::default(),
-            Matrix::default(),
-            MIN,
-            MAX,
-            false,
-        );
+        return Cylinder::new(Material::default(), Matrix::default(), MIN, MAX, false);
     }
 }
 

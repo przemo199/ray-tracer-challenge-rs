@@ -54,30 +54,6 @@ mod tests {
 
     use super::*;
 
-    // #[derive(Clone, Debug)]
-    // pub struct TestShape {
-    //     pub transformation: Matrix,
-    //     pub material: Material,
-    // }
-    //
-    // impl Shape for TestShape {
-    //     fn local_normal_at(&self, point: Point) -> Vector {
-    //         todo!()
-    //     }
-    //
-    //     fn set_material(&mut self, material: Material) {
-    //         todo!()
-    //     }
-    //
-    //     fn set_transformation(&mut self, transformation: Matrix) {
-    //         todo!()
-    //     }
-    //
-    //     fn local_intersect(&self, ray: &Ray) -> Intersections {
-    //         todo!()
-    //     }
-    // }
-
     #[test]
     fn default_material() {
         let shape = Sphere::default();

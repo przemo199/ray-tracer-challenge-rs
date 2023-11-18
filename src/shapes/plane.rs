@@ -10,23 +10,20 @@ use core::fmt::{Display, Formatter};
 pub struct Plane {
     pub material: Material,
     pub transformation: Transformation,
-    pub normal: Vector,
 }
 
 impl Plane {
     pub const fn new(material: Material, transformation: Transformation) -> Self {
-        let normal = Vector::UP;
         return Self {
             material,
             transformation,
-            normal,
         };
     }
 }
 
 impl Shape for Plane {
     fn local_normal_at(&self, _: Point) -> Vector {
-        return self.normal;
+        return Vector::UP;
     }
 
     fn material(&self) -> &Material {

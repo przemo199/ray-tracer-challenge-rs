@@ -131,13 +131,7 @@ impl Shape for Cone {
 
 impl Default for Cone {
     fn default() -> Cone {
-        return Cone::new(
-            Material::default(),
-            Matrix::default(),
-            MIN,
-            MAX,
-            false,
-        );
+        return Cone::new(Material::default(), Matrix::default(), MIN, MAX, false);
     }
 }
 

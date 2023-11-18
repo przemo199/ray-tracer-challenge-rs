@@ -1,5 +1,5 @@
-use clap::Parser;
 use crate::cli::{CliArguments, RenderingMode};
+use clap::Parser;
 use raytracer::scene_loader::load_scene_description;
 use std::time::Instant;
 

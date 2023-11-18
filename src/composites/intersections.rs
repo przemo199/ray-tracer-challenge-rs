@@ -1,7 +1,7 @@
 use crate::composites::Intersection;
+use crate::consts::MAX;
 use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
-use crate::consts::MAX;
 
 #[derive(Clone, Debug)]
 pub struct Intersections<'intersections> {
