@@ -1,4 +1,5 @@
-use clap::{Parser, ValueEnum};
+use crate::cli::RenderingMode;
+use clap::Parser;
 
 #[derive(Clone, Debug, Parser)]
 #[command(author, version, about, long_about = None)]
@@ -7,10 +8,4 @@ pub struct CliArguments {
     pub image_output_path: String,
     #[arg(value_enum, short, long, default_value_t = RenderingMode::Parallel)]
     pub rendering_mode: RenderingMode,
-}
-
-#[derive(Clone, Copy, Debug, ValueEnum)]
-pub enum RenderingMode {
-    Serial,
-    Parallel,
 }

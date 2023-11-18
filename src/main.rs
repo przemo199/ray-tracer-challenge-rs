@@ -1,9 +1,9 @@
-use crate::cli_arguments::{CliArguments, RenderingMode};
 use clap::Parser;
+use crate::cli::{CliArguments, RenderingMode};
 use raytracer::scene_loader::load_scene_description;
 use std::time::Instant;
 
-mod cli_arguments;
+mod cli;
 mod scenes;
 
 fn main() {
