@@ -1,6 +1,6 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::utils::{solve_quadratic, CoarseEq, Squared};
@@ -134,8 +134,8 @@ impl Default for Cone {
         return Cone::new(
             Material::default(),
             Matrix::default(),
-            f64::NEG_INFINITY,
-            f64::INFINITY,
+            MIN,
+            MAX,
             false,
         );
     }
@@ -172,8 +172,8 @@ mod tests {
     #[test]
     fn default_cone() {
         let cone = Cone::default();
-        assert_eq!(cone.min, f64::NEG_INFINITY);
-        assert_eq!(cone.max, f64::INFINITY);
+        assert_eq!(cone.min, MIN);
+        assert_eq!(cone.max, MAX);
         assert!(!cone.closed);
     }
 

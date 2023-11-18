@@ -1,6 +1,7 @@
 use crate::composites::Intersection;
 use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
+use crate::consts::MAX;
 
 #[derive(Clone, Debug)]
 pub struct Intersections<'intersections> {
@@ -20,7 +21,7 @@ impl<'intersections> Intersections<'intersections> {
 
     pub fn hit(&self) -> Option<&Intersection> {
         let mut maybe_hit = None;
-        let mut hit_distance = f64::INFINITY;
+        let mut hit_distance = MAX;
         for intersection in self {
             if intersection.is_within_distance(hit_distance) {
                 maybe_hit = Some(intersection);

@@ -1,6 +1,6 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
 use crate::utils::{solve_quadratic, Squared};
@@ -127,8 +127,8 @@ impl Default for Cylinder {
         return Cylinder::new(
             Material::default(),
             Matrix::default(),
-            f64::NEG_INFINITY,
-            f64::INFINITY,
+            MIN,
+            MAX,
             false,
         );
     }
@@ -155,8 +155,8 @@ mod tests {
     #[test]
     fn default_cylinder() {
         let cylinder = Cylinder::default();
-        assert_eq!(cylinder.min, f64::NEG_INFINITY);
-        assert_eq!(cylinder.max, f64::INFINITY);
+        assert_eq!(cylinder.min, MIN);
+        assert_eq!(cylinder.max, MAX);
         assert!(!cylinder.closed);
     }
 

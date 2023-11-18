@@ -1,6 +1,6 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::Transformation;
 use crate::primitives::{Matrix, Point, Vector};
 use bincode::Encode;
@@ -32,8 +32,8 @@ impl Cube {
             distance_min = distance_min_numerator / direction;
             distance_max = distance_max_numerator / direction;
         } else {
-            distance_min = distance_min_numerator * f64::INFINITY;
-            distance_max = distance_max_numerator * f64::INFINITY;
+            distance_min = distance_min_numerator * MAX;
+            distance_max = distance_max_numerator * MAX;
         }
 
         if distance_min > distance_max {
@@ -49,7 +49,7 @@ impl Shape for Cube {
         let max_value = [point.x.abs(), point.y.abs(), point.z.abs()]
             .iter()
             .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+            .fold(MIN, f64::max);
         if max_value == point.x.abs() {
             return Vector::new(point.x, 0, 0);
         } else if max_value == point.y.abs() {
@@ -74,11 +74,11 @@ impl Shape for Cube {
         let distance_min = [x_distance_min, y_distance_min, z_distance_min]
             .iter()
             .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+            .fold(MIN, f64::max);
         let distance_max = [x_distance_max, y_distance_max, z_distance_max]
             .iter()
             .copied()
-            .fold(f64::INFINITY, f64::min);
+            .fold(MAX, f64::min);
 
         if distance_min > distance_max || distance_max < 0.0 {
             return None;
