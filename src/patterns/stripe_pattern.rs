@@ -101,8 +101,8 @@ mod tests {
         material.ambient = 1.0;
         material.diffuse = 0.0;
         material.specular = 0.0;
-        let camera = Vector::new(0, 0, -1.0);
-        let normal = Vector::new(0, 0, -1.0);
+        let camera = Vector::new(0, 0, -1);
+        let normal = Vector::new(0, 0, -1);
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
         let color1 = material.lighting(
             &object,

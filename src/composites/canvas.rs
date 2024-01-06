@@ -44,7 +44,7 @@ impl Canvas {
     }
 
     fn to_ppm(&self) -> String {
-        let mut content: Vec<String> = self.get_header();
+        let mut content = self.get_header();
         let max_color_value: f64 = 1.0;
 
         for line in self.pixels.chunks(self.width as usize) {

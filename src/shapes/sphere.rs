@@ -107,17 +107,18 @@ mod tests {
         let normal = sphere.normal_at(Point::new(0, 0, 1));
         assert_eq!(normal, Vector::FORWARD);
 
+        let third_of_sqrt_3 = 3.0_f64.sqrt() / 3.0;
         let normal = sphere.normal_at(Point::new(
-            3.0_f64.sqrt() / 3.0,
-            3.0_f64.sqrt() / 3.0,
-            3.0_f64.sqrt() / 3.0,
+            third_of_sqrt_3,
+            third_of_sqrt_3,
+            third_of_sqrt_3,
         ));
         assert_eq!(
             normal,
             Vector::new(
-                3.0_f64.sqrt() / 3.0,
-                3.0_f64.sqrt() / 3.0,
-                3.0_f64.sqrt() / 3.0
+                third_of_sqrt_3,
+                third_of_sqrt_3,
+                third_of_sqrt_3
             )
         );
     }
@@ -125,10 +126,11 @@ mod tests {
     #[test]
     fn sphere_normal_is_normalized() {
         let sphere = Sphere::default();
+        let third_of_sqrt_3 = 3.0_f64.sqrt() / 3.0;
         let normal = sphere.normal_at(Point::new(
-            3.0_f64.sqrt() / 3.0,
-            3.0_f64.sqrt() / 3.0,
-            3.0_f64.sqrt() / 3.0,
+            third_of_sqrt_3,
+            third_of_sqrt_3,
+            third_of_sqrt_3,
         ));
         assert_eq!(normal, normal.normalized());
     }

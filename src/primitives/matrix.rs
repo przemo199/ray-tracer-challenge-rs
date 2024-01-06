@@ -31,8 +31,8 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         return self.0[row][column];
     }
 
-    pub fn set_index(&mut self, row: usize, column: usize, value: f64) {
-        self[row][column] = value;
+    pub fn set_index(&mut self, row: usize, column: usize, value: impl Into<f64>) {
+        self[row][column] = value.into();
     }
 
     #[inline(always)]

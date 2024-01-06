@@ -6,17 +6,17 @@ pub const IDENTITY: Transformation = Matrix::IDENTITY;
 
 pub fn translation(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 3, x.into());
-    result.set_index(1, 3, y.into());
-    result.set_index(2, 3, z.into());
+    result.set_index(0, 3, x);
+    result.set_index(1, 3, y);
+    result.set_index(2, 3, z);
     return result;
 }
 
 pub fn scaling(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 0, x.into());
-    result.set_index(1, 1, y.into());
-    result.set_index(2, 2, z.into());
+    result.set_index(0, 0, x);
+    result.set_index(1, 1, y);
+    result.set_index(2, 2, z);
     return result;
 }
 
@@ -65,12 +65,12 @@ pub fn shearing_matrix(
     zy: impl Into<f64>,
 ) -> Transformation {
     let mut result = IDENTITY;
-    result.set_index(0, 1, xy.into());
-    result.set_index(0, 2, xz.into());
-    result.set_index(1, 0, yx.into());
-    result.set_index(1, 2, yz.into());
-    result.set_index(2, 0, zx.into());
-    result.set_index(2, 1, zy.into());
+    result.set_index(0, 1, xy);
+    result.set_index(0, 2, xz);
+    result.set_index(1, 0, yx);
+    result.set_index(1, 2, yz);
+    result.set_index(2, 0, zx);
+    result.set_index(2, 1, zy);
     return result;
 }
 
