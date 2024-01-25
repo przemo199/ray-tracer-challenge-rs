@@ -1,7 +1,9 @@
 use crate::primitives::Color;
-use image::codecs::png::*;
+use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::ImageEncoder;
+use std::error::Error;
 use std::fs::File;
+use std::io;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
@@ -70,22 +72,22 @@ impl Canvas {
         return content.join("\n");
     }
 
-    fn prepare_file<P: AsRef<Path>>(&self, file_name: &P) {
+    fn prepare_file<P: AsRef<Path>>(&self, file_name: &P) -> io::Result<()> {
         let path = Path::new(file_name.as_ref());
         let prefix = path.parent().unwrap();
-        std::fs::create_dir_all(prefix).unwrap();
+        return std::fs::create_dir_all(prefix);
     }
 
-    pub fn to_ppm_file<P: AsRef<Path>>(&self, file_name: P) {
-        self.prepare_file(&file_name);
+    pub fn to_ppm_file<P: AsRef<Path>>(&self, file_name: P) -> io::Result<()> {
+        self.prepare_file(&file_name)?;
         let content = self.to_ppm();
-        let mut file = File::create(file_name.as_ref()).unwrap();
-        file.write_all(content.as_bytes()).unwrap();
+        let mut file = File::create(file_name.as_ref())?;
+        return file.write_all(content.as_bytes());
     }
 
-    pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) {
+    pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) -> Result<(), Box<dyn Error>> {
         let mut buffer: Vec<u8> = Vec::with_capacity(self.pixels.len() * 3);
-        self.prepare_file(&file_name);
+        self.prepare_file(&file_name)?;
 
         for pixel in &self.pixels {
             for color in pixel.get_channels() {
@@ -93,20 +95,18 @@ impl Canvas {
             }
         }
 
-        let buf_file_writer = BufWriter::new(File::create(file_name.as_ref()).unwrap());
+        let buf_file_writer = BufWriter::new(File::create(file_name.as_ref())?);
         let encoder = PngEncoder::new_with_quality(
             buf_file_writer,
             CompressionType::Best,
             FilterType::NoFilter,
         );
-        encoder
-            .write_image(
-                buffer.as_slice(),
-                self.width,
-                self.height,
-                image::ColorType::Rgb8,
-            )
-            .unwrap();
+        return Ok(encoder.write_image(
+            buffer.as_slice(),
+            self.width,
+            self.height,
+            image::ColorType::Rgb8,
+        )?);
     }
 }
 

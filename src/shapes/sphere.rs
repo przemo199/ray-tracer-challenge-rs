@@ -115,11 +115,7 @@ mod tests {
         ));
         assert_eq!(
             normal,
-            Vector::new(
-                third_of_sqrt_3,
-                third_of_sqrt_3,
-                third_of_sqrt_3
-            )
+            Vector::new(third_of_sqrt_3, third_of_sqrt_3, third_of_sqrt_3)
         );
     }
 
