@@ -72,7 +72,7 @@ impl Shape for Triangle {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Triangle");
     }
 }
 

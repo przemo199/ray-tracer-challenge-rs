@@ -91,7 +91,7 @@ impl Shape for Cube {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap();
+        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Cube");
     }
 }
 

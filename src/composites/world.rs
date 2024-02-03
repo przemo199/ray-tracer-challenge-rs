@@ -1,4 +1,4 @@
-use crate::composites::{ComputedHit, Intersections, Ray};
+use crate::composites::{ComputedHit, Intersection, Intersections, Ray};
 use crate::consts::MAX_REFLECTION_ITERATIONS;
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
@@ -23,7 +23,7 @@ impl World {
         let mut result = Intersections::new();
         for shape in &self.shapes {
             if let Some(intersections) = ray.intersect(shape.as_ref()) {
-                result.extend(intersections.intersections);
+                result.extend::<Vec<Intersection>>(intersections.into());
             }
         }
         result.sort_by_distance();
@@ -130,13 +130,10 @@ impl Default for World {
 impl PartialEq for World {
     fn eq(&self, rhs: &Self) -> bool {
         return self.lights.len() == rhs.lights.len()
-            && self.lights.iter().all(|light| rhs.lights.contains(light))
             && self.shapes.len() == rhs.shapes.len()
+            && self.lights.iter().all(|light| rhs.lights.contains(light))
             && self.shapes.iter().all(|object| {
-                return rhs
-                    .shapes
-                    .iter()
-                    .any(|entry| entry.as_ref() == object.as_ref());
+                return rhs.shapes.iter().any(|entry| entry == object);
             });
     }
 }

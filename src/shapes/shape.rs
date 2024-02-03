@@ -32,12 +32,6 @@ impl PartialEq for &'_ dyn Shape {
     }
 }
 
-impl PartialEq<dyn Shape> for Box<dyn Shape> {
-    fn eq(&self, rhs: &dyn Shape) -> bool {
-        return self.encoded() == rhs.encoded();
-    }
-}
-
 impl PartialEq for Box<dyn Shape> {
     fn eq(&self, rhs: &Self) -> bool {
         return self.encoded() == rhs.encoded();

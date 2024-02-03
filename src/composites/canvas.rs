@@ -74,7 +74,9 @@ impl Canvas {
 
     fn prepare_file<P: AsRef<Path>>(&self, file_name: &P) -> io::Result<()> {
         let path = Path::new(file_name.as_ref());
-        let prefix = path.parent().unwrap();
+        let prefix = path
+            .parent()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))?;
         return std::fs::create_dir_all(prefix);
     }
 

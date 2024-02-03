@@ -1,18 +1,15 @@
 use crate::composites::Intersection;
 use crate::consts::MAX;
+use core::cmp::Ordering;
 use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
 
 #[derive(Clone, Debug)]
-pub struct Intersections<'intersections> {
-    pub intersections: Vec<Intersection<'intersections>>,
-}
+pub struct Intersections<'intersections>(Vec<Intersection<'intersections>>);
 
 impl<'intersections> Intersections<'intersections> {
     pub const fn new() -> Intersections<'intersections> {
-        return Intersections {
-            intersections: Vec::new(),
-        };
+        return Intersections(Vec::new());
     }
 
     pub fn is_empty(&self) -> bool {
@@ -32,7 +29,11 @@ impl<'intersections> Intersections<'intersections> {
     }
 
     pub fn sort_by_distance(&mut self) {
-        self.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        self.sort_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or_else(|| Ordering::Equal)
+        });
     }
 
     pub fn into_option(self) -> Option<Intersections<'intersections>> {
@@ -50,13 +51,13 @@ impl<'intersections> Deref for Intersections<'intersections> {
     type Target = Vec<Intersection<'intersections>>;
 
     fn deref(&self) -> &Self::Target {
-        return &(self.intersections);
+        return &(self.0);
     }
 }
 
 impl<'intersections> DerefMut for Intersections<'intersections> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        return &mut (self.intersections);
+        return &mut (self.0);
     }
 }
 
@@ -69,20 +70,24 @@ impl PartialEq for Intersections<'_> {
     }
 }
 
+impl<'intersections> From<Intersections<'intersections>> for Vec<Intersection<'intersections>> {
+    fn from(value: Intersections<'intersections>) -> Self {
+        return value.0;
+    }
+}
+
 impl<'intersections> IntoIterator for &'intersections Intersections<'intersections> {
     type Item = &'intersections Intersection<'intersections>;
     type IntoIter = Iter<'intersections, Intersection<'intersections>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        return self.intersections.iter();
+        return self.0.iter();
     }
 }
 
 impl<'intersection> From<Vec<Intersection<'intersection>>> for Intersections<'intersection> {
     fn from(value: Vec<Intersection<'intersection>>) -> Self {
-        return Self {
-            intersections: value,
-        };
+        return Self(value);
     }
 }
 
@@ -90,9 +95,7 @@ impl<'intersection, const SIZE: usize> From<[Intersection<'intersection>; SIZE]>
     for Intersections<'intersection>
 {
     fn from(value: [Intersection<'intersection>; SIZE]) -> Self {
-        return Self {
-            intersections: value.to_vec(),
-        };
+        return Self(value.to_vec());
     }
 }
 

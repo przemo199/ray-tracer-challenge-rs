@@ -40,7 +40,10 @@ impl Pattern for CheckerPattern {
 
     fn encoded(&self) -> Vec<u8> {
         let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
-        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
+        encoded.extend(
+            bincode::encode_to_vec(self, BINCODE_CONFIG)
+                .expect("Failed to serialise CheckerPattern"),
+        );
         return encoded;
     }
 }
