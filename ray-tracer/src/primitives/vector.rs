@@ -56,7 +56,7 @@ impl Vector {
     /// Creates new instance of struct [Vector]
     /// # Examples
     /// ```
-    /// use raytracer::primitives::Vector;
+    /// use ray_tracer::primitives::Vector;
     /// let vector = Vector::new(1, 0.5, 0);
     /// assert_eq!(vector.x, 1.0);
     /// assert_eq!(vector.y, 0.5);

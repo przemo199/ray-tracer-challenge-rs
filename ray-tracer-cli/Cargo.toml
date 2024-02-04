@@ -1,0 +1,13 @@
+[package]
+name = "ray-tracer-cli"
+version = "0.1.0"
+authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+clap.workspace = true
+yaml-rust.workspace = true
+ray-tracer = { path = "../ray-tracer"}
+
+[dev-dependencies]
+rstest.workspace = true

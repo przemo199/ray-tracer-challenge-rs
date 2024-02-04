@@ -13,8 +13,8 @@ impl Ray {
     /// Creates new instance of struct [Ray]
     /// # Examples
     /// ```
-    /// use raytracer::composites::Ray;
-    /// use raytracer::primitives::{Point, Vector};
+    /// use ray_tracer::composites::Ray;
+    /// use ray_tracer::primitives::{Point, Vector};
     ///
     /// let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
     ///

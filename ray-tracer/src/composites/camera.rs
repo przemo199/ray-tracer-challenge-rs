@@ -6,7 +6,7 @@ use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use rayon::iter::ParallelIterator;
-use rayon::prelude::*;
+use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {

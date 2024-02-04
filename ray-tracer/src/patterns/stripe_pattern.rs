@@ -1,6 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
-use crate::primitives::{transformations, Transformation, Vector};
+use crate::primitives::{transformations, Transformation};
 use crate::primitives::{Color, Point};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};

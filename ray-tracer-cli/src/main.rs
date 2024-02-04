@@ -1,10 +1,11 @@
 use crate::cli::{CliArguments, RenderingMode};
+use crate::scene_loader::load_scene_description;
 use clap::Parser;
-use raytracer::scene_loader::load_scene_description;
 use std::error::Error;
 use std::time::Instant;
 
 mod cli;
+mod scene_loader;
 mod scenes;
 
 fn main() -> Result<(), Box<dyn Error>> {

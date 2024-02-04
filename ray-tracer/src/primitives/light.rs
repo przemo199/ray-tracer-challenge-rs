@@ -11,7 +11,7 @@ impl Light {
     /// Creates new instance of struct [Light]
     /// # Examples
     /// ```
-    /// use raytracer::primitives::{Color, Light, Point};
+    /// use ray_tracer::primitives::{Color, Light, Point};
     ///
     /// let light = Light::new(Point::default(), Color::BLACK);
     ///

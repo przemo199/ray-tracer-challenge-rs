@@ -1,8 +1,8 @@
-use crate::composites::{Camera, Material, World};
-use crate::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Color, Light, Point, Vector};
-use crate::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
+use ray_tracer::composites::{Camera, Material, World};
+use ray_tracer::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
+use ray_tracer::primitives::{transformations, Transformation};
+use ray_tracer::primitives::{Color, Light, Point, Vector};
+use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
