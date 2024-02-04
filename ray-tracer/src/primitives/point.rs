@@ -22,7 +22,7 @@ impl Point {
     /// Creates new instance of struct [Point]
     /// # Examples
     /// ```
-    /// use raytracer::primitives::Point;
+    /// use ray_tracer::primitives::Point;
     ///
     /// let point = Point::new(1, 0.5, 0);
     ///

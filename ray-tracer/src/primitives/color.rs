@@ -45,7 +45,7 @@ impl Color {
     /// Creates new instance of struct [Color]
     /// # Examples
     /// ```
-    /// use raytracer::primitives::Color;
+    /// use ray_tracer::primitives::Color;
     ///
     /// let color = Color::new(1, 0.5, 0);
     ///
@@ -64,7 +64,7 @@ impl Color {
     /// Returns array of RGB values representing color
     /// # Examples
     /// ```
-    /// use raytracer::primitives::Color;
+    /// use ray_tracer::primitives::Color;
     ///
     /// let color = Color::new(1.0, 0.5, 0.0);
     ///
