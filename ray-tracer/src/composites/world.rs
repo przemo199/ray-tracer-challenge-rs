@@ -249,7 +249,7 @@ mod tests {
     fn color_when_ray_misses() {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::UP);
-        let color = world.color_at(&ray);
+        let color = world.color_at_intersection_of(&ray);
         assert_eq!(color, Color::BLACK);
     }
 
@@ -257,7 +257,7 @@ mod tests {
     fn color_when_ray_hits() {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let color = world.color_at(&ray);
+        let color = world.color_at_intersection_of(&ray);
         assert_eq!(
             color,
             Color::new(
@@ -285,7 +285,7 @@ mod tests {
         world.shapes[1] = Box::new(sphere2);
 
         let ray = Ray::new(Point::new(0, 0, 0.75), Vector::BACKWARD);
-        let color = world.color_at(&ray);
+        let color = world.color_at_intersection_of(&ray);
         assert_eq!(color, world.shapes[1].material().color);
     }
 
@@ -420,7 +420,7 @@ mod tests {
         let arc_upper = Box::new(upper);
         world.shapes.push(arc_upper);
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
-        world.color_at(&ray);
+        world.color_at_intersection_of(&ray);
     }
 
     #[test]
