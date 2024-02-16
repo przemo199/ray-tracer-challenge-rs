@@ -30,18 +30,18 @@ Options:
 
 ## Examples
 
-![](ray-tracer-cli/rendered_images/cover.png)
+![](rendered_images/cover.png)
 
-![](ray-tracer-cli/rendered_images/reflect_refract.png)
+![](rendered_images/reflect_refract.png)
 
-![](ray-tracer-cli/rendered_images/refraction.png)
+![](rendered_images/refraction.png)
 
-![](ray-tracer-cli/rendered_images/metal.png)
+![](rendered_images/metal.png)
 
-![](ray-tracer-cli/rendered_images/cylinders.png)
+![](rendered_images/cylinders.png)
 
-![](ray-tracer-cli/rendered_images/table.png)
+![](rendered_images/table.png)
 
-![](ray-tracer-cli/rendered_images/three_sphere_scene.png)
+![](rendered_images/three_sphere_scene.png)
 
-![](ray-tracer-cli/rendered_images/shadow_puppets.png)
+![](rendered_images/shadow_puppets.png)

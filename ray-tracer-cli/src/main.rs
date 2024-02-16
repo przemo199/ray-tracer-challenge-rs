@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         RenderingMode::Serial => camera.render(&world),
         RenderingMode::Parallel => camera.render_parallel(&world),
     };
-    let elapsed = now.elapsed();
-    println!("Rendered in: {:.3?}s", elapsed.as_secs_f64());
+    let seconds_elapsed = now.elapsed().as_secs_f64();
+    println!("Image rendered in: {seconds_elapsed:.3?}s");
     return canvas.to_png_file(args.image_output_path);
 }

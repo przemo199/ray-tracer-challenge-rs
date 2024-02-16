@@ -1,5 +1,4 @@
 use crate::composites::{Canvas, Ray, World};
-use crate::consts::PROGRESS_TEMPLATE;
 use crate::primitives::Point;
 use crate::primitives::{transformations, Transformation};
 use crate::utils::CoarseEq;
@@ -20,10 +19,13 @@ pub struct Camera {
 }
 
 impl Camera {
+    pub const PROGRESS_TEMPLATE: &'static str =
+        "[{elapsed_precise}] {bar:50.white/gray}{percent}% {human_pos}/{human_len}";
+
     pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: impl Into<f64>) -> Self {
         let field_of_view = field_of_view.into();
         let half_view = (field_of_view / 2.0).tan();
-        let aspect = horizontal_size as f64 / vertical_size as f64;
+        let aspect = f64::from(horizontal_size) / f64::from(vertical_size as f64);
         let half_width: f64;
         let half_height: f64;
         if aspect >= 1.0 {
@@ -33,7 +35,7 @@ impl Camera {
             half_width = half_view * aspect;
             half_height = half_view;
         }
-        let pixel_size = (half_width * 2.0) / (horizontal_size as f64);
+        let pixel_size = (half_width * 2.0) / f64::from(horizontal_size);
         return Self {
             horizontal_size,
             vertical_size,
@@ -66,7 +68,7 @@ impl Camera {
 
     pub fn render(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        let style = ProgressStyle::with_template(PROGRESS_TEMPLATE)
+        let style = ProgressStyle::with_template(Self::PROGRESS_TEMPLATE)
             .expect("Failed to create ProgressStyle");
         canvas
             .pixels
@@ -85,7 +87,7 @@ impl Camera {
     pub fn render_parallel(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
         let style =
-            ProgressStyle::with_template(PROGRESS_TEMPLATE).expect("Failed to parse ProgressStyle");
+            ProgressStyle::with_template(Self::PROGRESS_TEMPLATE).expect("Failed to parse ProgressStyle");
         canvas
             .pixels
             .par_iter_mut()
