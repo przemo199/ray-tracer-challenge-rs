@@ -62,7 +62,7 @@ impl Canvas {
                     }
 
                     let scaled_color_value =
-                        ((color_value / max_color_value) * 255.0).round() as i32;
+                        ((color_value / max_color_value) * 255.0).round() as i64;
                     line_content.push(scaled_color_value.to_string());
                 }
             }

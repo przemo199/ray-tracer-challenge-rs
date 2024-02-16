@@ -1,5 +1,4 @@
 use crate::composites::{ComputedHit, Intersection, Intersections, Ray};
-use crate::consts::MAX_REFLECTION_ITERATIONS;
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
@@ -12,6 +11,8 @@ pub struct World {
 }
 
 impl World {
+    pub const MAX_REFLECTION_ITERATIONS: u8 = 6;
+
     pub const fn new(lights: Vec<Light>, objects: Vec<Box<dyn Shape>>) -> Self {
         return Self {
             lights,
@@ -65,7 +66,7 @@ impl World {
     }
 
     pub fn color_at(&self, ray: &Ray) -> Color {
-        return self.internal_color_at(ray, MAX_REFLECTION_ITERATIONS);
+        return self.internal_color_at(ray, Self::MAX_REFLECTION_ITERATIONS);
     }
 
     /// Returns whether between the [Light] and [Point] is and object casting shadow
