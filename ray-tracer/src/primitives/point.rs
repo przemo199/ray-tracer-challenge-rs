@@ -41,15 +41,6 @@ impl Point {
     pub fn values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 1.0];
     }
-
-    #[inline(always)]
-    fn cross(&self, rhs: &Self) -> Self {
-        return Self::new(
-            self.y.mul_add(rhs.z, -self.z * rhs.y),
-            self.z.mul_add(rhs.x, -self.x * rhs.z),
-            self.x.mul_add(rhs.y, -self.y * rhs.x),
-        );
-    }
 }
 
 impl Default for Point {
