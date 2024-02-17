@@ -26,7 +26,7 @@ pub trait Shape: Debug + Display + Send + Sync {
     fn encoded(&self) -> Vec<u8>;
 }
 
-impl PartialEq for &'_ dyn Shape {
+impl PartialEq for &dyn Shape {
     fn eq(&self, rhs: &Self) -> bool {
         return self.encoded() == rhs.encoded();
     }

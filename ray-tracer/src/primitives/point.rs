@@ -175,6 +175,13 @@ mod tests {
     }
 
     #[test]
+    fn subtract_vector_from_point() {
+        let point = Point::new(3, 2, 1);
+        let vector = Vector::new(5, 6, 7);
+        assert_eq!(point - vector, Point::new(-2, -4, -6));
+    }
+
+    #[test]
     fn sub_point() {
         let point_1 = Point::new(3, 2, 1);
         let point_2 = Point::new(5, 6, 7);
