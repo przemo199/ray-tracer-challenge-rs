@@ -18,8 +18,10 @@ jobs:
         rust: [stable, beta, nightly]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
+    - name: Checkout project sources
+      uses: actions/checkout@v4
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
       with:
         toolchain: ${{ matrix.rust }}
         override: true
