@@ -1,8 +1,7 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
-use crate::primitives::Transformation;
-use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{solve_quadratic, Squared};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
@@ -10,7 +9,7 @@ use core::fmt::{Display, Formatter};
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
     pub material: Material,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
     pub min: f64,
     pub max: f64,
     pub closed: bool,
@@ -26,7 +25,7 @@ impl Cylinder {
     ) -> Self {
         return Self {
             material,
-            transformation,
+            transformation_inverse: transformation.inverse(),
             min: min.into(),
             max: max.into(),
             closed,
@@ -80,8 +79,16 @@ impl Shape for Cylinder {
         return &self.material;
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
@@ -124,7 +131,13 @@ impl Shape for Cylinder {
 
 impl Default for Cylinder {
     fn default() -> Cylinder {
-        return Cylinder::new(Material::default(), Matrix::default(), MIN, MAX, false);
+        return Cylinder::new(
+            Material::default(),
+            Transformation::IDENTITY,
+            MIN,
+            MAX,
+            false,
+        );
     }
 }
 
@@ -136,7 +149,7 @@ impl Display for Cylinder {
             .field("max", &self.max)
             .field("closed", &self.closed)
             .field("material", &self.material)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }

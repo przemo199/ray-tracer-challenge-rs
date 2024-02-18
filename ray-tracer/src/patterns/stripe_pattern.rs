@@ -61,7 +61,7 @@ mod tests {
     use super::*;
     use crate::composites::Material;
     use crate::primitives::{Light, Vector};
-    use crate::shapes::Sphere;
+    use crate::shapes::{Shape, Sphere};
     use std::sync::Arc;
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn stripe_pattern_with_object_transformation() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2, 2, 2);
+        sphere.set_transformation(transformations::scaling(2, 2, 2));
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         let color = pattern.color_at_shape(&sphere, &Point::new(1.5, 0, 0));
         assert_eq!(color, Color::WHITE);
@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn stripe_pattern_with_pattern_and_object_transformations() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2, 2, 2);
+        sphere.set_transformation(transformations::scaling(2, 2, 2));
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         pattern.transformation = transformations::translation(0.5, 0, 0);
         let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 0, 0));

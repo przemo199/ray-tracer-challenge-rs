@@ -1,7 +1,7 @@
 use crate::consts::EPSILON;
 use crate::primitives::transformations;
 use crate::primitives::Color;
-use crate::shapes::Sphere;
+use crate::shapes::{Shape, Sphere};
 use core::ops::Mul;
 
 /// Trait for imprecise comparison between floats
@@ -23,7 +23,7 @@ impl CoarseEq for f64 {
     }
 }
 
-/// Trait for efficiently squaring value
+/// Trait for efficiently squaring values
 pub trait Squared: Copy + Mul<Self, Output = Self> {
     #[inline(always)]
     fn squared(self) -> Self {
@@ -63,6 +63,6 @@ pub fn world_default_sphere_1() -> Sphere {
 
 pub fn world_default_sphere_2() -> Sphere {
     let mut sphere = Sphere::default();
-    sphere.transformation = transformations::scaling(0.5, 0.5, 0.5);
+    sphere.set_transformation(transformations::scaling(0.5, 0.5, 0.5));
     return sphere;
 }

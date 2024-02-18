@@ -9,14 +9,14 @@ use core::fmt::{Display, Formatter};
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Plane {
     pub material: Material,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
 }
 
 impl Plane {
-    pub const fn new(material: Material, transformation: Transformation) -> Self {
+    pub fn new(material: Material, transformation: Transformation) -> Self {
         return Self {
             material,
-            transformation,
+            transformation_inverse: transformation.inverse(),
         };
     }
 }
@@ -30,8 +30,16 @@ impl Shape for Plane {
         return &self.material;
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
@@ -59,7 +67,7 @@ impl Display for Plane {
         return formatter
             .debug_struct("Plane")
             .field("material", &self.material)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }

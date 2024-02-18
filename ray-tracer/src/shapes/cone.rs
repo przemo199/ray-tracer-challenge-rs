@@ -1,16 +1,15 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
-use crate::primitives::Transformation;
-use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{solve_quadratic, CoarseEq, Squared};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, Encode)]
 pub struct Cone {
-    pub transformation: Transformation,
     pub material: Material,
+    transformation_inverse: Transformation,
     pub min: f64,
     pub max: f64,
     pub closed: bool,
@@ -25,7 +24,7 @@ impl Cone {
         closed: bool,
     ) -> Self {
         return Self {
-            transformation,
+            transformation_inverse: transformation.inverse(),
             material,
             min: min.into(),
             max: max.into(),
@@ -85,8 +84,16 @@ impl Shape for Cone {
         return &self.material;
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
@@ -131,7 +138,13 @@ impl Shape for Cone {
 
 impl Default for Cone {
     fn default() -> Cone {
-        return Cone::new(Material::default(), Matrix::default(), MIN, MAX, false);
+        return Cone::new(
+            Material::default(),
+            Transformation::IDENTITY,
+            MIN,
+            MAX,
+            false,
+        );
     }
 }
 
@@ -143,7 +156,7 @@ impl Display for Cone {
             .field("max", &self.max)
             .field("closed", &self.closed)
             .field("material", &self.material)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }
@@ -151,7 +164,7 @@ impl Display for Cone {
 impl PartialEq for Cone {
     fn eq(&self, rhs: &Self) -> bool {
         return self.material == rhs.material
-            && self.transformation == rhs.transformation
+            && self.transformation_inverse == rhs.transformation_inverse
             && self.closed == rhs.closed
             && self.min.coarse_eq(rhs.min)
             && self.max.coarse_eq(rhs.max);

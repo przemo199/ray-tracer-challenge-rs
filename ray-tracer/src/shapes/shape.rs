@@ -4,7 +4,7 @@ use core::fmt::{Debug, Display};
 
 pub trait Shape: Debug + Display + Send + Sync {
     fn normal_at(&self, point: Point) -> Vector {
-        let transform_inverse = self.transformation().inverse();
+        let transform_inverse = self.transformation_inverse();
         let local_point = transform_inverse * point;
         let local_normal = self.local_normal_at(local_point);
         let world_normal = transform_inverse.transpose() * local_normal;
@@ -15,12 +15,16 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn material(&self) -> &Material;
 
+    fn set_transformation(&mut self, transformation: Transformation);
+
     fn transformation(&self) -> Transformation;
+
+    fn transformation_inverse(&self) -> Transformation;
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections>;
 
     fn local_ray(&self, ray: &Ray) -> Ray {
-        return ray.transform(self.transformation().inverse());
+        return ray.transform(self.transformation_inverse());
     }
 
     fn encoded(&self) -> Vec<u8>;

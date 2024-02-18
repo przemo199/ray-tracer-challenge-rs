@@ -30,7 +30,7 @@ impl Ray {
     }
 
     pub fn intersect<'shape>(&self, shape: &'shape dyn Shape) -> Option<Intersections<'shape>> {
-        let local_ray = self.transform(shape.transformation().inverse());
+        let local_ray = self.transform(shape.transformation_inverse());
         return shape.local_intersect(&local_ray);
     }
 
@@ -159,7 +159,7 @@ mod tests {
     fn intersecting_scaled_sphere() {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2, 2, 2);
+        sphere.set_transformation(transformations::scaling(2, 2, 2));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref()).unwrap();
         assert_eq!(intersections.len(), 2);
@@ -171,7 +171,7 @@ mod tests {
     fn intersecting_translated_sphere() {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::translation(5, 0, 0);
+        sphere.set_transformation(transformations::translation(5, 0, 0));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref());
         assert_eq!(intersections, None);

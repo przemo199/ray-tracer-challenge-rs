@@ -12,6 +12,7 @@ pub struct World {
 
 impl World {
     pub const MAX_REFLECTION_ITERATIONS: u8 = 6;
+    pub const DEFAULT_COLOR: Color = Color::BLACK;
 
     pub const fn new(lights: Vec<Light>, shapes: Vec<Box<dyn Shape>>) -> Self {
         return Self { lights, shapes };
@@ -37,7 +38,7 @@ impl World {
                 let in_shadow = self.is_in_shadow(light, &computed_hit.over_point);
                 return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
-            .fold(Color::BLACK, |acc, color| acc + color);
+            .fold(Color::new(0, 0, 0), |acc, color| acc + color);
 
         let reflected_color = self.reflected_color(computed_hit, remaining_iterations);
         let refracted_color = self.refracted_color(computed_hit, remaining_iterations);
@@ -56,7 +57,7 @@ impl World {
         let intersections = self.intersections(ray);
         let maybe_hit = intersections.hit();
 
-        return maybe_hit.map_or(Color::BLACK, |hit| {
+        return maybe_hit.map_or(Self::DEFAULT_COLOR, |hit| {
             let computed_hit = hit.prepare_computations(ray, &intersections);
             return self.shade_hit(&computed_hit, remaining_iterations);
         });
@@ -82,7 +83,7 @@ impl World {
 
     fn reflected_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().reflectiveness == 0.0 {
-            return Color::BLACK;
+            return Self::DEFAULT_COLOR;
         }
 
         let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflection_vector);
@@ -92,7 +93,7 @@ impl World {
 
     fn refracted_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().transparency == 0.0 {
-            return Color::BLACK;
+            return Self::DEFAULT_COLOR;
         }
 
         let n_ratio = computed_hit.refractive_index_1 / computed_hit.refractive_index_2;
@@ -101,7 +102,7 @@ impl World {
         let is_total_internal_reflection = sin2_t > 1.0;
 
         if is_total_internal_reflection {
-            return Color::BLACK;
+            return Self::DEFAULT_COLOR;
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
@@ -166,7 +167,7 @@ mod tests {
         sphere_1.material.diffuse = 0.7;
         sphere_1.material.specular = 0.2;
         let mut sphere_2 = Sphere::default();
-        sphere_2.transformation = transformations::scaling(0.5, 0.5, 0.5);
+        sphere_2.set_transformation(transformations::scaling(0.5, 0.5, 0.5));
         assert_eq!(world.lights[0], light);
         assert_eq!(world.shapes.len(), 2);
         assert!(world
@@ -186,7 +187,7 @@ mod tests {
         assert_eq!(world_1, world_2);
         let sphere_1 = Sphere::default();
         let mut sphere_2 = Sphere::default();
-        sphere_2.transformation = transformations::rotation_z(PI);
+        sphere_2.set_transformation(transformations::rotation_z(PI));
         world_2.shapes.push(Box::new(sphere_2.clone()));
         assert_ne!(world_1, world_2);
         world_1.shapes.push(Box::new(sphere_1.clone()));
@@ -247,7 +248,7 @@ mod tests {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::UP);
         let color = world.color_at(&ray);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -319,10 +320,8 @@ mod tests {
         let mut world = World::default();
         world.lights = vec![Light::new(Point::new(0, 0, -10), Color::WHITE)];
         world.shapes.push(Box::<Sphere>::default());
-        let sphere = Sphere {
-            transformation: transformations::translation(0, 0, 10),
-            ..Default::default()
-        };
+        let mut sphere = Sphere::default();
+        sphere.set_transformation(transformations::translation(0, 0, 10));
         world.shapes.push(Box::new(sphere.clone()));
         let ray = Ray::new(Point::new(0, 0, 5), Vector::FORWARD);
         let boxed_sphere = Box::new(sphere);
@@ -346,7 +345,7 @@ mod tests {
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.reflected_color(&computed_hit, 1);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -356,7 +355,7 @@ mod tests {
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.material = material;
-        shape.transformation = transformations::translation(0, -1, 0);
+        shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -384,7 +383,7 @@ mod tests {
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.material = material;
-        shape.transformation = transformations::translation(0, -1, 0);
+        shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0.0, 0.0, -3.0),
@@ -408,12 +407,12 @@ mod tests {
         world.lights = vec![Light::new(Point::ORIGIN, Color::new(1, 1, 1))];
         let mut lower = Plane::default();
         lower.material.reflectiveness = 1.0;
-        lower.transformation = transformations::translation(0, -1, 0);
+        lower.set_transformation(transformations::translation(0, -1, 0));
         let arc_lower = Box::new(lower);
         world.shapes.push(arc_lower);
         let mut upper = Plane::default();
         upper.material.reflectiveness = 1.0;
-        upper.transformation = transformations::translation(0, 1, 0);
+        upper.set_transformation(transformations::translation(0, 1, 0));
         let arc_upper = Box::new(upper);
         world.shapes.push(arc_upper);
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
@@ -427,7 +426,7 @@ mod tests {
         let mut material = shape.material().clone();
         material.reflectiveness = 0.5;
         shape.material = material;
-        shape.transformation = transformations::translation(0, -1, 0);
+        shape.set_transformation(transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(shape.clone()));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -438,7 +437,7 @@ mod tests {
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         let color = world.reflected_color(&computed_hit, 0);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -451,7 +450,7 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -470,7 +469,7 @@ mod tests {
         intersections.push(Intersection::new(6, shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 0);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -495,7 +494,7 @@ mod tests {
         ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
         let color = world.refracted_color(&computed_hit, 5);
-        assert_eq!(color, Color::BLACK);
+        assert_eq!(color, World::DEFAULT_COLOR);
     }
 
     #[test]
@@ -540,7 +539,7 @@ mod tests {
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
         ball.material = ball_material;
-        ball.transformation = transformations::translation(0, -3.5, -0.5);
+        ball.set_transformation(transformations::translation(0, -3.5, -0.5));
         world.shapes.push(Box::new(ball));
         let ray = Ray::new(
             Point::new(0, 0, -3),
@@ -572,7 +571,7 @@ mod tests {
         ball_material.ambient = 0.5;
         let mut ball = Sphere::default();
         ball.material = ball_material;
-        ball.transformation = transformations::translation(0, -3.5, -0.5);
+        ball.set_transformation(transformations::translation(0, -3.5, -0.5));
         world.shapes.push(Box::new(ball));
         let ray = Ray::new(
             Point::new(0, 0, -3),

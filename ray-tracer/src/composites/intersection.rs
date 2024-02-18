@@ -158,10 +158,8 @@ mod tests {
     #[test]
     fn hit_offsets_point() {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let sphere = Sphere {
-            transformation: transformations::translation(0, 0, 1),
-            ..Default::default()
-        };
+        let mut sphere = Sphere::default();
+        sphere.set_transformation(transformations::translation(0, 0, 1));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let intersections = Intersections::new();
@@ -189,28 +187,28 @@ mod tests {
 
     #[test]
     fn finding_refractive_indexes() {
-        let mut sphere1 = Sphere {
-            material: Material::glass(),
-            transformation: transformations::scaling(2, 2, 2),
-        };
+        let mut sphere1 = Sphere::default();
+        sphere1.material = Material::glass();
+        sphere1.set_transformation(transformations::scaling(2, 2, 2));
+
         let mut material1 = sphere1.material.clone();
         material1.refractive_index = 1.5;
         sphere1.material = material1;
         let boxed_shape1: Box<dyn Shape> = Box::new(sphere1);
 
-        let mut sphere2 = Sphere {
-            material: Material::glass(),
-            transformation: transformations::translation(0, 0, -0.25),
-        };
+        let mut sphere2 = Sphere::default();
+        sphere2.material = Material::glass();
+        sphere2.set_transformation(transformations::translation(0, 0, -0.25));
+
         let mut material2 = sphere2.material.clone();
         material2.refractive_index = 2.0;
         sphere2.material = material2;
         let boxed_shape2: Box<dyn Shape> = Box::new(sphere2);
 
-        let mut sphere3 = Sphere {
-            material: Material::glass(),
-            transformation: transformations::translation(0, 0, 0.25),
-        };
+        let mut sphere3 = Sphere::default();
+        sphere3.material = Material::glass();
+        sphere3.set_transformation(transformations::translation(0, 0, 0.25));
+
         let mut material3 = sphere3.material.clone();
         material3.refractive_index = 2.5;
         sphere3.material = material3;
@@ -240,10 +238,9 @@ mod tests {
 
     #[test]
     fn under_point_is_below_surface() {
-        let sphere = Sphere {
-            material: Material::glass(),
-            transformation: transformations::translation(0, 0, 1),
-        };
+        let mut sphere = Sphere::default();
+        sphere.material = Material::glass();
+        sphere.set_transformation(transformations::translation(0, 0, 1));
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let mut intersections = Intersections::new();

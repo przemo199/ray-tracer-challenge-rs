@@ -2,7 +2,7 @@ use ray_tracer::composites::{Camera, Material, World};
 use ray_tracer::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
 use ray_tracer::primitives::{transformations, Transformation};
 use ray_tracer::primitives::{Color, Light, Point, Vector};
-use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Sphere};
+use ray_tracer::shapes::{Cone, Cube, Plane, Shape, Sphere};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -292,11 +292,9 @@ impl SceneParser {
                     "cone" => {
                         let (material, transformation) =
                             self.parse_material_and_transformation(&entry)?;
-                        let mut cone = Cone {
-                            material,
-                            transformation,
-                            ..Default::default()
-                        };
+                        let mut cone = Cone::default();
+                        cone.material = material;
+                        cone.set_transformation(transformation);
                         if let Yaml::Boolean(value) = &entry["closed"] {
                             cone.closed = *value;
                         }
@@ -311,11 +309,9 @@ impl SceneParser {
                     "cylinder" => {
                         let (material, transformation) =
                             self.parse_material_and_transformation(&entry)?;
-                        let mut cylinder = Cylinder {
-                            material,
-                            transformation,
-                            ..Default::default()
-                        };
+                        let mut cylinder = Cone::default();
+                        cylinder.material = material;
+                        cylinder.set_transformation(transformation);
                         if let Yaml::Boolean(value) = entry["closed"] {
                             cylinder.closed = value;
                         }

@@ -9,7 +9,7 @@ use core::fmt::{Debug, Display, Formatter};
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
     pub material: Material,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
     pub vertex_1: Point,
     pub vertex_2: Point,
     pub vertex_3: Point,
@@ -22,10 +22,10 @@ impl Triangle {
     pub fn new(vertex_1: Point, vertex_2: Point, vertex_3: Point) -> Self {
         let edge_1 = vertex_2 - vertex_1;
         let edge_2 = vertex_3 - vertex_1;
-        let normal = (edge_2.cross(&edge_1)).normalized();
+        let normal = edge_2.cross(&edge_1).normalized();
         return Self {
             material: Material::default(),
-            transformation: transformations::IDENTITY,
+            transformation_inverse: transformations::IDENTITY,
             vertex_1,
             vertex_2,
             vertex_3,
@@ -45,8 +45,16 @@ impl Shape for Triangle {
         return &self.material;
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
@@ -87,7 +95,7 @@ impl Display for Triangle {
             .field("e2", &self.edge_1)
             .field("normal", &self.normal)
             .field("material", &self.material)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }

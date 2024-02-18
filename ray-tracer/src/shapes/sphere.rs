@@ -10,14 +10,14 @@ use core::fmt::{Display, Formatter};
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Sphere {
     pub material: Material,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
 }
 
 impl Sphere {
-    pub const fn new(material: Material, transformation: Transformation) -> Self {
+    pub fn new(material: Material, transformation: Transformation) -> Self {
         return Self {
             material,
-            transformation,
+            transformation_inverse: transformation.inverse(),
         };
     }
 }
@@ -31,8 +31,16 @@ impl Shape for Sphere {
         return &self.material;
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
@@ -60,7 +68,7 @@ impl Default for Sphere {
         let transformation = transformations::IDENTITY;
         return Self {
             material,
-            transformation,
+            transformation_inverse: transformation,
         };
     }
 }
@@ -70,7 +78,7 @@ impl Display for Sphere {
         return formatter
             .debug_struct("Sphere")
             .field("material", &self.material)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }
@@ -84,15 +92,15 @@ mod tests {
     #[test]
     fn default_transformation() {
         let sphere = Sphere::default();
-        assert_eq!(sphere.transformation, transformations::IDENTITY);
+        assert_eq!(sphere.transformation_inverse, transformations::IDENTITY);
     }
 
     #[test]
     fn changing_transformation() {
         let mut sphere = Sphere::default();
         let transformation = transformations::translation(2, 3, 4);
-        sphere.transformation = transformation;
-        assert_eq!(sphere.transformation, transformation);
+        sphere.transformation_inverse = transformation;
+        assert_eq!(sphere.transformation_inverse, transformation);
     }
 
     #[test]
@@ -134,7 +142,7 @@ mod tests {
     #[test]
     fn normal_on_translated_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::translation(0, 1, 0);
+        sphere.set_transformation(transformations::translation(0, 1, 0));
         let normal = sphere.normal_at(Point::new(
             0.0,
             1.0 + core::f64::consts::FRAC_1_SQRT_2,
@@ -153,8 +161,9 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut sphere = Sphere::default();
-        sphere.transformation =
-            transformations::scaling(1, 0.5, 1) * transformations::rotation_z(PI / 5.0);
+        sphere.set_transformation(
+            transformations::scaling(1, 0.5, 1) * transformations::rotation_z(PI / 5.0),
+        );
         let normal = sphere.normal_at(Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0));
         assert_eq!(
             normal,

@@ -8,11 +8,11 @@ use bincode::error::EncodeError;
 use bincode::Encode;
 use core::fmt::{Debug, Display, Formatter};
 
-pub trait Pattern: Debug + Display + Sync + Send {
+pub trait Pattern: Debug + Display + Send + Sync {
     fn color_at(&self, point: &Point) -> Color;
 
     fn color_at_shape(&self, shape: &dyn Shape, point: &Point) -> Color {
-        let object_point = shape.transformation().inverse() * *point;
+        let object_point = shape.transformation_inverse() * *point;
         let pattern_point = self.transformation().inverse() * object_point;
         return self.color_at(&pattern_point);
     }
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn test_pattern_with_object_transformation() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2, 2, 2);
+        sphere.set_transformation(transformations::scaling(2, 2, 2));
         let pattern = TestPattern::new();
         let color = pattern.color_at_shape(&sphere, &Point::new(2, 3, 4));
         assert_eq!(color, Color::new(1, 1.5, 2));
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn test_pattern_with_pattern_and_object_transformations() {
         let mut sphere = Sphere::default();
-        sphere.transformation = transformations::scaling(2, 2, 2);
+        sphere.set_transformation(transformations::scaling(2, 2, 2));
         let mut pattern = TestPattern::new();
         pattern.transformation = transformations::translation(0.5, 1, 1.5);
         let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 3, 3.5));

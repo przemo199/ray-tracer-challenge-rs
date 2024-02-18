@@ -77,13 +77,11 @@ mod tests {
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
-        let shape = Sphere {
-            material: Material::glass(),
-            ..Default::default()
-        };
+        let mut sphere = Sphere::default();
+        sphere.material = Material::glass();
         let ray = Ray::new(Point::new(0, 0, 2.0_f64.sqrt() / 2.0), Vector::UP);
         let mut intersections = Intersections::new();
-        let boxed_shape = Box::new(shape);
+        let boxed_shape = Box::new(sphere);
         intersections.push(Intersection::new(
             -(2.0_f64.sqrt()) / 2.0,
             boxed_shape.as_ref(),
@@ -98,13 +96,11 @@ mod tests {
 
     #[test]
     fn schlick_approximation_perpendicular_to_viewing_angle() {
-        let shape = Sphere {
-            material: Material::glass(),
-            ..Default::default()
-        };
+        let mut sphere = Sphere::default();
+        sphere.material = Material::glass();
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
         let mut intersections = Intersections::new();
-        let boxed_shape = Box::new(shape);
+        let boxed_shape = Box::new(sphere);
         intersections.push(Intersection::new(-1, boxed_shape.as_ref()));
         intersections.push(Intersection::new(1, boxed_shape.as_ref()));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
@@ -113,13 +109,11 @@ mod tests {
 
     #[test]
     fn schlick_approximation_with_small_angle() {
-        let shape = Sphere {
-            material: Material::glass(),
-            ..Default::default()
-        };
+        let mut sphere = Sphere::default();
+        sphere.material = Material::glass();
         let ray = Ray::new(Point::new(0, 0.99, -2), Vector::FORWARD);
         let mut intersections = Intersections::new();
-        let boxed_shape = Box::new(shape);
+        let boxed_shape = Box::new(sphere);
         intersections.push(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
         assert!(computed_hit.schlick().coarse_eq(0.4887308101221217));
