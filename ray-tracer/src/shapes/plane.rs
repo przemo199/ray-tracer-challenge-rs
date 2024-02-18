@@ -98,7 +98,7 @@ mod tests {
         let intersections = boxed_shape.as_ref().local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
     }
 
     #[test]
@@ -109,6 +109,6 @@ mod tests {
         let intersections = boxed_shape.as_ref().local_intersect(&ray).unwrap();
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 1.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
     }
 }

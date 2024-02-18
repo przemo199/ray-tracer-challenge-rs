@@ -84,8 +84,8 @@ mod tests {
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, 4.0);
         assert_eq!(intersections[1].distance, 6.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
-        assert_eq!(intersections[1].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
+        assert_eq!(intersections[1].shape, boxed_shape.as_ref());
     }
 
     #[test]
@@ -97,8 +97,8 @@ mod tests {
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, 5.0);
         assert_eq!(intersections[1].distance, 5.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
-        assert_eq!(intersections[1].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
+        assert_eq!(intersections[1].shape, boxed_shape.as_ref());
     }
 
     #[test]
@@ -119,8 +119,8 @@ mod tests {
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, -1.0);
         assert_eq!(intersections[1].distance, 1.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
-        assert_eq!(intersections[1].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
+        assert_eq!(intersections[1].shape, boxed_shape.as_ref());
     }
 
     #[test]
@@ -129,12 +129,12 @@ mod tests {
         let sphere = Sphere::default();
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersections = ray.intersect(boxed_shape.as_ref()).unwrap();
-        intersections[0].object.encoded();
+        intersections[0].shape.encoded();
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, -6.0);
         assert_eq!(intersections[1].distance, -4.0);
-        assert_eq!(intersections[0].object, boxed_shape.as_ref());
-        assert_eq!(intersections[1].object, boxed_shape.as_ref());
+        assert_eq!(intersections[0].shape, boxed_shape.as_ref());
+        assert_eq!(intersections[1].shape, boxed_shape.as_ref());
     }
 
     #[test]

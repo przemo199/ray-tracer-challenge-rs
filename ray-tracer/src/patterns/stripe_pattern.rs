@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn lighting_with_stripe_pattern_applied() {
-        let object = Sphere::default();
+        let shape = Sphere::default();
         let mut material = Material::default();
         material.pattern = Option::from(
             Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn Pattern>
@@ -105,7 +105,7 @@ mod tests {
         let normal = Vector::new(0, 0, -1);
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);
         let color1 = material.lighting(
-            &object,
+            &shape,
             &light,
             &Point::new(0.9, 0, 0),
             &camera,
@@ -113,7 +113,7 @@ mod tests {
             false,
         );
         let color2 = material.lighting(
-            &object,
+            &shape,
             &light,
             &Point::new(1.1, 0, 0),
             &camera,

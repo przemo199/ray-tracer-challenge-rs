@@ -13,11 +13,8 @@ pub struct World {
 impl World {
     pub const MAX_REFLECTION_ITERATIONS: u8 = 6;
 
-    pub const fn new(lights: Vec<Light>, objects: Vec<Box<dyn Shape>>) -> Self {
-        return Self {
-            lights,
-            shapes: objects,
-        };
+    pub const fn new(lights: Vec<Light>, shapes: Vec<Box<dyn Shape>>) -> Self {
+        return Self { lights, shapes };
     }
 
     pub fn intersections(&self, ray: &Ray) -> Intersections {
@@ -32,7 +29,7 @@ impl World {
     }
 
     fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
-        let material = computed_hit.object.material();
+        let material = computed_hit.shape.material();
         let surface_color = self
             .lights
             .iter()
@@ -79,22 +76,22 @@ impl World {
             .into_iter()
             .any(|intersection| {
                 intersection.is_within_distance(distance_to_light)
-                    && intersection.object.material().casts_shadow
+                    && intersection.shape.material().casts_shadow
             });
     }
 
     fn reflected_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
-        if remaining_iterations == 0 || computed_hit.object.material().reflectiveness == 0.0 {
+        if remaining_iterations == 0 || computed_hit.shape.material().reflectiveness == 0.0 {
             return Color::BLACK;
         }
 
         let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflection_vector);
         let reflected_color = self.internal_color_at(&reflected_ray, remaining_iterations - 1);
-        return reflected_color * computed_hit.object.material().reflectiveness;
+        return reflected_color * computed_hit.shape.material().reflectiveness;
     }
 
     fn refracted_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
-        if remaining_iterations == 0 || computed_hit.object.material().transparency == 0.0 {
+        if remaining_iterations == 0 || computed_hit.shape.material().transparency == 0.0 {
             return Color::BLACK;
         }
 
@@ -113,18 +110,18 @@ impl World {
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color = self.internal_color_at(&refracted_ray, remaining_iterations - 1);
 
-        return refracted_color * computed_hit.object.material().transparency;
+        return refracted_color * computed_hit.shape.material().transparency;
     }
 }
 
 impl Default for World {
     fn default() -> Self {
         let light = Light::default();
-        let objects: Vec<Box<dyn Shape>> = vec![
+        let shapes: Vec<Box<dyn Shape>> = vec![
             Box::new(world_default_sphere_1()),
             Box::new(world_default_sphere_2()),
         ];
-        return Self::new(vec![light], objects);
+        return Self::new(vec![light], shapes);
     }
 }
 
@@ -133,8 +130,8 @@ impl PartialEq for World {
         return self.lights.len() == rhs.lights.len()
             && self.shapes.len() == rhs.shapes.len()
             && self.lights.iter().all(|light| rhs.lights.contains(light))
-            && self.shapes.iter().all(|object| {
-                return rhs.shapes.iter().any(|entry| entry == object);
+            && self.shapes.iter().all(|shape| {
+                return rhs.shapes.iter().any(|entry| entry == shape);
             });
     }
 }
@@ -144,7 +141,7 @@ impl Display for World {
         return formatter
             .debug_struct("World")
             .field("light", &self.lights)
-            .field("objects", &self.shapes)
+            .field("shapes", &self.shapes)
             .finish();
     }
 }

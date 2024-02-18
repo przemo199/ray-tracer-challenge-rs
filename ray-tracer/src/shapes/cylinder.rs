@@ -10,7 +10,7 @@ use core::fmt::{Display, Formatter};
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
     pub material: Material,
-    pub transformation: Matrix<4>,
+    pub transformation: Transformation,
     pub min: f64,
     pub max: f64,
     pub closed: bool,
@@ -19,7 +19,7 @@ pub struct Cylinder {
 impl Cylinder {
     pub fn new(
         material: Material,
-        transformation: Matrix<4>,
+        transformation: Transformation,
         min: impl Into<f64>,
         max: impl Into<f64>,
         closed: bool,

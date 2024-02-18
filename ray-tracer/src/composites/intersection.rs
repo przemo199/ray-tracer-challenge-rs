@@ -6,14 +6,14 @@ use core::fmt::Debug;
 #[derive(Clone, Debug)]
 pub struct Intersection<'shape> {
     pub distance: f64,
-    pub object: &'shape dyn Shape,
+    pub shape: &'shape dyn Shape,
 }
 
 impl<'shape> Intersection<'shape> {
-    pub fn new(distance: impl Into<f64>, object: &dyn Shape) -> Intersection {
+    pub fn new(distance: impl Into<f64>, shape: &dyn Shape) -> Intersection {
         return Intersection {
             distance: distance.into(),
-            object,
+            shape,
         };
     }
 
@@ -23,7 +23,7 @@ impl<'shape> Intersection<'shape> {
         intersections: &'shape Intersections<'shape>,
     ) -> ComputedHit<'shape> {
         let point = ray.position(self.distance);
-        let mut normal = self.object.normal_at(point);
+        let mut normal = self.shape.normal_at(point);
         let camera_vector = -ray.direction;
         let is_inside = normal.dot(&camera_vector) < 0.0;
 
@@ -37,9 +37,9 @@ impl<'shape> Intersection<'shape> {
         let mut refractive_index_1: f64 = 1.0;
         let mut refractive_index_2: f64 = 1.0;
 
-        let encoded_objects: Vec<_> = intersections
+        let encoded_shapes: Vec<_> = intersections
             .into_iter()
-            .map(|intersection| intersection.object.encoded())
+            .map(|intersection| intersection.shape.encoded())
             .collect();
 
         for (index, intersection) in intersections.into_iter().enumerate() {
@@ -48,14 +48,14 @@ impl<'shape> Intersection<'shape> {
                     refractive_index_1 = 1.0;
                 } else {
                     refractive_index_1 = intersections[*containers.last().unwrap()]
-                        .object
+                        .shape
                         .material()
                         .refractive_index;
                 }
             }
 
             let old_len = containers.len();
-            containers.retain(|entry| encoded_objects[*entry] != encoded_objects[index]);
+            containers.retain(|entry| encoded_shapes[*entry] != encoded_shapes[index]);
             if old_len == containers.len() {
                 containers.push(index);
             }
@@ -65,7 +65,7 @@ impl<'shape> Intersection<'shape> {
                     refractive_index_2 = 1.0;
                 } else {
                     refractive_index_2 = intersections[*containers.last().unwrap()]
-                        .object
+                        .shape
                         .material()
                         .refractive_index;
                 }
@@ -75,7 +75,7 @@ impl<'shape> Intersection<'shape> {
 
         return ComputedHit::new(
             self.distance,
-            self.object,
+            self.shape,
             point,
             camera_vector,
             normal,
@@ -94,7 +94,7 @@ impl<'shape> Intersection<'shape> {
 impl PartialEq<Intersection<'_>> for Intersection<'_> {
     fn eq(&self, rhs: &Intersection) -> bool {
         return self.distance.coarse_eq(rhs.distance)
-            && self.object.encoded() == rhs.object.encoded();
+            && self.shape.encoded() == rhs.shape.encoded();
     }
 }
 
@@ -113,7 +113,7 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(3.5, boxed_shape.as_ref());
         assert_eq!(intersection.distance, 3.5);
-        assert_eq!(intersection.object, boxed_shape.as_ref());
+        assert_eq!(intersection.shape, boxed_shape.as_ref());
     }
 
     #[test]
@@ -125,7 +125,7 @@ mod tests {
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         assert_eq!(computed_hit.distance, intersection.distance);
-        assert_eq!(computed_hit.object, boxed_shape.as_ref());
+        assert_eq!(computed_hit.shape, boxed_shape.as_ref());
         assert_eq!(computed_hit.point, Point::new(0, 0, -1));
         assert_eq!(computed_hit.camera_vector, Vector::BACKWARD);
         assert_eq!(computed_hit.normal, Vector::BACKWARD);

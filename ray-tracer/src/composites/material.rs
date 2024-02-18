@@ -124,7 +124,7 @@ impl Material {
         in_shadow: bool,
     ) -> Color {
         return self.lighting(
-            computed_hit.object,
+            computed_hit.shape,
             light,
             &computed_hit.over_point,
             &computed_hit.camera_vector,

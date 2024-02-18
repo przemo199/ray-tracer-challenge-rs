@@ -1,15 +1,14 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
-use crate::primitives::Transformation;
-use crate::primitives::{Matrix, Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cube {
     pub material: Material,
-    pub transformation: Matrix<4>,
+    pub transformation: Transformation,
 }
 
 impl Cube {
@@ -97,7 +96,7 @@ impl Shape for Cube {
 
 impl Default for Cube {
     fn default() -> Cube {
-        return Cube::new(Material::default(), Matrix::IDENTITY);
+        return Cube::new(Material::default(), Transformation::IDENTITY);
     }
 }
 
@@ -114,6 +113,7 @@ impl Display for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Vector;
     use rstest::rstest;
 
     #[rstest]

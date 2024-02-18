@@ -6,7 +6,7 @@ use crate::utils::Squared;
 #[derive(Clone, Debug)]
 pub struct ComputedHit<'shape> {
     pub distance: f64,
-    pub object: &'shape dyn Shape,
+    pub shape: &'shape dyn Shape,
     pub point: Point,
     pub over_point: Point,
     pub under_point: Point,
@@ -21,7 +21,7 @@ pub struct ComputedHit<'shape> {
 impl ComputedHit<'_> {
     pub fn new(
         distance: impl Into<f64>,
-        object: &dyn Shape,
+        shape: &dyn Shape,
         point: Point,
         camera_vector: Vector,
         normal: Vector,
@@ -34,7 +34,7 @@ impl ComputedHit<'_> {
         let under_point = point - (normal * EPSILON);
         return ComputedHit {
             distance: distance.into(),
-            object,
+            shape,
             point,
             over_point,
             under_point,
