@@ -11,13 +11,18 @@ use core::fmt::{Debug, Display, Formatter};
 pub trait Pattern: Debug + Display + Send + Sync {
     fn color_at(&self, point: &Point) -> Color;
 
+    #[inline]
     fn color_at_shape(&self, shape: &dyn Shape, point: &Point) -> Color {
         let object_point = shape.transformation_inverse() * *point;
-        let pattern_point = self.transformation().inverse() * object_point;
+        let pattern_point = self.transformation_inverse() * object_point;
         return self.color_at(&pattern_point);
     }
 
+    fn set_transformation(&mut self, transformation: Transformation);
+
     fn transformation(&self) -> Transformation;
+
+    fn transformation_inverse(&self) -> Transformation;
 
     fn encoded(&self) -> Vec<u8>;
 }
@@ -36,7 +41,7 @@ impl Encode for dyn Pattern {
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct TestPattern {
-    transformation: Transformation,
+    transformation_inverse: Transformation,
 }
 
 impl TestPattern {
@@ -44,7 +49,7 @@ impl TestPattern {
 
     pub const fn new() -> TestPattern {
         return Self {
-            transformation: transformations::IDENTITY,
+            transformation_inverse: transformations::IDENTITY,
         };
     }
 }
@@ -54,8 +59,16 @@ impl Pattern for TestPattern {
         return Color::new(point.x, point.y, point.z);
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -69,7 +82,7 @@ impl Display for TestPattern {
     fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("TestPattern")
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }
@@ -83,15 +96,15 @@ mod tests {
     #[test]
     fn default_test_pattern_transformation() {
         let pattern = TestPattern::new();
-        assert_eq!(pattern.transformation, transformations::IDENTITY);
+        assert_eq!(pattern.transformation_inverse, transformations::IDENTITY);
     }
 
     #[test]
     fn assigning_test_pattern_transformation() {
         let mut pattern = TestPattern::new();
-        pattern.transformation = transformations::translation(1, 2, 3);
+        pattern.transformation_inverse = transformations::translation(1, 2, 3);
         assert_eq!(
-            pattern.transformation,
+            pattern.transformation_inverse,
             transformations::translation(1, 2, 3)
         );
     }
@@ -109,7 +122,7 @@ mod tests {
     fn test_pattern_with_pattern_transformation() {
         let sphere = Sphere::default();
         let mut pattern = TestPattern::new();
-        pattern.transformation = transformations::scaling(2, 2, 2);
+        pattern.set_transformation(transformations::scaling(2, 2, 2));
         let color = pattern.color_at_shape(&sphere, &Point::new(2, 3, 4));
         assert_eq!(color, Color::new(1, 1.5, 2));
     }
@@ -119,7 +132,7 @@ mod tests {
         let mut sphere = Sphere::default();
         sphere.set_transformation(transformations::scaling(2, 2, 2));
         let mut pattern = TestPattern::new();
-        pattern.transformation = transformations::translation(0.5, 1, 1.5);
+        pattern.set_transformation(transformations::translation(0.5, 1, 1.5));
         let color = pattern.color_at_shape(&sphere, &Point::new(2.5, 3, 3.5));
         assert_eq!(color, Color::new(0.75, 0.5, 0.25));
     }

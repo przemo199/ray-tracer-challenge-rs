@@ -15,7 +15,7 @@ pub struct Camera {
     half_width: f64,
     half_height: f64,
     pixel_size: f64,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
 }
 
 impl Camera {
@@ -43,7 +43,7 @@ impl Camera {
             half_width,
             half_height,
             pixel_size,
-            transformation: transformations::IDENTITY,
+            transformation_inverse: transformations::IDENTITY,
         };
     }
 
@@ -60,8 +60,8 @@ impl Camera {
         // using the camera matrix, transform the canvas point and the origin
         // and then compute the ray's direction vector
         // (remember that the canvas is at z = -1)
-        let pixel = self.transformation.inverse() * Point::new(world_x, world_y, -1);
-        let origin = self.transformation.inverse() * Point::ORIGIN;
+        let pixel = self.transformation_inverse * Point::new(world_x, world_y, -1);
+        let origin = self.transformation_inverse * Point::ORIGIN;
         let direction = (pixel - origin).normalized();
         return Ray::new(origin, direction);
     }
@@ -101,6 +101,18 @@ impl Camera {
             });
         return canvas;
     }
+
+    pub fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
+    pub fn transformation(&self) -> Transformation {
+        return self.transformation_inverse.inverse();
+    }
+
+    pub fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
+    }
 }
 
 impl PartialEq for Camera {
@@ -125,7 +137,7 @@ impl Display for Camera {
             .field("half_width", &self.half_width)
             .field("half_height", &self.half_height)
             .field("pixel_size", &self.pixel_size)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }
@@ -145,7 +157,7 @@ mod tests {
         assert_eq!(camera.horizontal_size, horizontal_size);
         assert_eq!(camera.vertical_size, vertical_size);
         assert_eq!(camera.field_of_view, field_of_view);
-        assert_eq!(camera.transformation, transformations::IDENTITY);
+        assert_eq!(camera.transformation_inverse, transformations::IDENTITY);
     }
 
     #[test]
@@ -182,8 +194,9 @@ mod tests {
     #[test]
     fn ray_through_canvas_with_transformed_camera() {
         let mut camera = Camera::new(201, 101, PI / 2.0);
-        camera.transformation =
-            transformations::rotation_y(PI / 4.0) * transformations::translation(0, -2, 5);
+        camera.set_transformation(
+            transformations::rotation_y(PI / 4.0) * transformations::translation(0, -2, 5),
+        );
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Point::new(0, 2, -5));
         assert_eq!(
@@ -199,7 +212,7 @@ mod tests {
         let from = Point::new(0, 0, -5);
         let to = Point::ORIGIN;
         let up = Vector::UP;
-        camera.transformation = transformations::view_transform(from, to, up);
+        camera.set_transformation(transformations::view_transform(from, to, up));
         let canvas = camera.render(&world);
         assert_eq!(
             canvas.get_pixel(5, 5),
@@ -218,7 +231,7 @@ mod tests {
         let from = Point::new(0, 0, -5);
         let to = Point::ORIGIN;
         let up = Vector::UP;
-        camera.transformation = transformations::view_transform(from, to, up);
+        camera.set_transformation(transformations::view_transform(from, to, up));
         let canvas = camera.render_parallel(&world);
         assert_eq!(
             canvas.get_pixel(5, 5),

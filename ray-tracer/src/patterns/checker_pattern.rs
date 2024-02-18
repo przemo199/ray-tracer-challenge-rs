@@ -9,7 +9,7 @@ use core::fmt::{Display, Formatter};
 pub struct CheckerPattern {
     color_a: Color,
     color_b: Color,
-    pub transformation: Transformation,
+    transformation_inverse: Transformation,
 }
 
 impl CheckerPattern {
@@ -19,7 +19,7 @@ impl CheckerPattern {
         return Self {
             color_a,
             color_b,
-            transformation: transformations::IDENTITY,
+            transformation_inverse: transformations::IDENTITY,
         };
     }
 }
@@ -34,8 +34,16 @@ impl Pattern for CheckerPattern {
         };
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation(&self) -> Transformation {
-        return self.transformation;
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -54,7 +62,7 @@ impl Display for CheckerPattern {
             .debug_struct("CheckerPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
-            .field("transformation", &self.transformation)
+            .field("transformation", &self.transformation_inverse)
             .finish();
     }
 }

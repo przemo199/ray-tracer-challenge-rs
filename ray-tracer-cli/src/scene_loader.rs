@@ -157,28 +157,28 @@ impl SceneParser {
                 "stripes" => {
                     let mut pattern = StripePattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.transformation = transformation;
+                        pattern.set_transformation(transformation);
                     }
                     Ok(Arc::new(pattern))
                 }
                 "gradient" => {
                     let mut pattern = GradientPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.transformation = transformation;
+                        pattern.set_transformation(transformation);
                     }
                     Ok(Arc::new(pattern))
                 }
                 "rings" => {
                     let mut pattern = RingPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.transformation = transformation;
+                        pattern.set_transformation(transformation);
                     }
                     Ok(Arc::new(pattern))
                 }
                 "checkers" => {
                     let mut pattern = CheckerPattern::new(color_a, color_b);
                     if let Some(transformation) = maybe_transformation {
-                        pattern.transformation = transformation;
+                        pattern.set_transformation(transformation);
                     }
                     Ok(Arc::new(pattern))
                 }
@@ -259,7 +259,7 @@ impl SceneParser {
                         let up = parse_array_of_3(entry["up"].as_vec().unwrap())?;
                         let up = Vector::from(up);
                         camera = Camera::new(horizontal_size, vertical_size, fov);
-                        camera.transformation = transformations::view_transform(from, to, up);
+                        camera.set_transformation(transformations::view_transform(from, to, up));
                     }
                     "light" => {
                         let position = parse_array_of_3(entry["at"].as_vec().unwrap())?;
