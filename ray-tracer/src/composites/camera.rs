@@ -86,8 +86,8 @@ impl Camera {
 
     pub fn render_parallel(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        let style =
-            ProgressStyle::with_template(Self::PROGRESS_TEMPLATE).expect("Failed to parse ProgressStyle");
+        let style = ProgressStyle::with_template(Self::PROGRESS_TEMPLATE)
+            .expect("Failed to parse ProgressStyle");
         canvas
             .pixels
             .par_iter_mut()

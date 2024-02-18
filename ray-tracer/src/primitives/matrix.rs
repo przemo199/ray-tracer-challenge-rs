@@ -9,9 +9,9 @@ use core::ops::{Deref, DerefMut, Mul};
 pub struct Matrix<const SIDE_LENGTH: usize>([[f64; SIDE_LENGTH]; SIDE_LENGTH]);
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
-    pub const EMPTY: Matrix<SIDE_LENGTH> = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
+    pub const EMPTY: Self = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
 
-    pub const IDENTITY: Matrix<SIDE_LENGTH> = {
+    pub const IDENTITY: Self = {
         let mut result = Self::EMPTY;
         let mut index = 0;
         while index < SIDE_LENGTH {
@@ -23,7 +23,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         result
     };
 
-    pub const fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Matrix<SIDE_LENGTH> {
+    pub const fn new(elements: [[f64; SIDE_LENGTH]; SIDE_LENGTH]) -> Self {
         return Self(elements);
     }
 
@@ -36,7 +36,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
     }
 
     #[inline(always)]
-    pub fn transpose(&self) -> Matrix<SIDE_LENGTH> {
+    pub fn transpose(&self) -> Self {
         let mut result = *self;
         for row in 0..SIDE_LENGTH {
             let row_offset = row + 1;
@@ -60,7 +60,7 @@ impl Matrix<2> {
 
     #[inline(always)]
     fn determinant(&self) -> f64 {
-        return self[0][0] * self[1][1] - self[0][1] * self[1][0];
+        return (self[0][0] * self[1][1]) - (self[0][1] * self[1][0]);
     }
 
     pub const fn minor(&self, row: usize, column: usize) -> f64 {
@@ -81,7 +81,7 @@ impl Matrix<2> {
     }
 
     #[inline(always)]
-    pub fn inverse(&self) -> Matrix<2> {
+    pub fn inverse(&self) -> Self {
         let mut result = Matrix::<2>::EMPTY;
         let determinant = self.determinant();
 
@@ -219,47 +219,22 @@ impl Matrix<4> {
     }
 
     #[inline(always)]
-    pub fn inverse(&self) -> Matrix<4> {
-        let mut result = Matrix::<4>::EMPTY;
+    pub fn inverse(&self) -> Self {
+        let mut result = Self::EMPTY;
         let determinant = self.determinant();
         for row in 0..4 {
             for column in 0..4 {
-                result.set_index(column, row, self.cofactor(row, column) / determinant);
+                let cofactor = self.cofactor(row, column);
+                result.set_index(column, row, cofactor / determinant);
             }
         }
         return result;
-        // the following caching approach causes performance regression
-        // thread_local! {
-        //     static CACHE: RefCell<HashMap<Matrix<4>, Matrix<4>>> = RefCell::new(HashMap::with_capacity(1024));
-        // }
-        // return CACHE.with(|cache| {
-        //     let mut cache = cache.borrow_mut();
-        //     let cached = cache.get(self);
-        //     match cached {
-        //         Some(value) => {
-        //             return value.clone();
-        //         }
-        //         None => {
-        //             let mut result = Matrix::<4>::empty();
-        //             let determinant = self.determinant();
-        //
-        //             for row in 0..4 {
-        //                 for column in 0..4 {
-        //                     let cofactor = self.cofactor(row, column);
-        //                     result.set_index(column, row, cofactor / determinant);
-        //                 }
-        //             }
-        //             cache.insert(*self, result);
-        //             return result;
-        //         }
-        //     }
-        // });
     }
 }
 
 impl<const SIDE_LENGTH: usize> Default for Matrix<SIDE_LENGTH> {
-    fn default() -> Matrix<SIDE_LENGTH> {
-        return Matrix::IDENTITY;
+    fn default() -> Self {
+        return Self::IDENTITY;
     }
 }
 
@@ -287,7 +262,7 @@ impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
 }
 
 impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
-    fn eq(&self, rhs: &Matrix<SIDE_LENGTH>) -> bool {
+    fn eq(&self, rhs: &Self) -> bool {
         for (self_row, rhs_row) in self.iter().zip(rhs.iter()) {
             for (self_value, rhs_value) in self_row.iter().zip(rhs_row.iter()) {
                 if !self_value.coarse_eq(*rhs_value) {
@@ -299,21 +274,11 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     }
 }
 
-// impl<const SIDE_LENGTH: usize> Hash for Matrix<SIDE_LENGTH> {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         for row in self.elements {
-//             for value in row {
-//                 unsafe { mem::transmute::<f64, u64>(value).hash(state) };
-//             }
-//         }
-//     }
-// }
-
 impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
-    type Output = Matrix<SIDE_LENGTH>;
+    type Output = Self;
 
-    fn mul(self, rhs: Matrix<SIDE_LENGTH>) -> Self::Output {
-        let mut result = Matrix::<SIDE_LENGTH>::EMPTY;
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut result = Self::EMPTY;
         for (row_index, row) in result.iter_mut().enumerate() {
             for (column_index, value) in row.iter_mut().enumerate() {
                 let mut sum = 0.0;

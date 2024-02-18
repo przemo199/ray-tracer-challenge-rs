@@ -4,10 +4,6 @@ version = "0.1.0"
 authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
 edition = "2021"
 
-#[lib]
-#name = "raytracer"
-#crate-type = ["rlib"]
-
 [dependencies]
 bincode.workspace = true
 image.workspace = true
