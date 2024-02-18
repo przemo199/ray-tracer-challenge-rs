@@ -189,7 +189,7 @@ impl SceneParser {
     }
 
     fn parse_transformation(&self, yaml: &Yaml) -> Result<Transformation, Box<dyn Error>> {
-        let mut transformation = transformations::IDENTITY;
+        let mut transformation = Transformation::IDENTITY;
 
         let yaml = if yaml[VALUE] != BadValue {
             &yaml[VALUE]

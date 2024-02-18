@@ -364,7 +364,7 @@
 //         1.5,
 //         true,
 //     );
-//     let ball = Sphere::new(material, transformations::IDENTITY);
+//     let ball = Sphere::new(material, Transformation::IDENTITY);
 //     let material = Material::new(
 //         Color::new(1, 1, 1),
 //         None,

@@ -1,6 +1,5 @@
 use crate::composites::{Canvas, Ray, World};
-use crate::primitives::Point;
-use crate::primitives::{transformations, Transformation};
+use crate::primitives::{Point, Transformation};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
@@ -43,7 +42,7 @@ impl Camera {
             half_width,
             half_height,
             pixel_size,
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
         };
     }
 
@@ -146,7 +145,7 @@ impl Display for Camera {
 mod tests {
     use super::*;
     use crate::consts::PI;
-    use crate::primitives::{Color, Vector};
+    use crate::primitives::{transformations, Color, Vector};
 
     #[test]
     fn constructing_camera() {
@@ -157,7 +156,7 @@ mod tests {
         assert_eq!(camera.horizontal_size, horizontal_size);
         assert_eq!(camera.vertical_size, vertical_size);
         assert_eq!(camera.field_of_view, field_of_view);
-        assert_eq!(camera.transformation_inverse, transformations::IDENTITY);
+        assert_eq!(camera.transformation_inverse, Transformation::IDENTITY);
     }
 
     #[test]

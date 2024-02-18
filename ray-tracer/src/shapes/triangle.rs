@@ -1,8 +1,7 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
 use core::fmt::{Debug, Display, Formatter};
 
@@ -25,7 +24,7 @@ impl Triangle {
         let normal = edge_2.cross(&edge_1).normalized();
         return Self {
             material: Material::default(),
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
             vertex_1,
             vertex_2,
             vertex_3,
@@ -104,6 +103,7 @@ impl Display for Triangle {
 mod tests {
     use super::*;
     use crate::composites::Ray;
+    use crate::primitives::Vector;
 
     #[test]
     fn creating_triangle() {

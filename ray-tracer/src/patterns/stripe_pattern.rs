@@ -1,7 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Color, Point};
+use crate::primitives::{Color, Point, Transformation};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
@@ -19,7 +18,7 @@ impl StripePattern {
         return Self {
             color_a,
             color_b,
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
         };
     }
 }
@@ -68,7 +67,7 @@ impl Display for StripePattern {
 mod tests {
     use super::*;
     use crate::composites::Material;
-    use crate::primitives::{Light, Vector};
+    use crate::primitives::{transformations, Light, Vector};
     use crate::shapes::{Shape, Sphere};
     use std::sync::Arc;
 

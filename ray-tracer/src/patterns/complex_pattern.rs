@@ -1,7 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Color, Point};
+use crate::primitives::{Color, Point, Transformation};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 use std::sync::Arc;
@@ -20,7 +19,7 @@ impl ComplexPattern {
         return Self {
             pattern_a,
             pattern_b,
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
         };
     }
 }

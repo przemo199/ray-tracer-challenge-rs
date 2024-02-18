@@ -1,6 +1,5 @@
 use crate::consts::BINCODE_CONFIG;
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Color, Point};
+use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Shape;
 use bincode::enc::write::Writer;
 use bincode::enc::Encoder;
@@ -49,7 +48,7 @@ impl TestPattern {
 
     pub const fn new() -> TestPattern {
         return Self {
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
         };
     }
 }
@@ -90,13 +89,13 @@ impl Display for TestPattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primitives::{Color, Point};
+    use crate::primitives::{transformations, Color, Point};
     use crate::shapes::Sphere;
 
     #[test]
     fn default_test_pattern_transformation() {
         let pattern = TestPattern::new();
-        assert_eq!(pattern.transformation_inverse, transformations::IDENTITY);
+        assert_eq!(pattern.transformation_inverse, Transformation::IDENTITY);
     }
 
     #[test]

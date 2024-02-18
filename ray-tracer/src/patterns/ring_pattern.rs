@@ -1,7 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Color, Point};
+use crate::primitives::{Color, Point, Transformation};
 use crate::utils::Squared;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
@@ -20,7 +19,7 @@ impl RingPattern {
         return Self {
             color_a,
             color_b,
-            transformation_inverse: transformations::IDENTITY,
+            transformation_inverse: Transformation::IDENTITY,
         };
     }
 }

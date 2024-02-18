@@ -2,27 +2,28 @@ use crate::primitives::{Matrix, Point, Vector};
 
 pub type Transformation = Matrix<4>;
 
-pub const IDENTITY: Transformation = Matrix::IDENTITY;
-
+#[inline]
 pub fn translation(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     result.set_index(0, 3, x);
     result.set_index(1, 3, y);
     result.set_index(2, 3, z);
     return result;
 }
 
+#[inline]
 pub fn scaling(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     result.set_index(0, 0, x);
     result.set_index(1, 1, y);
     result.set_index(2, 2, z);
     return result;
 }
 
+#[inline]
 pub fn rotation_x(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
     result.set_index(1, 1, cos);
@@ -32,9 +33,10 @@ pub fn rotation_x(theta: impl Into<f64>) -> Transformation {
     return result;
 }
 
+#[inline]
 pub fn rotation_y(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
     result.set_index(0, 0, cos);
@@ -44,9 +46,10 @@ pub fn rotation_y(theta: impl Into<f64>) -> Transformation {
     return result;
 }
 
+#[inline]
 pub fn rotation_z(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
     result.set_index(0, 0, cos);
@@ -56,6 +59,7 @@ pub fn rotation_z(theta: impl Into<f64>) -> Transformation {
     return result;
 }
 
+#[inline]
 pub fn shearing_matrix(
     xy: impl Into<f64>,
     xz: impl Into<f64>,
@@ -64,7 +68,7 @@ pub fn shearing_matrix(
     zx: impl Into<f64>,
     zy: impl Into<f64>,
 ) -> Transformation {
-    let mut result = IDENTITY;
+    let mut result = Transformation::IDENTITY;
     result.set_index(0, 1, xy);
     result.set_index(0, 2, xz);
     result.set_index(1, 0, yx);
@@ -74,6 +78,7 @@ pub fn shearing_matrix(
     return result;
 }
 
+#[inline]
 pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
     let forward = (to - from).normalized();
     let up_normalized = up.normalized();
@@ -239,7 +244,7 @@ mod tests {
         let to = Point::new(0, 0, -1);
         let up = Vector::UP;
         let orientation = view_transform(from, to, up);
-        assert_eq!(orientation, IDENTITY);
+        assert_eq!(orientation, Transformation::IDENTITY);
     }
 
     #[test]

@@ -1,8 +1,7 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::BINCODE_CONFIG;
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::solve_quadratic;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
@@ -64,12 +63,7 @@ impl Shape for Sphere {
 
 impl Default for Sphere {
     fn default() -> Self {
-        let material = Material::default();
-        let transformation = transformations::IDENTITY;
-        return Self {
-            material,
-            transformation_inverse: transformation,
-        };
+        return Self::new(Material::default(), Transformation::IDENTITY);
     }
 }
 
@@ -87,12 +81,13 @@ impl Display for Sphere {
 mod tests {
     use super::*;
     use crate::consts::PI;
+    use crate::primitives::{transformations, Vector};
     use core::default::Default;
 
     #[test]
     fn default_transformation() {
         let sphere = Sphere::default();
-        assert_eq!(sphere.transformation_inverse, transformations::IDENTITY);
+        assert_eq!(sphere.transformation_inverse, Transformation::IDENTITY);
     }
 
     #[test]

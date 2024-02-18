@@ -1,8 +1,7 @@
 use super::Shape;
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
-use crate::primitives::{transformations, Transformation};
-use crate::primitives::{Point, Vector};
+use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
@@ -58,7 +57,7 @@ impl Shape for Plane {
 
 impl Default for Plane {
     fn default() -> Plane {
-        return Plane::new(Material::default(), transformations::IDENTITY);
+        return Plane::new(Material::default(), Transformation::IDENTITY);
     }
 }
 
