@@ -1,6 +1,7 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
+use crate::shapes::Transform;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
@@ -23,16 +24,7 @@ impl GradientPattern {
     }
 }
 
-impl Pattern for GradientPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        let distance = self.color_b - self.color_a;
-        let mut fraction = point.x.fract().abs();
-        if point.x as i64 % 2 != 0 {
-            fraction = 1.0 - fraction;
-        }
-        return self.color_a + (distance * fraction);
-    }
-
+impl Transform for GradientPattern {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -43,6 +35,17 @@ impl Pattern for GradientPattern {
 
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+}
+
+impl Pattern for GradientPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        let distance = self.color_b - self.color_a;
+        let mut fraction = point.x.fract().abs();
+        if point.x as i64 % 2 != 0 {
+            fraction = 1.0 - fraction;
+        }
+        return self.color_a + (distance * fraction);
     }
 
     fn encoded(&self) -> Vec<u8> {

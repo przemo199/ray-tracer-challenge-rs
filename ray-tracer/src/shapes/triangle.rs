@@ -1,4 +1,4 @@
-use super::Shape;
+use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{Point, Transformation, Vector};
@@ -35,27 +35,7 @@ impl Triangle {
     }
 }
 
-impl Shape for Triangle {
-    fn local_normal_at(&self, _: Point) -> Vector {
-        return self.normal;
-    }
-
-    fn material(&self) -> &Material {
-        return &self.material;
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
+impl Intersect for Triangle {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let direction_cross_edge2 = ray.direction.cross(&self.edge_2);
         let determinant = self.edge_1.dot(&direction_cross_edge2);
@@ -76,6 +56,30 @@ impl Shape for Triangle {
             let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
             return Some(Intersections::from([Intersection::new(distance, self)]));
         }
+    }
+}
+
+impl Transform for Triangle {
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
+    fn transformation(&self) -> Transformation {
+        return self.transformation_inverse.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
+    }
+}
+
+impl Shape for Triangle {
+    fn local_normal_at(&self, _: Point) -> Vector {
+        return self.normal;
+    }
+
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn encoded(&self) -> Vec<u8> {

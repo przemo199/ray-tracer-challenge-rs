@@ -1,13 +1,13 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Color, Point, Transformation};
-use crate::shapes::Shape;
+use crate::shapes::{Intersect, Shape, Transform};
 use bincode::enc::write::Writer;
 use bincode::enc::Encoder;
 use bincode::error::EncodeError;
 use bincode::Encode;
 use core::fmt::{Debug, Display, Formatter};
 
-pub trait Pattern: Debug + Display + Send + Sync {
+pub trait Pattern: Transform + Debug + Display + Send + Sync {
     fn color_at(&self, point: &Point) -> Color;
 
     #[inline]
@@ -16,12 +16,6 @@ pub trait Pattern: Debug + Display + Send + Sync {
         let pattern_point = self.transformation_inverse() * object_point;
         return self.color_at(&pattern_point);
     }
-
-    fn set_transformation(&mut self, transformation: Transformation);
-
-    fn transformation(&self) -> Transformation;
-
-    fn transformation_inverse(&self) -> Transformation;
 
     fn encoded(&self) -> Vec<u8>;
 }
@@ -53,11 +47,7 @@ impl TestPattern {
     }
 }
 
-impl Pattern for TestPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        return Color::new(point.x, point.y, point.z);
-    }
-
+impl Transform for TestPattern {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -68,6 +58,12 @@ impl Pattern for TestPattern {
 
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+}
+
+impl Pattern for TestPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        return Color::new(point.x, point.y, point.z);
     }
 
     fn encoded(&self) -> Vec<u8> {
@@ -90,7 +86,7 @@ impl Display for TestPattern {
 mod tests {
     use super::*;
     use crate::primitives::{transformations, Color, Point};
-    use crate::shapes::Sphere;
+    use crate::shapes::{Sphere, Transform};
 
     #[test]
     fn default_test_pattern_transformation() {

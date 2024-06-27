@@ -1,10 +1,11 @@
 use crate::composites::{Canvas, Ray, World};
-use crate::primitives::{Point, Transformation};
+use crate::primitives::{Color, Point, Transformation};
+use crate::shapes::Transform;
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
-use rayon::iter::ParallelIterator;
-use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator};
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
+use rayon::prelude::IndexedParallelIterator;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
@@ -15,6 +16,7 @@ pub struct Camera {
     half_height: f64,
     pixel_size: f64,
     transformation_inverse: Transformation,
+    origin: Point,
 }
 
 impl Camera {
@@ -43,6 +45,7 @@ impl Camera {
             half_height,
             pixel_size,
             transformation_inverse: Transformation::IDENTITY,
+            origin: Point::ORIGIN,
         };
     }
 
@@ -60,9 +63,15 @@ impl Camera {
         // and then compute the ray's direction vector
         // (remember that the canvas is at z = -1)
         let pixel = self.transformation_inverse * Point::new(world_x, world_y, -1);
-        let origin = self.transformation_inverse * Point::ORIGIN;
-        let direction = (pixel - origin).normalized();
-        return Ray::new(origin, direction);
+        let direction = (pixel - self.origin).normalized();
+        return Ray::new(self.origin, direction);
+    }
+
+    fn render_pixel(&self, index: usize, pixel: &mut Color, world: &World) {
+        let x: u32 = index as u32 % self.horizontal_size;
+        let y: u32 = index as u32 / self.vertical_size;
+        let ray = self.ray_for_pixel(x, y);
+        *pixel = world.color_at(&ray);
     }
 
     pub fn render(&self, world: &World) -> Canvas {
@@ -101,15 +110,22 @@ impl Camera {
         return canvas;
     }
 
-    pub fn set_transformation(&mut self, transformation: Transformation) {
+    fn update_origin(&mut self) {
+        self.origin = self.transformation_inverse * Point::ORIGIN;
+    }
+}
+
+impl Transform for Camera {
+    fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
+        self.update_origin();
     }
 
-    pub fn transformation(&self) -> Transformation {
+    fn transformation(&self) -> Transformation {
         return self.transformation_inverse.inverse();
     }
 
-    pub fn transformation_inverse(&self) -> Transformation {
+    fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
 }

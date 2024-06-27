@@ -128,9 +128,15 @@ impl<T: Into<f64>> From<[T; 4]> for Point {
     }
 }
 
-impl Into<[f64; 4]> for Point {
-    fn into(self) -> [f64; 4] {
-        return self.values();
+impl From<Point> for [f64; 4] {
+    fn from(value: Point) -> Self {
+        return value.values();
+    }
+}
+
+impl From<Vector> for Point {
+    fn from(value: Vector) -> Self {
+        return Point::new(value.x, value.y, value.z);
     }
 }
 

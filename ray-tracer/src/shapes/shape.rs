@@ -2,7 +2,7 @@ use crate::composites::{Intersections, Material, Ray};
 use crate::primitives::{Point, Transformation, Vector};
 use core::fmt::{Debug, Display};
 
-pub trait Shape: Debug + Display + Send + Sync {
+pub trait Shape: Debug + Display + Send + Sync + Transform + Intersect {
     fn normal_at(&self, point: Point) -> Vector {
         let transform_inverse = self.transformation_inverse();
         let local_point = transform_inverse * point;
@@ -15,19 +15,19 @@ pub trait Shape: Debug + Display + Send + Sync {
 
     fn material(&self) -> &Material;
 
+    fn encoded(&self) -> Vec<u8>;
+}
+
+pub trait Transform {
     fn set_transformation(&mut self, transformation: Transformation);
 
     fn transformation(&self) -> Transformation;
 
     fn transformation_inverse(&self) -> Transformation;
+}
 
+pub trait Intersect {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections>;
-
-    fn local_ray(&self, ray: &Ray) -> Ray {
-        return ray.transform(self.transformation_inverse());
-    }
-
-    fn encoded(&self) -> Vec<u8>;
 }
 
 impl PartialEq for &dyn Shape {

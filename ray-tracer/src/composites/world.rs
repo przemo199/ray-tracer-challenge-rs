@@ -155,7 +155,7 @@ mod tests {
     use crate::patterns::TestPattern;
     use crate::primitives::transformations;
     use crate::primitives::Vector;
-    use crate::shapes::{Plane, Sphere};
+    use crate::shapes::{Plane, Sphere, Transform};
     use std::sync::Arc;
 
     #[test]

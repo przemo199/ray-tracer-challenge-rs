@@ -2,7 +2,7 @@ use ray_tracer::composites::{Camera, Material, World};
 use ray_tracer::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
 use ray_tracer::primitives::{transformations, Transformation};
 use ray_tracer::primitives::{Color, Light, Point, Vector};
-use ray_tracer::shapes::{Cone, Cube, Plane, Shape, Sphere};
+use ray_tracer::shapes::{Cone, Cube, Plane, Sphere, Transform};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;

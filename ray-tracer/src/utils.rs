@@ -1,7 +1,7 @@
 use crate::consts::EPSILON;
 use crate::primitives::transformations;
 use crate::primitives::Color;
-use crate::shapes::{Shape, Sphere};
+use crate::shapes::{Sphere, Transform};
 use core::ops::Mul;
 
 /// Trait for imprecise comparison between floats

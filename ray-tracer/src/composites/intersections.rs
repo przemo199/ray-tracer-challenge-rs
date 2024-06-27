@@ -32,7 +32,7 @@ impl<'intersections> Intersections<'intersections> {
         self.sort_by(|a, b| {
             a.distance
                 .partial_cmp(&b.distance)
-                .unwrap_or_else(|| Ordering::Equal)
+                .unwrap_or(Ordering::Equal)
         });
     }
 
@@ -96,6 +96,12 @@ impl<'intersection, const SIZE: usize> From<[Intersection<'intersection>; SIZE]>
 {
     fn from(value: [Intersection<'intersection>; SIZE]) -> Self {
         return Self(value.to_vec());
+    }
+}
+
+impl<'intersection> From<Intersection<'intersection>> for Intersections<'intersection> {
+    fn from(value: Intersection<'intersection>) -> Self {
+        return [value].into();
     }
 }
 

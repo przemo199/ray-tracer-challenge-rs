@@ -3,6 +3,8 @@ use bincode::Encode;
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, Div, Mul, Neg, Sub};
 
+use super::Point;
+
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
     pub x: f64,
@@ -182,9 +184,15 @@ impl<T: Into<f64>> From<[T; 4]> for Vector {
     }
 }
 
-impl Into<[f64; 4]> for Vector {
-    fn into(self) -> [f64; 4] {
-        return self.values();
+impl From<Vector> for [f64; 4] {
+    fn from(value: Vector) -> Self {
+        return value.values();
+    }
+}
+
+impl From<Point> for Vector {
+    fn from(value: Point) -> Self {
+        return Vector::new(value.x, value.y, value.z);
     }
 }
 

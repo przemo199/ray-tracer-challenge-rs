@@ -1,4 +1,5 @@
 use crate::primitives::Color;
+use core::ops::Deref;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::ImageEncoder;
 use std::error::Error;
@@ -10,7 +11,7 @@ use std::path::Path;
 pub struct Canvas {
     pub width: u32,
     pub height: u32,
-    pub pixels: Vec<Color>,
+    pub(crate) pixels: Vec<Color>,
 }
 
 impl Canvas {
@@ -26,7 +27,7 @@ impl Canvas {
     }
 
     const fn coords_to_index(&self, x: u32, y: u32) -> usize {
-        return (x + (y * self.width)) as usize;
+        return ((y * self.width) + x) as usize;
     }
 
     pub fn get_pixel(&self, x: u32, y: u32) -> &Color {
@@ -107,8 +108,15 @@ impl Canvas {
             buffer.as_slice(),
             self.width,
             self.height,
-            image::ColorType::Rgb8,
+            image::ExtendedColorType::Rgb8,
         )?);
+    }
+}
+
+impl Deref for Canvas {
+    type Target = Vec<Color>;
+    fn deref(&self) -> &Self::Target {
+        return &self.pixels;
     }
 }
 

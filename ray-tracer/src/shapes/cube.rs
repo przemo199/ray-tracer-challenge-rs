@@ -1,4 +1,5 @@
-use super::Shape;
+use super::shape::Intersect;
+use super::{Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
@@ -43,24 +44,7 @@ impl Cube {
     }
 }
 
-impl Shape for Cube {
-    fn local_normal_at(&self, point: Point) -> Vector {
-        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()]
-            .iter()
-            .copied()
-            .fold(MIN, f64::max);
-        if max_value == point.x.abs() {
-            return Vector::new(point.x, 0, 0);
-        } else if max_value == point.y.abs() {
-            return Vector::new(0, point.y, 0);
-        }
-        return Vector::new(0, 0, point.z);
-    }
-
-    fn material(&self) -> &Material {
-        return &self.material;
-    }
-
+impl Transform for Cube {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -72,7 +56,9 @@ impl Shape for Cube {
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
+}
 
+impl Intersect for Cube {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let (x_distance_min, x_distance_max) = Self::check_axis(ray.origin.x, ray.direction.x);
         let (y_distance_min, y_distance_max) = Self::check_axis(ray.origin.y, ray.direction.y);
@@ -95,6 +81,25 @@ impl Shape for Cube {
                 Intersection::new(distance_max, self),
             ]));
         }
+    }
+}
+
+impl Shape for Cube {
+    fn local_normal_at(&self, point: Point) -> Vector {
+        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()]
+            .iter()
+            .copied()
+            .fold(MIN, f64::max);
+        if max_value == point.x.abs() {
+            return Vector::new(point.x, 0, 0);
+        } else if max_value == point.y.abs() {
+            return Vector::new(0, point.y, 0);
+        }
+        return Vector::new(0, 0, point.z);
+    }
+
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn encoded(&self) -> Vec<u8> {

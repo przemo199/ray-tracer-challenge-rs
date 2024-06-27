@@ -105,7 +105,7 @@ mod tests {
     use crate::consts::EPSILON;
     use crate::primitives::transformations;
     use crate::primitives::{Point, Vector};
-    use crate::shapes::{Plane, Shape, Sphere};
+    use crate::shapes::{Plane, Shape, Sphere, Transform};
 
     #[test]
     fn new_intersection() {

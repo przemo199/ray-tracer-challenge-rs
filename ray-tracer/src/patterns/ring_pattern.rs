@@ -1,6 +1,7 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
+use crate::shapes::Transform;
 use crate::utils::Squared;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
@@ -24,16 +25,7 @@ impl RingPattern {
     }
 }
 
-impl Pattern for RingPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        let distance = (point.x.squared() + point.z.squared()).sqrt().floor() as i64;
-        return if distance % 2 == 0 {
-            self.color_a
-        } else {
-            self.color_b
-        };
-    }
-
+impl Transform for RingPattern {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -44,6 +36,17 @@ impl Pattern for RingPattern {
 
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+}
+
+impl Pattern for RingPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        let distance = (point.x.squared() + point.z.squared()).sqrt().floor() as i64;
+        return if distance % 2 == 0 {
+            self.color_a
+        } else {
+            self.color_b
+        };
     }
 
     fn encoded(&self) -> Vec<u8> {

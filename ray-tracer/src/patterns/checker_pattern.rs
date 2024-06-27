@@ -1,6 +1,7 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::pattern::Pattern;
 use crate::primitives::{Color, Point, Transformation};
+use crate::shapes::Transform;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 
@@ -23,16 +24,7 @@ impl CheckerPattern {
     }
 }
 
-impl Pattern for CheckerPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        let distance = (point.x.floor() + point.y.floor() + point.z.floor()) as i64;
-        return if distance % 2 == 0 {
-            self.color_a
-        } else {
-            self.color_b
-        };
-    }
-
+impl Transform for CheckerPattern {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -43,6 +35,17 @@ impl Pattern for CheckerPattern {
 
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+}
+
+impl Pattern for CheckerPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        let distance = (point.x.floor() + point.y.floor() + point.z.floor()) as i64;
+        return if distance % 2 == 0 {
+            self.color_a
+        } else {
+            self.color_b
+        };
     }
 
     fn encoded(&self) -> Vec<u8> {

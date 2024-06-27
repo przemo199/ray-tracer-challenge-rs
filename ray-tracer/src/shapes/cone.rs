@@ -1,4 +1,5 @@
-use super::Shape;
+use super::shape::Intersect;
+use super::{Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
@@ -60,30 +61,7 @@ impl Cone {
     }
 }
 
-impl Shape for Cone {
-    fn local_normal_at(&self, point: Point) -> Vector {
-        let distance = point.x.squared() + point.z.squared();
-
-        if distance < self.max.squared() && point.y >= (self.max - EPSILON) {
-            return Vector::UP;
-        }
-
-        if distance < self.min.squared() && point.y <= (self.min + EPSILON) {
-            return Vector::DOWN;
-        }
-
-        let mut y = distance.sqrt();
-        if point.y > 0.0 {
-            y = -y;
-        }
-
-        return Vector::new(point.x, y, point.z);
-    }
-
-    fn material(&self) -> &Material {
-        return &self.material;
-    }
-
+impl Transform for Cone {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -95,7 +73,9 @@ impl Shape for Cone {
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
+}
 
+impl Intersect for Cone {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         let a = ray.direction.x.squared() - ray.direction.y.squared() + ray.direction.z.squared();
         let b = 2.0
@@ -129,6 +109,31 @@ impl Shape for Cone {
 
         self.intersect_caps(ray, &mut intersections);
         return intersections.into_option();
+    }
+}
+
+impl Shape for Cone {
+    fn local_normal_at(&self, point: Point) -> Vector {
+        let distance = point.x.squared() + point.z.squared();
+
+        if distance < self.max.squared() && point.y >= (self.max - EPSILON) {
+            return Vector::UP;
+        }
+
+        if distance < self.min.squared() && point.y <= (self.min + EPSILON) {
+            return Vector::DOWN;
+        }
+
+        let mut y = distance.sqrt();
+        if point.y > 0.0 {
+            y = -y;
+        }
+
+        return Vector::new(point.x, y, point.z);
+    }
+
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn encoded(&self) -> Vec<u8> {

@@ -1,6 +1,7 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
+use crate::shapes::Transform;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
 use std::sync::Arc;
@@ -24,16 +25,7 @@ impl ComplexPattern {
     }
 }
 
-impl Pattern for ComplexPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        let distance = point.x.floor() as i64;
-        return if distance % 2 == 0 {
-            self.pattern_a.color_at(point)
-        } else {
-            self.pattern_b.color_at(point)
-        };
-    }
-
+impl Transform for ComplexPattern {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -44,6 +36,17 @@ impl Pattern for ComplexPattern {
 
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+}
+
+impl Pattern for ComplexPattern {
+    fn color_at(&self, point: &Point) -> Color {
+        let distance = point.x.floor() as i64;
+        return if distance % 2 == 0 {
+            self.pattern_a.color_at(point)
+        } else {
+            self.pattern_b.color_at(point)
+        };
     }
 
     fn encoded(&self) -> Vec<u8> {

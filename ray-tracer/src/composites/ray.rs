@@ -1,6 +1,6 @@
 use crate::composites::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
-use crate::shapes::Shape;
+use crate::shapes::{Intersect, Transform};
 use core::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -29,7 +29,10 @@ impl Ray {
         return self.origin + self.direction * distance.into();
     }
 
-    pub fn intersect<'shape>(&self, shape: &'shape dyn Shape) -> Option<Intersections<'shape>> {
+    pub fn intersect<'shape, T: Transform + Intersect + ?Sized>(
+        &self,
+        shape: &'shape T,
+    ) -> Option<Intersections<'shape>> {
         let local_ray = self.transform(shape.transformation_inverse());
         return shape.local_intersect(&local_ray);
     }
@@ -55,7 +58,7 @@ impl Display for Ray {
 mod tests {
     use super::*;
     use crate::primitives::transformations;
-    use crate::shapes::Sphere;
+    use crate::shapes::{Shape, Sphere, Transform};
 
     #[test]
     fn creating_and_inspecting_ray() {

@@ -1,4 +1,4 @@
-use super::Shape;
+use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{Point, Transformation, Vector};
@@ -20,15 +20,7 @@ impl Plane {
     }
 }
 
-impl Shape for Plane {
-    fn local_normal_at(&self, _: Point) -> Vector {
-        return Vector::UP;
-    }
-
-    fn material(&self) -> &Material {
-        return &self.material;
-    }
-
+impl Transform for Plane {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -40,14 +32,26 @@ impl Shape for Plane {
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
+}
 
+impl Intersect for Plane {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
         if ray.direction.y.abs() < EPSILON {
             return None;
         } else {
             let distance = -ray.origin.y / ray.direction.y;
-            return Some(Intersections::from([Intersection::new(distance, self)]));
+            return Some([Intersection::new(distance, self).into()].into());
         }
+    }
+}
+
+impl Shape for Plane {
+    fn local_normal_at(&self, _: Point) -> Vector {
+        return Vector::UP;
+    }
+
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn encoded(&self) -> Vec<u8> {

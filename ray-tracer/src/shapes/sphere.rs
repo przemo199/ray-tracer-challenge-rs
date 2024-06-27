@@ -1,4 +1,4 @@
-use super::Shape;
+use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Point, Transformation, Vector};
@@ -21,15 +21,7 @@ impl Sphere {
     }
 }
 
-impl Shape for Sphere {
-    fn local_normal_at(&self, point: Point) -> Vector {
-        return Vector::new(point.x, point.y, point.z);
-    }
-
-    fn material(&self) -> &Material {
-        return &self.material;
-    }
-
+impl Transform for Sphere {
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
     }
@@ -41,9 +33,11 @@ impl Shape for Sphere {
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
+}
 
+impl Intersect for Sphere {
     fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
-        let sphere_to_ray_distance = Vector::new(ray.origin.x, ray.origin.y, ray.origin.z);
+        let sphere_to_ray_distance: Vector = ray.origin.into();
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
@@ -54,6 +48,16 @@ impl Shape for Sphere {
                 Intersection::new(distance_2, self),
             ]);
         });
+    }
+}
+
+impl Shape for Sphere {
+    fn local_normal_at(&self, point: Point) -> Vector {
+        return Vector::new(point.x, point.y, point.z);
+    }
+
+    fn material(&self) -> &Material {
+        return &self.material;
     }
 
     fn encoded(&self) -> Vec<u8> {
