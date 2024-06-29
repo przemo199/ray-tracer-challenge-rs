@@ -103,7 +103,7 @@ impl Vector {
 
     #[inline(always)]
     pub fn reflect(&self, normal: &Self) -> Self {
-        return *self - *normal * 2.0_f64 * self.dot(normal);
+        return *self - (*normal * 2.0_f64 * self.dot(normal));
     }
 }
 

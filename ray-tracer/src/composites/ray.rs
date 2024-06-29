@@ -29,10 +29,10 @@ impl Ray {
         return self.origin + self.direction * distance.into();
     }
 
-    pub fn intersect<'shapes, 'shape: 'shapes, T: Transform + Intersect + ?Sized>(
+    pub fn intersect<'shape, T: Transform + Intersect + ?Sized>(
         &self,
         shape: &'shape T,
-        intersections: &mut Intersections<'shapes>
+        intersections: &mut Intersections<'shape>
     ) {
         let local_ray = self.transform(shape.transformation_inverse());
         shape.local_intersect(&local_ray, intersections);

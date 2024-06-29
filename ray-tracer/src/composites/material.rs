@@ -62,10 +62,10 @@ impl Material {
         normal_vector: &Vector,
         in_shadow: bool,
     ) -> Color {
-        let color = self.resolve_color(shape, point);
+        let effective_color = self.resolve_color(shape, point) * light.intensity;
 
         return self.calculate_lighting(
-            &color,
+            &effective_color,
             light,
             point,
             camera_vector,
@@ -85,15 +85,14 @@ impl Material {
     #[inline(always)]
     fn calculate_lighting(
         &self,
-        color: &Color,
+        effective_color: &Color,
         light: &Light,
         point: &Point,
         camera_vector: &Vector,
         normal_vector: &Vector,
         in_shadow: bool,
     ) -> Color {
-        let effective_color = *color * light.intensity;
-        let ambient = effective_color * self.ambient;
+        let ambient = *effective_color * self.ambient;
 
         if in_shadow {
             return ambient;
@@ -104,7 +103,7 @@ impl Material {
         if light_dot_normal < 0.0 {
             return ambient;
         }
-        let diffuse = effective_color * self.diffuse * light_dot_normal;
+        let diffuse = *effective_color * self.diffuse * light_dot_normal;
         let reflect_vector = (-light_vector).reflect(normal_vector);
         let reflect_dot_camera = reflect_vector.dot(camera_vector);
 
