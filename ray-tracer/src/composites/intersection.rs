@@ -18,10 +18,10 @@ impl<'shape> Intersection<'shape> {
     }
 
     pub fn prepare_computations(
-        &'shape self,
+        &self,
         ray: &Ray,
-        intersections: &'shape Intersections<'shape>,
-    ) -> ComputedHit<'shape> {
+        intersections: &Intersections,
+    ) -> ComputedHit {
         let point = ray.position(self.distance);
         let mut normal = self.shape.normal_at(point);
         let camera_vector = -ray.direction;

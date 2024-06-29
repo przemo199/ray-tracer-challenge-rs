@@ -119,7 +119,7 @@ mod tests {
         let intersection_2 = Intersection::new(2, boxed_shape.as_ref());
         intersections.push(intersection_1.clone());
         intersections.push(intersection_2);
-        assert_eq!(intersections.hit().unwrap(), &intersection_1);
+        assert_eq!(intersections.hit(), Some(&intersection_1));
     }
 
     #[test]
@@ -131,7 +131,7 @@ mod tests {
         let intersection_2 = Intersection::new(1, boxed_shape.as_ref());
         intersections.push(intersection_1);
         intersections.push(intersection_2.clone());
-        assert_eq!(intersections.hit().unwrap(), &intersection_2);
+        assert_eq!(intersections.hit(), Some(&intersection_2));
     }
 
     #[test]
@@ -159,6 +159,6 @@ mod tests {
         intersections.push(intersection_2);
         intersections.push(intersection_3);
         intersections.push(intersection_4.clone());
-        assert_eq!(intersections.hit().unwrap(), &intersection_4);
+        assert_eq!(intersections.hit(), Some(&intersection_4));
     }
 }

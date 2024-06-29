@@ -35,7 +35,7 @@ impl Transform for Plane {
 }
 
 impl Intersect for Plane {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         if ray.direction.y.abs() < EPSILON {
             return;
         }

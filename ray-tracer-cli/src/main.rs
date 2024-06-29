@@ -11,7 +11,7 @@ mod scenes;
 fn main() -> Result<(), Box<dyn Error>> {
     let args = CliArguments::parse();
     let (world, camera) = load_scene_description(&args.scene_path)?;
-    println!("Rendering image using {} scene", args.scene_path);
+    println!("Rendering image using scene at {}", args.scene_path);
     let now = Instant::now();
     let canvas = match args.rendering_mode {
         RenderingMode::Serial => camera.render(&world),

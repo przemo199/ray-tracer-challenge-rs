@@ -76,7 +76,7 @@ impl Transform for Cone {
 }
 
 impl Intersect for Cone {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let a = ray.direction.x.squared() - ray.direction.y.squared() + ray.direction.z.squared();
         let b = 2.0
             * ray.origin.z.mul_add(

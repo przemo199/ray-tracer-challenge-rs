@@ -36,7 +36,7 @@ impl Triangle {
 }
 
 impl Intersect for Triangle {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let direction_cross_edge2 = ray.direction.cross(&self.edge_2);
         let determinant = self.edge_1.dot(&direction_cross_edge2);
         if determinant.abs() < EPSILON {

@@ -59,7 +59,7 @@ impl Transform for Cube {
 }
 
 impl Intersect for Cube {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let (x_distance_min, x_distance_max) = Self::check_axis(ray.origin.x, ray.direction.x);
         let (y_distance_min, y_distance_max) = Self::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Self::check_axis(ray.origin.z, ray.direction.z);

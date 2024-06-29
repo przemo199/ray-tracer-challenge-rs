@@ -75,7 +75,7 @@ impl Transform for Cylinder {
 }
 
 impl Intersect for Cylinder {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let a = ray.direction.x.squared() + ray.direction.z.squared();
 
         if a.abs() > 0.0 {

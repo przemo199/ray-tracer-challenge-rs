@@ -1,4 +1,4 @@
-use crate::composites::{Canvas, Ray, World};
+use crate::composites::{Canvas, Intersections, Ray, World};
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
 use crate::utils::CoarseEq;
@@ -71,13 +71,15 @@ impl Camera {
         let x: u32 = index as u32 % self.horizontal_size;
         let y: u32 = index as u32 / self.vertical_size;
         let ray = self.ray_for_pixel(x, y);
-        *pixel = world.color_at(&ray);
+        let mut intersections = Intersections::new();
+        *pixel = world.color_at(&ray, &mut intersections);
     }
 
     pub fn render(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
         let style = ProgressStyle::with_template(Self::PROGRESS_TEMPLATE)
             .expect("Failed to create ProgressStyle");
+        let mut intersections = Intersections::new();
         canvas
             .pixels
             .iter_mut()
@@ -87,7 +89,7 @@ impl Camera {
                 let x: u32 = index as u32 % canvas.width;
                 let y: u32 = index as u32 / canvas.width;
                 let ray = self.ray_for_pixel(x, y);
-                *pixel = world.color_at(&ray);
+                *pixel = world.color_at(&ray, &mut intersections);
             });
         return canvas;
     }
@@ -101,11 +103,11 @@ impl Camera {
             .par_iter_mut()
             .progress_with_style(style)
             .enumerate()
-            .for_each(|(index, pixel)| {
+            .for_each_with(Intersections::new(), |intersections, (index, pixel)| {
                 let x: u32 = index as u32 % canvas.width;
                 let y: u32 = index as u32 / canvas.width;
                 let ray = self.ray_for_pixel(x, y);
-                *pixel = world.color_at(&ray);
+                *pixel = world.color_at(&ray, intersections);
             });
         return canvas;
     }

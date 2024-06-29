@@ -36,7 +36,7 @@ impl Transform for Sphere {
 }
 
 impl Intersect for Sphere {
-    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
+    fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let sphere_to_ray_distance: Vector = ray.origin.into();
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray_distance);

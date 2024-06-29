@@ -1,4 +1,4 @@
-use crate::composites::{ComputedHit, Intersection, Intersections, Ray};
+use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
@@ -18,28 +18,28 @@ impl World {
         return Self { lights, shapes };
     }
 
-    pub fn intersections(&self, ray: &Ray) -> Intersections {
-        let mut result = Intersections::new();
-        for shape in &*self.shapes {
-            ray.intersect(shape.as_ref(), &mut result);
+    /// Clears intersection buffer and fills it with result of intersecting [Ray] with shapes in [World]
+    pub fn collect_intersections<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>) {
+        intersections.clear();
+        for shape in &self.shapes {
+            ray.intersect(shape.as_ref(), intersections);
         }
-        result.sort_by_distance();
-        return result;
+        intersections.sort_by_distance();
     }
 
-    fn shade_hit(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
+    fn shade_hit<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
         let material = computed_hit.shape.material();
         let surface_color = self
             .lights
             .iter()
             .map(|light| {
-                let in_shadow = self.is_in_shadow(light, &computed_hit.over_point);
+                let in_shadow = self.is_in_shadow(light, &computed_hit.over_point, intersections);
                 return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
             .fold(Color::new(0, 0, 0), |acc, color| acc + color);
 
-        let reflected_color = self.reflected_color(computed_hit, remaining_iterations);
-        let refracted_color = self.refracted_color(computed_hit, remaining_iterations);
+        let reflected_color = self.reflected_color(computed_hit, intersections, remaining_iterations);
+        let refracted_color = self.refracted_color(computed_hit, intersections, remaining_iterations);
 
         if material.reflectiveness > 0.0 && material.transparency > 0.0 {
             let reflectance = computed_hit.schlick();
@@ -51,45 +51,47 @@ impl World {
         }
     }
 
-    fn internal_color_at(&self, ray: &Ray, remaining_iterations: u8) -> Color {
-        let intersections = self.intersections(ray);
+    fn internal_color_at<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
+        self.collect_intersections(ray, intersections);
         let maybe_hit = intersections.hit();
 
-        return maybe_hit.map_or(Self::DEFAULT_COLOR, |hit| {
-            let computed_hit = hit.prepare_computations(ray, &intersections);
-            return self.shade_hit(&computed_hit, remaining_iterations);
-        });
+        if let Some(hit) = maybe_hit {
+            let computed_hit = hit.prepare_computations(ray, intersections);
+            let mut shade_hit_intersections = Intersections::new();
+            return self.shade_hit(&computed_hit, &mut shade_hit_intersections, remaining_iterations);
+        } else {
+            return Self::DEFAULT_COLOR;
+        }
     }
 
-    pub fn color_at(&self, ray: &Ray) -> Color {
-        return self.internal_color_at(ray, Self::MAX_REFLECTION_ITERATIONS);
+    pub fn color_at<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>) -> Color {
+        return self.internal_color_at(ray, intersections, Self::MAX_REFLECTION_ITERATIONS);
     }
 
-    /// Returns whether between the [Light] and [Point] is and object casting shadow
-    fn is_in_shadow(&self, light: &Light, point: &Point) -> bool {
+    /// Returns whether between the [Light] and [Point] is shape casting shadow
+    fn is_in_shadow<'shapes>(&'shapes self, light: &Light, point: &Point, intersections: &mut Intersections<'shapes>) -> bool {
         let point_to_light_vector = light.position - *point;
         let distance_to_light = point_to_light_vector.magnitude();
         let shadow_ray = Ray::new(*point, point_to_light_vector.normalized());
-        return self
-            .intersections(&shadow_ray)
-            .into_iter()
+        self.collect_intersections(&shadow_ray, intersections);
+        return intersections.into_iter()
             .any(|intersection| {
+                intersection.shape.material().casts_shadow &&
                 intersection.is_within_distance(distance_to_light)
-                    && intersection.shape.material().casts_shadow
             });
     }
 
-    fn reflected_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
+    fn reflected_color<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().reflectiveness == 0.0 {
             return Self::DEFAULT_COLOR;
         }
 
         let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflection_vector);
-        let reflected_color = self.internal_color_at(&reflected_ray, remaining_iterations - 1);
+        let reflected_color = self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
         return reflected_color * computed_hit.shape.material().reflectiveness;
     }
 
-    fn refracted_color(&self, computed_hit: &ComputedHit, remaining_iterations: u8) -> Color {
+    fn refracted_color<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().transparency == 0.0 {
             return Self::DEFAULT_COLOR;
         }
@@ -107,7 +109,7 @@ impl World {
         let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
             - (computed_hit.camera_vector * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
-        let refracted_color = self.internal_color_at(&refracted_ray, remaining_iterations - 1);
+        let refracted_color = self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
 
         return refracted_color * computed_hit.shape.material().transparency;
     }
@@ -199,7 +201,8 @@ mod tests {
     fn intersect_world_with_ray() {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let intersections = world.intersections(&ray);
+        let mut intersections = Intersections::new();
+        world.collect_intersections(&ray, &mut intersections);
         assert_eq!(intersections.len(), 4);
         assert_eq!(intersections[0].distance, 4.0);
         assert_eq!(intersections[1].distance, 4.5);
@@ -215,7 +218,8 @@ mod tests {
         let intersection = Intersection::new(4.0, shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 1);
         assert_eq!(
             color,
             Color::new(
@@ -234,7 +238,8 @@ mod tests {
         let intersection = Intersection::new(0.5, world.shapes[1].as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 1);
         assert_eq!(
             color,
             Color::new(0.9049844720832575, 0.9049844720832575, 0.9049844720832575)
@@ -245,7 +250,8 @@ mod tests {
     fn color_when_ray_misses() {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::UP);
-        let color = world.color_at(&ray);
+        let mut intersections = Intersections::new();
+        let color = world.color_at(&ray, &mut intersections);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -253,7 +259,8 @@ mod tests {
     fn color_when_ray_hits() {
         let world = World::default();
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let color = world.color_at(&ray);
+        let mut intersections = Intersections::new();
+        let color = world.color_at(&ray, &mut intersections);
         assert_eq!(
             color,
             Color::new(
@@ -281,7 +288,8 @@ mod tests {
         world.shapes[1] = Box::new(sphere2);
 
         let ray = Ray::new(Point::new(0, 0, 0.75), Vector::BACKWARD);
-        let color = world.color_at(&ray);
+        let mut intersections = Intersections::new();
+        let color = world.color_at(&ray, &mut intersections);
         assert_eq!(color, world.shapes[1].material().color);
     }
 
@@ -289,28 +297,32 @@ mod tests {
     fn no_shadow_when_nothing_obscures_light() {
         let world = World::default();
         let point = Point::new(0, 10, 0);
-        assert!(!world.is_in_shadow(&world.lights[0], &point));
+        let mut intersections = Intersections::new();
+        assert!(!world.is_in_shadow(&world.lights[0], &point, &mut intersections));
     }
 
     #[test]
     fn no_shadow_when_light_is_behind_point() {
         let world = World::default();
         let point = Point::new(-20, 20, -20);
-        assert!(!world.is_in_shadow(&world.lights[0], &point));
+        let mut intersections = Intersections::new();
+        assert!(!world.is_in_shadow(&world.lights[0], &point, &mut intersections));
     }
 
     #[test]
     fn no_shadow_when_object_is_behind_point() {
         let world = World::default();
         let point = Point::new(-2, 2, -2);
-        assert!(!world.is_in_shadow(&world.lights[0], &point));
+        let mut intersections = Intersections::new();
+        assert!(!world.is_in_shadow(&world.lights[0], &point, &mut intersections));
     }
 
     #[test]
     fn shadow_when_object_is_between_hit_and_light() {
         let world = World::default();
         let point = Point::new(10, -10, 10);
-        assert!(world.is_in_shadow(&world.lights[0], &point));
+        let mut intersections = Intersections::new();
+        assert!(world.is_in_shadow(&world.lights[0], &point, &mut intersections));
     }
 
     #[test]
@@ -326,7 +338,8 @@ mod tests {
         let intersection = Intersection::new(4, boxed_sphere.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 1);
         assert_eq!(color, Color::new(0.1, 0.1, 0.1));
     }
 
@@ -342,7 +355,8 @@ mod tests {
         let intersection = Intersection::new(1.0, world.shapes[1].as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.reflected_color(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.reflected_color(&computed_hit, &mut intersections, 1);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -363,7 +377,8 @@ mod tests {
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.reflected_color(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.reflected_color(&computed_hit, &mut intersections, 1);
         assert_eq!(
             color,
             Color::new(
@@ -391,7 +406,8 @@ mod tests {
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 1);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 1);
         assert_eq!(
             color,
             Color::new(0.8767560027604027, 0.9243386562051279, 0.8291733493156773)
@@ -414,7 +430,8 @@ mod tests {
         let arc_upper = Box::new(upper);
         world.shapes.push(arc_upper);
         let ray = Ray::new(Point::ORIGIN, Vector::UP);
-        world.color_at(&ray);
+        let mut intersections = Intersections::new();
+        world.color_at(&ray, &mut intersections);
     }
 
     #[test]
@@ -434,7 +451,8 @@ mod tests {
         let intersection = Intersection::new(2.0_f64.sqrt(), boxed_shape.as_ref());
         let intersections = Intersections::new();
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        let color = world.reflected_color(&computed_hit, 0);
+        let mut intersections = Intersections::new();
+        let color = world.reflected_color(&computed_hit, &mut intersections, 0);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -447,7 +465,8 @@ mod tests {
         intersections.push(Intersection::new(6, shape));
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        let color = world.refracted_color(&computed_hit, 5);
+        let mut intersections = Intersections::new();
+        let color = world.refracted_color(&computed_hit, &mut intersections, 5);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -466,7 +485,8 @@ mod tests {
         intersections.push(Intersection::new(4, shape.as_ref()));
         intersections.push(Intersection::new(6, shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        let color = world.refracted_color(&computed_hit, 0);
+        let mut intersections = Intersections::new();
+        let color = world.refracted_color(&computed_hit, &mut intersections, 0);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -491,7 +511,8 @@ mod tests {
             boxed_shape.as_ref(),
         ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
-        let color = world.refracted_color(&computed_hit, 5);
+        let mut intersections = Intersections::new();
+        let color = world.refracted_color(&computed_hit, &mut intersections,5);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 
@@ -517,7 +538,8 @@ mod tests {
         intersections.push(Intersection::new(0.4899, world.shapes[1].as_ref()));
         intersections.push(Intersection::new(0.9899, world.shapes[0].as_ref()));
         let computed_hit = intersections[2].prepare_computations(&ray, &intersections);
-        let color = world.refracted_color(&computed_hit, 5);
+        let mut intersections = Intersections::new();
+        let color = world.refracted_color(&computed_hit, &mut intersections, 5);
         assert_eq!(
             color,
             Color::new(0, 0.9988846813665367, 0.04721645191320928)
@@ -547,7 +569,8 @@ mod tests {
         let arc_floor = Box::new(floor);
         intersections.push(Intersection::new(2.0_f64.sqrt(), arc_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 5);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 5);
         assert_eq!(
             color,
             Color::new(0.9364253889815014, 0.6864253889815014, 0.6864253889815014)
@@ -579,7 +602,8 @@ mod tests {
         let boxed_floor = Box::new(floor);
         intersections.push(Intersection::new(2.0_f64.sqrt(), boxed_floor.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        let color = world.shade_hit(&computed_hit, 5);
+        let mut intersections = Intersections::new();
+        let color = world.shade_hit(&computed_hit, &mut intersections, 5);
         assert_eq!(
             color,
             Color::new(0.9339151412754023, 0.696434227200244, 0.692430691912747)
