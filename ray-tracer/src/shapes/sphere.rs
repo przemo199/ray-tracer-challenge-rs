@@ -36,14 +36,14 @@ impl Transform for Sphere {
 }
 
 impl Intersect for Sphere {
-    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
+    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
         let sphere_to_ray_distance: Vector = ray.origin.into();
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
 
-        return solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
-            return Intersections::from([
+        solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
+            intersections.extend([
                 Intersection::new(distance_1, self),
                 Intersection::new(distance_2, self),
             ]);

@@ -76,7 +76,7 @@ impl Transform for Cone {
 }
 
 impl Intersect for Cone {
-    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
+    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
         let a = ray.direction.x.squared() - ray.direction.y.squared() + ray.direction.z.squared();
         let b = 2.0
             * ray.origin.z.mul_add(
@@ -87,7 +87,6 @@ impl Intersect for Cone {
             );
         let c = ray.origin.x.squared() - ray.origin.y.squared() + ray.origin.z.squared();
 
-        let mut intersections = Intersections::new();
         if a.abs() < EPSILON && b.abs() > EPSILON {
             let distance = -c / (2.0 * b);
             intersections.push(Intersection::new(distance, self));
@@ -107,8 +106,7 @@ impl Intersect for Cone {
             }
         }
 
-        self.intersect_caps(ray, &mut intersections);
-        return intersections.into_option();
+        self.intersect_caps(ray, intersections);
     }
 }
 
@@ -202,7 +200,8 @@ mod tests {
         let cone = Cone::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, distance_1);
         assert_eq!(intersections[1].distance, distance_2);
@@ -213,7 +212,8 @@ mod tests {
         let cone = Cone::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(Point::new(0, 0, -1), Vector::new(0, 1, 1).normalized());
-        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 1);
         assert_eq!(intersections[0].distance, 0.3535533905932738);
     }
@@ -235,12 +235,9 @@ mod tests {
         };
         let boxed_shape: Box<dyn Shape> = Box::new(cone);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
-        if count > 0 {
-            assert_eq!(intersections.unwrap().len(), count);
-        } else {
-            assert_eq!(intersections, None);
-        }
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
+        assert_eq!(intersections.len(), count);
     }
 
     #[rstest]

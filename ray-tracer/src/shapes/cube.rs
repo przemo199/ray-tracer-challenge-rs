@@ -59,7 +59,7 @@ impl Transform for Cube {
 }
 
 impl Intersect for Cube {
-    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
+    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
         let (x_distance_min, x_distance_max) = Self::check_axis(ray.origin.x, ray.direction.x);
         let (y_distance_min, y_distance_max) = Self::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Self::check_axis(ray.origin.z, ray.direction.z);
@@ -73,13 +73,11 @@ impl Intersect for Cube {
             .copied()
             .fold(MAX, f64::min);
 
-        if distance_min > distance_max || distance_max < 0.0 {
-            return None;
-        } else {
-            return Some(Intersections::from([
+        if distance_min < distance_max && distance_max > 0.0 {
+            intersections.extend([
                 Intersection::new(distance_min, self),
                 Intersection::new(distance_max, self),
-            ]));
+            ]);
         }
     }
 }
@@ -146,7 +144,8 @@ mod tests {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
-        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, distance_1.into());
         assert_eq!(intersections[1].distance, distance_2.into());
@@ -164,8 +163,9 @@ mod tests {
         let cube = Cube::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cube);
         let ray = Ray::new(origin, direction);
-        let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections, None);
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
+        assert!(intersections.is_empty());
     }
 
     #[rstest]

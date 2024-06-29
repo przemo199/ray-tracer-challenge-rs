@@ -27,7 +27,7 @@ pub trait Transform {
 }
 
 pub trait Intersect {
-    fn local_intersect(&self, ray: &Ray) -> Option<Intersections>;
+    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>);
 }
 
 impl PartialEq for &dyn Shape {

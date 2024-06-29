@@ -20,10 +20,8 @@ impl World {
 
     pub fn intersections(&self, ray: &Ray) -> Intersections {
         let mut result = Intersections::new();
-        for shape in &self.shapes {
-            if let Some(intersections) = ray.intersect(shape.as_ref()) {
-                result.extend::<Vec<Intersection>>(intersections.into());
-            }
+        for shape in &*self.shapes {
+            ray.intersect(shape.as_ref(), &mut result);
         }
         result.sort_by_distance();
         return result;

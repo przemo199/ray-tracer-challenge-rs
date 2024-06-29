@@ -1,6 +1,6 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Color, Point, Transformation};
-use crate::shapes::{Intersect, Shape, Transform};
+use crate::shapes::{Shape, Transform};
 use bincode::enc::write::Writer;
 use bincode::enc::Encoder;
 use bincode::error::EncodeError;

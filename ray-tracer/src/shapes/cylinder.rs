@@ -75,10 +75,9 @@ impl Transform for Cylinder {
 }
 
 impl Intersect for Cylinder {
-    fn local_intersect(&self, ray: &Ray) -> Option<Intersections> {
+    fn local_intersect<'intersections, 'shape: 'intersections>(&'shape self, ray: &Ray, intersections: &mut Intersections<'intersections>) {
         let a = ray.direction.x.squared() + ray.direction.z.squared();
 
-        let mut intersections = Intersections::new();
         if a.abs() > 0.0 {
             let b = 2.0
                 * ray
@@ -104,8 +103,7 @@ impl Intersect for Cylinder {
             }
         }
 
-        self.intersect_caps(ray, &mut intersections);
-        return intersections.into_option();
+        self.intersect_caps(ray, intersections);
     }
 }
 
@@ -179,8 +177,9 @@ mod tests {
         let cylinder = Cylinder::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
-        assert_eq!(intersections, None);
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
+        assert!(intersections.is_empty());
     }
 
     #[rstest]
@@ -196,7 +195,8 @@ mod tests {
         let cylinder = Cylinder::default();
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].distance, distance_1);
         assert_eq!(intersections[1].distance, distance_2);
@@ -232,12 +232,9 @@ mod tests {
         };
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray);
-        if count > 0 {
-            assert_eq!(intersections.unwrap().len(), count);
-        } else {
-            assert_eq!(intersections, None);
-        }
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
+        assert_eq!(intersections.len(), count);
     }
 
     #[rstest]
@@ -257,7 +254,8 @@ mod tests {
         cylinder.closed = true;
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
-        let intersections = boxed_shape.local_intersect(&ray).unwrap();
+        let mut intersections = Intersections::new();
+        boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), count);
     }
 
