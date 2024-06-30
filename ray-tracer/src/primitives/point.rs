@@ -38,7 +38,7 @@ impl Point {
         };
     }
 
-    pub fn values(&self) -> [f64; 4] {
+    pub const fn values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 1.0];
     }
 
