@@ -79,10 +79,10 @@ impl Color {
     }
 
     pub fn normalized(&self) -> Color {
-        return self.channels().map(Self::scale_color_value).into();
+        return self.channels().map(Self::clamp_color_value).into();
     }
 
-    fn scale_color_value(color_value: f64) -> f64 {
+    fn clamp_color_value(color_value: f64) -> f64 {
         return color_value.clamp(Self::MIN_COLOR_VALUE, Self::MAX_COLOR_VALUE);
     }
 }
