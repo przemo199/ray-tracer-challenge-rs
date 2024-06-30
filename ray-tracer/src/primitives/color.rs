@@ -1,7 +1,7 @@
 use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
-use core::ops::{Add, Mul, Sub};
+use core::ops::{Add, Mul, Sub, Div};
 
 /// Struct representing RGB values of a color
 #[derive(Clone, Copy, Debug, Encode)]
@@ -78,8 +78,12 @@ impl Color {
         return [self.red, self.green, self.blue];
     }
 
+    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+        return Into::<[f64; 3]>::into(*self).map(f).into();
+    }
+
     pub fn normalized(&self) -> Color {
-        return self.channels().map(Self::clamp_value).into();
+        return self.map(Self::clamp_value).into();
     }
 
     fn clamp_value(color_value: f64) -> f64 {
@@ -152,7 +156,15 @@ impl Mul<f64> for Color {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Self::new(self.red * rhs, self.green * rhs, self.blue * rhs);
+        return self.map(|value| value * rhs);
+    }
+}
+
+impl Div<f64> for Color {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        return self.map(|value| value / rhs);
     }
 }
 
