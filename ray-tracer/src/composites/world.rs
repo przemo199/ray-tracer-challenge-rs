@@ -70,9 +70,8 @@ impl World {
         remaining_iterations: u8,
     ) -> Color {
         self.collect_intersections(ray, intersections);
-        let maybe_hit = intersections.hit();
 
-        if let Some(hit) = maybe_hit {
+        if let Some(hit) = intersections.hit() {
             let computed_hit = hit.prepare_computations(ray, intersections);
             let mut shade_hit_intersections = Intersections::new();
             return self.shade_hit(

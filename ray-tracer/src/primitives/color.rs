@@ -1,7 +1,7 @@
 use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter};
-use core::ops::{Add, Mul, Sub, Div};
+use core::ops::{Add, Div, Mul, Sub};
 
 /// Struct representing RGB values of a color
 #[derive(Clone, Copy, Debug, Encode)]
