@@ -8,4 +8,6 @@ pub struct CliArguments {
     pub image_output_path: String,
     #[arg(value_enum, short, long, default_value_t = RenderingMode::Parallel)]
     pub rendering_mode: RenderingMode,
+    #[arg(long, short, action)]
+    pub quiet: bool,
 }

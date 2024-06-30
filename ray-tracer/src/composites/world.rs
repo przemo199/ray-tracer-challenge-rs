@@ -29,7 +29,6 @@ impl World {
         for shape in &self.shapes {
             ray.intersect(shape.as_ref(), intersections);
         }
-        intersections.sort();
     }
 
     fn shade_hit<'shapes>(
@@ -243,6 +242,7 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         world.collect_intersections(&ray, &mut intersections);
+        intersections.sort();
         assert_eq!(intersections.len(), 4);
         assert_eq!(intersections[0].distance, 4.0);
         assert_eq!(intersections[1].distance, 4.5);

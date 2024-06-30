@@ -17,7 +17,8 @@ impl<'intersections> Intersections<'intersections> {
     pub fn hit(&self) -> Option<&Intersection> {
         return self
             .iter()
-            .find(|intersection| intersection.distance >= 0.0);
+            .filter(|intersection| intersection.distance >= 0.0)
+            .min();
     }
 }
 
@@ -139,7 +140,6 @@ mod tests {
         intersections.push(intersection_2);
         intersections.push(intersection_3);
         intersections.push(intersection_4.clone());
-        intersections.sort();
         assert_eq!(intersections.hit(), Some(&intersection_4));
     }
 }
