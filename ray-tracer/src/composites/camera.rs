@@ -86,8 +86,7 @@ impl Camera {
             .progress_with_style(style)
             .enumerate()
             .for_each(|(index, pixel)| {
-                let x: u32 = index as u32 % canvas.width;
-                let y: u32 = index as u32 / canvas.width;
+                let (x, y) = Canvas::index_to_coords(canvas.width, index);
                 let ray = self.ray_for_pixel(x, y);
                 *pixel = world.color_at(&ray, &mut intersections);
             });
@@ -104,8 +103,7 @@ impl Camera {
             .progress_with_style(style)
             .enumerate()
             .for_each_with(Intersections::new(), |intersections, (index, pixel)| {
-                let x: u32 = index as u32 % canvas.width;
-                let y: u32 = index as u32 / canvas.width;
+                let (x, y) = Canvas::index_to_coords(canvas.width, index);
                 let ray = self.ray_for_pixel(x, y);
                 *pixel = world.color_at(&ray, intersections);
             });
@@ -118,17 +116,22 @@ impl Camera {
 }
 
 impl Transform for Camera {
+    fn transformation(&self) -> Transformation {
+        return self.transformation_inverse.inverse();
+    }
+
     fn set_transformation(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation.inverse();
         self.update_origin();
     }
 
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation;
+        self.update_origin();
     }
 }
 

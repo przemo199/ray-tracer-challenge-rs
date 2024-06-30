@@ -1,6 +1,4 @@
 use crate::composites::Intersection;
-use crate::consts::MAX;
-use core::cmp::Ordering;
 use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
 
@@ -17,27 +15,8 @@ impl<'intersections> Intersections<'intersections> {
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
-        let mut maybe_hit = None;
-        let mut hit_distance = MAX;
-        for intersection in self {
-            if intersection.is_within_distance(hit_distance) {
-                maybe_hit = Some(intersection);
-                hit_distance = intersection.distance;
-            }
-        }
-        return maybe_hit;
-    }
-
-    pub fn sort_by_distance(&mut self) {
-        self.sort_by(|a, b| {
-            a.distance
-                .partial_cmp(&b.distance)
-                .unwrap_or(Ordering::Equal)
-        });
-    }
-
-    pub fn into_option(self) -> Option<Intersections<'intersections>> {
-        return if self.is_empty() { None } else { Some(self) };
+        return self.iter()
+            .find(|intersection| intersection.distance >= 0.0);
     }
 }
 
@@ -159,6 +138,7 @@ mod tests {
         intersections.push(intersection_2);
         intersections.push(intersection_3);
         intersections.push(intersection_4.clone());
+        intersections.sort();
         assert_eq!(intersections.hit(), Some(&intersection_4));
     }
 }

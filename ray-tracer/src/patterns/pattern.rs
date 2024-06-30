@@ -38,7 +38,7 @@ pub struct TestPattern {
 }
 
 impl TestPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = b"TestPattern";
+    const PATTERN_NAME: &'static [u8] = b"TestPattern";
 
     pub const fn new() -> TestPattern {
         return Self {
@@ -48,16 +48,20 @@ impl TestPattern {
 }
 
 impl Transform for TestPattern {
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
     fn transformation(&self) -> Transformation {
         return self.transformation_inverse.inverse();
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation;
     }
 }
 
@@ -67,7 +71,7 @@ impl Pattern for TestPattern {
     }
 
     fn encoded(&self) -> Vec<u8> {
-        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
+        let mut encoded = Self::PATTERN_NAME.to_vec();
         encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
     }

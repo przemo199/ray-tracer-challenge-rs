@@ -19,11 +19,13 @@ pub trait Shape: Debug + Display + Send + Sync + Transform + Intersect {
 }
 
 pub trait Transform {
-    fn set_transformation(&mut self, transformation: Transformation);
-
     fn transformation(&self) -> Transformation;
 
+    fn set_transformation(&mut self, transformation: Transformation);
+
     fn transformation_inverse(&self) -> Transformation;
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation);
 }
 
 pub trait Intersect {

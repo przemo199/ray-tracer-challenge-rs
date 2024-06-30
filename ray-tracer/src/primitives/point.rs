@@ -41,6 +41,10 @@ impl Point {
     pub fn values(&self) -> [f64; 4] {
         return [self.x, self.y, self.z, 1.0];
     }
+
+    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+        return Into::<[f64; 3]>::into(*self).map(f).into();
+    }
 }
 
 impl Default for Point {
@@ -94,7 +98,7 @@ impl Mul<f64> for Point {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
+        return self.map(|value| value * rhs);
     }
 }
 
@@ -102,7 +106,7 @@ impl Div<f64> for Point {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        return Self::new(self.x / rhs, self.y / rhs, self.z / rhs);
+        return self.map(|value| value / rhs);
     }
 }
 
@@ -110,7 +114,7 @@ impl Neg for Point {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        return Self::new(-self.x, -self.y, -self.z);
+        return self.map(|value| -value);
     }
 }
 
@@ -131,6 +135,13 @@ impl<T: Into<f64>> From<[T; 4]> for Point {
 impl From<Point> for [f64; 4] {
     fn from(value: Point) -> Self {
         return value.values();
+    }
+}
+
+impl From<Point> for [f64; 3] {
+    fn from(value: Point) -> Self {
+        let [x, y, z, _] = value.values();
+        return [x, y, z];
     }
 }
 

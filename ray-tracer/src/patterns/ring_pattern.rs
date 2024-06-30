@@ -25,20 +25,6 @@ impl RingPattern {
     }
 }
 
-impl Transform for RingPattern {
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-}
-
 impl Pattern for RingPattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = (point.x.squared() + point.z.squared()).sqrt().floor() as i64;
@@ -53,6 +39,24 @@ impl Pattern for RingPattern {
         let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
         encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
+    }
+}
+
+impl Transform for RingPattern {
+    fn transformation(&self) -> Transformation {
+        return self.transformation_inverse.inverse();
+    }
+
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
+    }
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation;
     }
 }
 

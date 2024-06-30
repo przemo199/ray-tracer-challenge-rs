@@ -32,7 +32,7 @@ impl Ray {
     pub fn intersect<'shape, T: Transform + Intersect + ?Sized>(
         &self,
         shape: &'shape T,
-        intersections: &mut Intersections<'shape>
+        intersections: &mut Intersections<'shape>,
     ) {
         let local_ray = self.transform(shape.transformation_inverse());
         shape.local_intersect(&local_ray, intersections);

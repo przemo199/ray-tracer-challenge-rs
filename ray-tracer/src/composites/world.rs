@@ -12,6 +12,7 @@ pub struct World {
 
 impl World {
     pub const MAX_REFLECTION_ITERATIONS: u8 = 6;
+
     pub const DEFAULT_COLOR: Color = Color::BLACK;
 
     pub const fn new(lights: Vec<Light>, shapes: Vec<Box<dyn Shape>>) -> Self {
@@ -19,15 +20,24 @@ impl World {
     }
 
     /// Clears intersection buffer and fills it with result of intersecting [Ray] with shapes in [World]
-    pub fn collect_intersections<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>) {
+    pub fn collect_intersections<'shapes>(
+        &'shapes self,
+        ray: &Ray,
+        intersections: &mut Intersections<'shapes>,
+    ) {
         intersections.clear();
         for shape in &self.shapes {
             ray.intersect(shape.as_ref(), intersections);
         }
-        intersections.sort_by_distance();
+        intersections.sort();
     }
 
-    fn shade_hit<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
+    fn shade_hit<'shapes>(
+        &'shapes self,
+        computed_hit: &ComputedHit,
+        intersections: &mut Intersections<'shapes>,
+        remaining_iterations: u8,
+    ) -> Color {
         let material = computed_hit.shape.material();
         let surface_color = self
             .lights
@@ -38,8 +48,10 @@ impl World {
             })
             .fold(Color::new(0, 0, 0), |acc, color| acc + color);
 
-        let reflected_color = self.reflected_color(computed_hit, intersections, remaining_iterations);
-        let refracted_color = self.refracted_color(computed_hit, intersections, remaining_iterations);
+        let reflected_color =
+            self.reflected_color(computed_hit, intersections, remaining_iterations);
+        let refracted_color =
+            self.refracted_color(computed_hit, intersections, remaining_iterations);
 
         if material.reflectiveness > 0.0 && material.transparency > 0.0 {
             let reflectance = computed_hit.schlick();
@@ -51,47 +63,75 @@ impl World {
         }
     }
 
-    fn internal_color_at<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
+    fn internal_color_at<'shapes>(
+        &'shapes self,
+        ray: &Ray,
+        intersections: &mut Intersections<'shapes>,
+        remaining_iterations: u8,
+    ) -> Color {
         self.collect_intersections(ray, intersections);
         let maybe_hit = intersections.hit();
 
         if let Some(hit) = maybe_hit {
             let computed_hit = hit.prepare_computations(ray, intersections);
             let mut shade_hit_intersections = Intersections::new();
-            return self.shade_hit(&computed_hit, &mut shade_hit_intersections, remaining_iterations);
+            return self.shade_hit(
+                &computed_hit,
+                &mut shade_hit_intersections,
+                remaining_iterations,
+            );
         } else {
             return Self::DEFAULT_COLOR;
         }
     }
 
-    pub fn color_at<'shapes>(&'shapes self, ray: &Ray, intersections: &mut Intersections<'shapes>) -> Color {
+    pub fn color_at<'shapes>(
+        &'shapes self,
+        ray: &Ray,
+        intersections: &mut Intersections<'shapes>,
+    ) -> Color {
         return self.internal_color_at(ray, intersections, Self::MAX_REFLECTION_ITERATIONS);
     }
 
     /// Returns whether between the [Light] and [Point] is shape casting shadow
-    fn is_in_shadow<'shapes>(&'shapes self, light: &Light, point: &Point, intersections: &mut Intersections<'shapes>) -> bool {
+    fn is_in_shadow<'shapes>(
+        &'shapes self,
+        light: &Light,
+        point: &Point,
+        intersections: &mut Intersections<'shapes>,
+    ) -> bool {
         let point_to_light_vector = light.position - *point;
         let distance_to_light = point_to_light_vector.magnitude();
         let shadow_ray = Ray::new(*point, point_to_light_vector.normalized());
         self.collect_intersections(&shadow_ray, intersections);
-        return intersections.into_iter()
-            .any(|intersection| {
-                intersection.shape.material().casts_shadow &&
-                intersection.is_within_distance(distance_to_light)
-            });
+        return intersections.into_iter().any(|intersection| {
+            intersection.shape.material().casts_shadow
+                && intersection.is_within_distance(distance_to_light)
+        });
     }
 
-    fn reflected_color<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
+    fn reflected_color<'shapes>(
+        &'shapes self,
+        computed_hit: &ComputedHit,
+        intersections: &mut Intersections<'shapes>,
+        remaining_iterations: u8,
+    ) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().reflectiveness == 0.0 {
             return Self::DEFAULT_COLOR;
         }
 
         let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflection_vector);
-        let reflected_color = self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
+        let reflected_color =
+            self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
         return reflected_color * computed_hit.shape.material().reflectiveness;
     }
 
-    fn refracted_color<'shapes>(&'shapes self, computed_hit: &ComputedHit, intersections: &mut Intersections<'shapes>, remaining_iterations: u8) -> Color {
+    fn refracted_color<'shapes>(
+        &'shapes self,
+        computed_hit: &ComputedHit,
+        intersections: &mut Intersections<'shapes>,
+        remaining_iterations: u8,
+    ) -> Color {
         if remaining_iterations == 0 || computed_hit.shape.material().transparency == 0.0 {
             return Self::DEFAULT_COLOR;
         }
@@ -109,7 +149,8 @@ impl World {
         let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
             - (computed_hit.camera_vector * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
-        let refracted_color = self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
+        let refracted_color =
+            self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
 
         return refracted_color * computed_hit.shape.material().transparency;
     }
@@ -500,7 +541,7 @@ mod tests {
             boxed_shape.as_ref(),
         ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
-        let color = world.refracted_color(&computed_hit, &mut Intersections::new(),5);
+        let color = world.refracted_color(&computed_hit, &mut Intersections::new(), 5);
         assert_eq!(color, World::DEFAULT_COLOR);
     }
 

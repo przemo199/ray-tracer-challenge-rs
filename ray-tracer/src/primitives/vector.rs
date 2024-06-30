@@ -76,23 +76,19 @@ impl Vector {
         return [self.x, self.y, self.z, 0.0];
     }
 
-    #[inline(always)]
     pub fn magnitude(&self) -> f64 {
         return (self.x.squared() + self.y.squared() + self.z.squared()).sqrt();
     }
 
-    #[inline(always)]
     pub fn normalized(&self) -> Self {
         let magnitude = self.magnitude();
         return Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
     }
 
-    #[inline(always)]
     pub fn dot(&self, rhs: &Self) -> f64 {
         return self.z.mul_add(rhs.z, self.x.mul_add(rhs.x, self.y * rhs.y));
     }
 
-    #[inline(always)]
     pub fn cross(&self, rhs: &Self) -> Self {
         return Self::new(
             self.y.mul_add(rhs.z, -self.z * rhs.y),
@@ -101,9 +97,12 @@ impl Vector {
         );
     }
 
-    #[inline(always)]
     pub fn reflect(&self, normal: &Self) -> Self {
         return *self - (*normal * 2.0_f64 * self.dot(normal));
+    }
+
+    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+        return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 }
 
@@ -150,7 +149,7 @@ impl Mul<f64> for Vector {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
+        return self.map(|value| value * rhs);
     }
 }
 
@@ -158,7 +157,7 @@ impl Div<f64> for Vector {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        return Self::new(self.x / rhs, self.y / rhs, self.z / rhs);
+        return self.map(|value| value / rhs);
     }
 }
 
@@ -166,7 +165,7 @@ impl Neg for Vector {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        return Self::new(-self.x, -self.y, -self.z);
+        return self.map(|value| -value);
     }
 }
 
@@ -187,6 +186,13 @@ impl<T: Into<f64>> From<[T; 4]> for Vector {
 impl From<Vector> for [f64; 4] {
     fn from(value: Vector) -> Self {
         return value.values();
+    }
+}
+
+impl From<Vector> for [f64; 3] {
+    fn from(value: Vector) -> Self {
+        let [x, y, z, _] = value.values();
+        return [x, y, z];
     }
 }
 

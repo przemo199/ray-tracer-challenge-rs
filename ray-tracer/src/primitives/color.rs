@@ -12,34 +12,38 @@ pub struct Color {
 }
 
 impl Color {
+    pub const MIN_COLOR_VALUE: f64 = 0.0;
+
+    pub const MAX_COLOR_VALUE: f64 = 1.0;
+
     pub const WHITE: Self = Self {
-        red: 1.0,
-        green: 1.0,
-        blue: 1.0,
+        red: Self::MAX_COLOR_VALUE,
+        green: Self::MAX_COLOR_VALUE,
+        blue: Self::MAX_COLOR_VALUE,
     };
 
     pub const BLACK: Self = Self {
-        red: 0.0,
-        green: 0.0,
-        blue: 0.0,
+        red: Self::MIN_COLOR_VALUE,
+        green: Self::MIN_COLOR_VALUE,
+        blue: Self::MIN_COLOR_VALUE,
     };
 
     pub const RED: Self = Self {
-        red: 1.0,
-        green: 0.0,
-        blue: 0.0,
+        red: Self::MAX_COLOR_VALUE,
+        green: Self::MIN_COLOR_VALUE,
+        blue: Self::MIN_COLOR_VALUE,
     };
 
     pub const GREEN: Self = Self {
-        red: 0.0,
-        green: 1.0,
-        blue: 0.0,
+        red: Self::MIN_COLOR_VALUE,
+        green: Self::MAX_COLOR_VALUE,
+        blue: Self::MIN_COLOR_VALUE,
     };
 
     pub const BLUE: Self = Self {
-        red: 0.0,
-        green: 0.0,
-        blue: 1.0,
+        red: Self::MIN_COLOR_VALUE,
+        green: Self::MIN_COLOR_VALUE,
+        blue: Self::MAX_COLOR_VALUE,
     };
 
     /// Creates new instance of struct [Color]
@@ -68,10 +72,18 @@ impl Color {
     ///
     /// let color = Color::new(1.0, 0.5, 0.0);
     ///
-    ///  assert_eq!(color.get_channels(), [1.0, 0.5, 0.0]);
+    ///  assert_eq!(color.channels(), [1.0, 0.5, 0.0]);
     /// ```
-    pub const fn get_channels(&self) -> [f64; 3] {
+    pub const fn channels(&self) -> [f64; 3] {
         return [self.red, self.green, self.blue];
+    }
+
+    pub fn normalized(&self) -> Color {
+        return self.channels().map(Self::scale_color_value).into();
+    }
+
+    fn scale_color_value(color_value: f64) -> f64 {
+        return color_value.clamp(Self::MIN_COLOR_VALUE, Self::MAX_COLOR_VALUE);
     }
 }
 
@@ -145,22 +157,20 @@ impl Mul<f64> for Color {
 }
 
 impl<T: Into<f64>> From<[T; 3]> for Color {
-    fn from(value: [T; 3]) -> Self {
-        let [x, y, z] = value;
+    fn from([x, y, z]: [T; 3]) -> Self {
         return Self::new(x, y, z);
     }
 }
 
 impl<T: Into<f64>> From<[T; 4]> for Color {
-    fn from(value: [T; 4]) -> Self {
-        let [x, y, z, ..] = value;
+    fn from([x, y, z, ..]: [T; 4]) -> Self {
         return Self::new(x, y, z);
     }
 }
 
 impl Into<[f64; 3]> for Color {
     fn into(self) -> [f64; 3] {
-        return self.get_channels();
+        return self.channels();
     }
 }
 

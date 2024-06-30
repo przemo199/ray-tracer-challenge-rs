@@ -1,3 +1,4 @@
+use crate::composites::World;
 use crate::primitives::Color;
 use core::ops::Deref;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
@@ -15,10 +16,16 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    pub const DEFAULT_COLOR: Color = World::DEFAULT_COLOR;
+
+    pub const MIN_COLOR_VALUE: f64 = Color::MIN_COLOR_VALUE;
+
+    pub const MAX_COLOR_VALUE: f64 = 255.0;
+
     /// Creates new instance of struct Canvas
     pub fn new(width: u32, height: u32) -> Self {
         let pixel_count = (width * height) as usize;
-        let pixels = vec![Color::BLACK; pixel_count];
+        let pixels = vec![Self::DEFAULT_COLOR; pixel_count];
         return Self {
             width,
             height,
@@ -26,50 +33,50 @@ impl Canvas {
         };
     }
 
-    const fn coords_to_index(&self, x: u32, y: u32) -> usize {
-        return ((y * self.width) + x) as usize;
+    pub const fn xy_to_index(&self, x: u32, y: u32) -> usize {
+        return Self::coords_to_index(self.width, (x, y));
+    }
+
+    pub const fn coords_to_index(canvas_width: u32, (x, y): (u32, u32)) -> usize {
+        return ((y * canvas_width) + x) as usize;
+    }
+
+    pub const fn index_to_xy(&self, index: usize) -> (u32, u32) {
+        return Self::index_to_coords(self.width, index);
+    }
+
+    pub const fn index_to_coords(canvas_width: u32, index: usize) -> (u32, u32) {
+        return (index as u32 % canvas_width, index as u32 / canvas_width);
     }
 
     pub fn get_pixel(&self, x: u32, y: u32) -> &Color {
-        return &self.pixels[self.coords_to_index(x, y)];
+        return &self.pixels[self.xy_to_index(x, y)];
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        let index = self.coords_to_index(x, y);
+        let index = self.xy_to_index(x, y);
         self.pixels[index] = color;
     }
 
     fn get_header(&self) -> Vec<String> {
         let identifier = "P3".to_owned();
-        let color_range = "255".to_owned();
+        let color_range = (Self::MAX_COLOR_VALUE as i64).to_string();
         let image_size = [self.width.to_string(), self.height.to_string()].join(" ");
         return vec![identifier, image_size, color_range];
     }
 
     fn to_ppm(&self) -> String {
+        let ppm_image = self.pixels.chunks(self.width as usize).into_iter()
+            .map(|line| {
+                return line
+                    .iter()
+                    .map(Color::normalized)
+                    .flat_map(|color| color.channels().into_iter())
+                    .map(|channel: f64| ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string())
+                    .collect::<Vec<String>>().join(" ");
+            });
         let mut content = self.get_header();
-        let max_color_value: f64 = 1.0;
-
-        for line in self.pixels.chunks(self.width as usize) {
-            let mut line_content: Vec<String> = Vec::new();
-            for pixel in line {
-                for mut color_value in pixel.get_channels() {
-                    if color_value < 0.0 {
-                        color_value = 0.0;
-                    }
-
-                    if color_value > 1.0 {
-                        color_value = 1.0;
-                    }
-
-                    let scaled_color_value =
-                        ((color_value / max_color_value) * 255.0).round() as i64;
-                    line_content.push(scaled_color_value.to_string());
-                }
-            }
-            content.push(line_content.join(" "));
-        }
-
+        content.extend(ppm_image);
         return content.join("\n");
     }
 
@@ -89,14 +96,14 @@ impl Canvas {
     }
 
     pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) -> Result<(), Box<dyn Error>> {
-        let mut buffer: Vec<u8> = Vec::with_capacity(self.pixels.len() * 3);
         self.prepare_file(&file_name)?;
 
-        for pixel in &self.pixels {
-            for color in pixel.get_channels() {
-                buffer.push((color * 255.0).round() as u8);
-            }
-        }
+        let buffer: Vec<u8> = self.pixels
+            .iter()
+            .map(Color::normalized)
+            .flat_map(|color| color.channels().into_iter())
+            .map(|channel| (channel * Self::MAX_COLOR_VALUE).round() as u8)
+            .collect();
 
         let buf_file_writer = BufWriter::new(File::create(file_name.as_ref())?);
         let encoder = PngEncoder::new_with_quality(
@@ -115,6 +122,7 @@ impl Canvas {
 
 impl Deref for Canvas {
     type Target = Vec<Color>;
+
     fn deref(&self) -> &Self::Target {
         return &self.pixels;
     }

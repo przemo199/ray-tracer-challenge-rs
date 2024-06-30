@@ -45,16 +45,20 @@ impl Cube {
 }
 
 impl Transform for Cube {
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
     fn transformation(&self) -> Transformation {
         return self.transformation_inverse.inverse();
     }
 
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
+    }
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation;
     }
 }
 

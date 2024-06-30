@@ -1,6 +1,7 @@
 use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
+use core::cmp::Ordering;
 use core::fmt::Debug;
 
 #[derive(Clone, Debug)]
@@ -9,7 +10,7 @@ pub struct Intersection<'shape> {
     pub shape: &'shape dyn Shape,
 }
 
-impl<'shape> Intersection<'shape> {
+impl Intersection<'_> {
     pub fn new(distance: impl Into<f64>, shape: &dyn Shape) -> Intersection {
         return Intersection {
             distance: distance.into(),
@@ -17,11 +18,7 @@ impl<'shape> Intersection<'shape> {
         };
     }
 
-    pub fn prepare_computations(
-        &self,
-        ray: &Ray,
-        intersections: &Intersections,
-    ) -> ComputedHit {
+    pub fn prepare_computations(&self, ray: &Ray, intersections: &Intersections) -> ComputedHit {
         let point = ray.position(self.distance);
         let mut normal = self.shape.normal_at(point);
         let camera_vector = -ray.direction;
@@ -95,6 +92,20 @@ impl PartialEq<Intersection<'_>> for Intersection<'_> {
     fn eq(&self, rhs: &Intersection) -> bool {
         return self.distance.coarse_eq(rhs.distance)
             && self.shape.encoded() == rhs.shape.encoded();
+    }
+}
+
+impl Eq for Intersection<'_> {}
+
+impl PartialOrd for Intersection<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        return self.distance.partial_cmp(&other.distance);
+    }
+}
+
+impl Ord for Intersection<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        return self.partial_cmp(other).unwrap_or(Ordering::Equal);
     }
 }
 

@@ -24,20 +24,6 @@ impl GradientPattern {
     }
 }
 
-impl Transform for GradientPattern {
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-}
-
 impl Pattern for GradientPattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = self.color_b - self.color_a;
@@ -52,6 +38,24 @@ impl Pattern for GradientPattern {
         let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
         encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
         return encoded;
+    }
+}
+
+impl Transform for GradientPattern {
+    fn transformation(&self) -> Transformation {
+        return self.transformation_inverse.inverse();
+    }
+
+    fn set_transformation(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation.inverse();
+    }
+
+    fn transformation_inverse(&self) -> Transformation {
+        return self.transformation_inverse;
+    }
+
+    fn set_transformation_inverse(&mut self, transformation: Transformation) {
+        self.transformation_inverse = transformation;
     }
 }
 
