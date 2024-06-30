@@ -66,14 +66,20 @@ impl Canvas {
     }
 
     fn to_ppm(&self) -> String {
-        let ppm_image = self.pixels.chunks(self.width as usize).into_iter()
+        let ppm_image = self
+            .pixels
+            .chunks(self.width as usize)
+            .into_iter()
             .map(|line| {
                 return line
                     .iter()
                     .map(Color::normalized)
                     .flat_map(|color| color.channels().into_iter())
-                    .map(|channel: f64| ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string())
-                    .collect::<Vec<String>>().join(" ");
+                    .map(|channel: f64| {
+                        ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string()
+                    })
+                    .collect::<Vec<String>>()
+                    .join(" ");
             });
         let mut content = self.get_header();
         content.extend(ppm_image);
@@ -98,7 +104,8 @@ impl Canvas {
     pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) -> Result<(), Box<dyn Error>> {
         self.prepare_file(&file_name)?;
 
-        let buffer: Vec<u8> = self.pixels
+        let buffer: Vec<u8> = self
+            .pixels
             .iter()
             .map(Color::normalized)
             .flat_map(|color| color.channels().into_iter())

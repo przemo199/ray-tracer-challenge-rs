@@ -15,7 +15,8 @@ impl<'intersections> Intersections<'intersections> {
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
-        return self.iter()
+        return self
+            .iter()
             .find(|intersection| intersection.distance >= 0.0);
     }
 }
