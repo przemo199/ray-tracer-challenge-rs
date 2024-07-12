@@ -166,15 +166,16 @@ impl Display for Material {
 
 impl PartialEq for Material {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.color == rhs.color
-            && self.pattern == rhs.pattern
-            && self.ambient.coarse_eq(rhs.ambient)
-            && self.diffuse.coarse_eq(rhs.diffuse)
-            && self.specular.coarse_eq(rhs.specular)
-            && self.shininess.coarse_eq(rhs.shininess)
-            && self.reflectiveness.coarse_eq(rhs.reflectiveness)
-            && self.refractive_index.coarse_eq(rhs.refractive_index)
-            && self.transparency.coarse_eq(rhs.transparency);
+        return std::ptr::eq(self, rhs)
+            || self.color == rhs.color
+                && self.pattern == rhs.pattern
+                && self.ambient.coarse_eq(rhs.ambient)
+                && self.diffuse.coarse_eq(rhs.diffuse)
+                && self.specular.coarse_eq(rhs.specular)
+                && self.shininess.coarse_eq(rhs.shininess)
+                && self.reflectiveness.coarse_eq(rhs.reflectiveness)
+                && self.refractive_index.coarse_eq(rhs.refractive_index)
+                && self.transparency.coarse_eq(rhs.transparency);
     }
 }
 

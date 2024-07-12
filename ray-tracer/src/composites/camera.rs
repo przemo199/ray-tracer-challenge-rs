@@ -137,13 +137,14 @@ impl Transform for Camera {
 
 impl PartialEq for Camera {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.horizontal_size == rhs.horizontal_size
-            && self.vertical_size == rhs.vertical_size
-            && self.horizontal_size == rhs.horizontal_size
-            && self.field_of_view.coarse_eq(rhs.field_of_view)
-            && self.half_width.coarse_eq(rhs.half_width)
-            && self.half_height.coarse_eq(rhs.half_height)
-            && self.pixel_size.coarse_eq(rhs.pixel_size);
+        return std::ptr::eq(self, rhs)
+            || self.horizontal_size == rhs.horizontal_size
+                && self.vertical_size == rhs.vertical_size
+                && self.horizontal_size == rhs.horizontal_size
+                && self.field_of_view.coarse_eq(rhs.field_of_view)
+                && self.half_width.coarse_eq(rhs.half_width)
+                && self.half_height.coarse_eq(rhs.half_height)
+                && self.pixel_size.coarse_eq(rhs.pixel_size);
     }
 }
 

@@ -34,13 +34,13 @@ pub trait Intersect {
 
 impl PartialEq for &dyn Shape {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.encoded() == rhs.encoded();
+        return std::ptr::eq(self, rhs) || self.encoded() == rhs.encoded();
     }
 }
 
 impl PartialEq for Box<dyn Shape> {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.encoded() == rhs.encoded();
+        return std::ptr::eq(self, rhs) || self.encoded() == rhs.encoded();
     }
 }
 

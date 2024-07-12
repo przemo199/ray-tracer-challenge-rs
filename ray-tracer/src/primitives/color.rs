@@ -110,9 +110,10 @@ impl Display for Color {
 
 impl PartialEq for Color {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.red.coarse_eq(rhs.red)
-            && self.green.coarse_eq(rhs.green)
-            && self.blue.coarse_eq(rhs.blue);
+        return std::ptr::eq(self, rhs)
+            || self.red.coarse_eq(rhs.red)
+                && self.green.coarse_eq(rhs.green)
+                && self.blue.coarse_eq(rhs.blue);
     }
 }
 

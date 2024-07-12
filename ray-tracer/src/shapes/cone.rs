@@ -37,7 +37,7 @@ impl Cone {
         let distance = distance.into();
         let x = ray.direction.x.mul_add(distance, ray.origin.x);
         let z = ray.direction.z.mul_add(distance, ray.origin.z);
-        return x.squared() + z.squared() <= radius.into().squared();
+        return (x.squared() + z.squared()) <= radius.into().squared();
     }
 
     fn intersect_caps<'intersections>(
@@ -170,11 +170,12 @@ impl Display for Cone {
 
 impl PartialEq for Cone {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.material == rhs.material
-            && self.transformation_inverse == rhs.transformation_inverse
-            && self.closed == rhs.closed
-            && self.min.coarse_eq(rhs.min)
-            && self.max.coarse_eq(rhs.max);
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+                && self.transformation_inverse == rhs.transformation_inverse
+                && self.closed == rhs.closed
+                && self.min.coarse_eq(rhs.min)
+                && self.max.coarse_eq(rhs.max);
     }
 }
 

@@ -263,14 +263,13 @@ impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
 
 impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     fn eq(&self, rhs: &Self) -> bool {
-        for (self_row, rhs_row) in self.iter().zip(rhs.iter()) {
-            for (self_value, rhs_value) in self_row.iter().zip(rhs_row.iter()) {
-                if !self_value.coarse_eq(*rhs_value) {
-                    return false;
-                }
-            }
+        if std::ptr::eq(self, rhs) {
+            return true;
         }
-        return true;
+
+        return self.iter().zip(rhs.iter())
+            .flat_map(|(self_row, rhs_row)| self_row.iter().zip(rhs_row.iter()))
+            .all(|(self_value, rhs_value)| self_value.coarse_eq(*rhs_value));
     }
 }
 

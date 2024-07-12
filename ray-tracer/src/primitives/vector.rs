@@ -125,7 +125,8 @@ impl Display for Vector {
 
 impl PartialEq for Vector {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
+        return std::ptr::eq(self, rhs)
+            || self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
     }
 }
 

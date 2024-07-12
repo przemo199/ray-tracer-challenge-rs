@@ -29,6 +29,7 @@ impl World {
         for shape in &self.shapes {
             ray.intersect(shape.as_ref(), intersections);
         }
+        intersections.sort();
     }
 
     fn shade_hit<'shapes>(
@@ -70,17 +71,14 @@ impl World {
     ) -> Color {
         self.collect_intersections(ray, intersections);
 
-        if let Some(hit) = intersections.hit() {
-            let computed_hit = hit.prepare_computations(ray, intersections);
-            let mut shade_hit_intersections = Intersections::new();
-            return self.shade_hit(
-                &computed_hit,
-                &mut shade_hit_intersections,
-                remaining_iterations,
-            );
-        } else {
-            return Self::DEFAULT_COLOR;
-        }
+        let shading_intersections = &mut Intersections::new();
+        return intersections
+            .hit()
+            .map(|hit| hit.prepare_computations(ray, intersections))
+            .map(|computed_hit| {
+                self.shade_hit(&computed_hit, shading_intersections, remaining_iterations)
+            })
+            .unwrap_or(Self::DEFAULT_COLOR);
     }
 
     pub fn color_at<'shapes>(
@@ -167,12 +165,13 @@ impl Default for World {
 
 impl PartialEq for World {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.lights.len() == rhs.lights.len()
-            && self.shapes.len() == rhs.shapes.len()
-            && self.lights.iter().all(|light| rhs.lights.contains(light))
-            && self.shapes.iter().all(|shape| {
-                return rhs.shapes.iter().any(|entry| entry == shape);
-            });
+        return std::ptr::eq(self, rhs)
+            || self.lights.len() == rhs.lights.len()
+                && self.shapes.len() == rhs.shapes.len()
+                && self.lights.iter().all(|light| rhs.lights.contains(light))
+                && self.shapes.iter().all(|shape| {
+                    return rhs.shapes.iter().any(|entry| entry == shape);
+                });
     }
 }
 

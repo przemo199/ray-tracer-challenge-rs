@@ -44,10 +44,11 @@ impl<'intersections> DerefMut for Intersections<'intersections> {
 
 impl PartialEq for Intersections<'_> {
     fn eq(&self, rhs: &Self) -> bool {
-        return self.len() == rhs.len()
-            && self.into_iter().all(|intersection| {
-                return rhs.contains(intersection);
-            });
+        return std::ptr::eq(self, rhs)
+            || self.len() == rhs.len()
+                && self.into_iter().all(|intersection| {
+                    return rhs.contains(intersection);
+                });
     }
 }
 

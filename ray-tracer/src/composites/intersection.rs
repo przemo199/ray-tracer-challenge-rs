@@ -30,42 +30,38 @@ impl Intersection<'_> {
 
         let reflection_vector = ray.direction.reflect(&normal);
 
-        let mut containers: Vec<usize> = Vec::new();
+        let mut containers: Vec<&dyn Shape> = Vec::new();
         let mut refractive_index_1: f64 = 1.0;
         let mut refractive_index_2: f64 = 1.0;
 
-        let encoded_shapes: Vec<_> = intersections
-            .into_iter()
-            .map(|intersection| intersection.shape.encoded())
-            .collect();
-
-        for (index, intersection) in intersections.into_iter().enumerate() {
-            if intersection == self {
-                if containers.is_empty() {
-                    refractive_index_1 = 1.0;
-                } else {
-                    refractive_index_1 = intersections[*containers.last().unwrap()]
-                        .shape
-                        .material()
-                        .refractive_index;
-                }
+        for intersection in intersections {
+            let is_self = self == intersection;
+            if is_self {
+                refractive_index_1 = containers
+                    .last()
+                    .map_or(1.0, |intersection| intersection.material().refractive_index);
             }
 
-            let old_len = containers.len();
-            containers.retain(|entry| encoded_shapes[*entry] != encoded_shapes[index]);
-            if old_len == containers.len() {
-                containers.push(index);
+            // let old_len = containers.len();
+            // containers.iter_mut().position(|entry| intersection.shape == *entry);
+            // containers.retain(|entry| intersection.shape == *entry);
+            // if old_len == containers.len() {
+            //     containers.push(intersection.shape);
+            // }
+
+            let position = containers
+                .iter_mut()
+                .position(|entry| intersection.shape == *entry);
+            if let Some(value) = position {
+                containers.remove(value);
+            } else {
+                containers.push(intersection.shape);
             }
 
-            if intersection == self {
-                if containers.is_empty() {
-                    refractive_index_2 = 1.0;
-                } else {
-                    refractive_index_2 = intersections[*containers.last().unwrap()]
-                        .shape
-                        .material()
-                        .refractive_index;
-                }
+            if is_self {
+                refractive_index_2 = containers
+                    .last()
+                    .map_or(1.0, |intersection| intersection.material().refractive_index);
                 break;
             }
         }
@@ -90,8 +86,9 @@ impl Intersection<'_> {
 
 impl PartialEq<Intersection<'_>> for Intersection<'_> {
     fn eq(&self, rhs: &Intersection) -> bool {
-        return self.distance.coarse_eq(rhs.distance)
-            && self.shape.encoded() == rhs.shape.encoded();
+        return std::ptr::eq(self, rhs)
+            || self.distance.coarse_eq(rhs.distance)
+                && self.shape.encoded() == rhs.shape.encoded();
     }
 }
 

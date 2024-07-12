@@ -22,7 +22,7 @@ pub trait Pattern: Transform + Debug + Display + Send + Sync {
 
 impl PartialEq for dyn Pattern {
     fn eq(&self, rhs: &dyn Pattern) -> bool {
-        return self.encoded() == rhs.encoded();
+        return std::ptr::eq(self, rhs) || self.encoded() == rhs.encoded();
     }
 }
 
