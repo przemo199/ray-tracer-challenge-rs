@@ -31,27 +31,24 @@ impl Intersection<'_> {
         let reflection_vector = ray.direction.reflect(&normal);
 
         let mut containers: Vec<&dyn Shape> = Vec::new();
-        let mut refractive_index_1: f64 = 1.0;
-        let mut refractive_index_2: f64 = 1.0;
+        const DEFAULT_REFRACTIVE_INDEX: f64 = 1.0;
+        let mut refractive_index_1: f64 = DEFAULT_REFRACTIVE_INDEX;
+        let mut refractive_index_2: f64 = DEFAULT_REFRACTIVE_INDEX;
 
+        // since no intersections can be produced at this point comparing pointers should be enough to test for equality
         for intersection in intersections {
-            let is_self = self == intersection;
+            let is_self = std::ptr::eq(self, intersection);
             if is_self {
                 refractive_index_1 = containers
                     .last()
-                    .map_or(1.0, |intersection| intersection.material().refractive_index);
+                    .map_or(DEFAULT_REFRACTIVE_INDEX, |intersection| {
+                        intersection.material().refractive_index
+                    });
             }
-
-            // let old_len = containers.len();
-            // containers.iter_mut().position(|entry| intersection.shape == *entry);
-            // containers.retain(|entry| intersection.shape == *entry);
-            // if old_len == containers.len() {
-            //     containers.push(intersection.shape);
-            // }
 
             let position = containers
                 .iter_mut()
-                .position(|entry| intersection.shape == *entry);
+                .position(|entry| std::ptr::eq(intersection.shape, *entry));
             if let Some(value) = position {
                 containers.remove(value);
             } else {
@@ -61,7 +58,9 @@ impl Intersection<'_> {
             if is_self {
                 refractive_index_2 = containers
                     .last()
-                    .map_or(1.0, |intersection| intersection.material().refractive_index);
+                    .map_or(DEFAULT_REFRACTIVE_INDEX, |intersection| {
+                        intersection.material().refractive_index
+                    });
                 break;
             }
         }

@@ -267,7 +267,9 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
             return true;
         }
 
-        return self.iter().zip(rhs.iter())
+        return self
+            .iter()
+            .zip(rhs.iter())
             .flat_map(|(self_row, rhs_row)| self_row.iter().zip(rhs_row.iter()))
             .all(|(self_value, rhs_value)| self_value.coarse_eq(*rhs_value));
     }
