@@ -3,7 +3,7 @@ use crate::primitives::Color;
 use core::ops::Deref;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::ImageEncoder;
-use std::error::Error;
+use core::error::Error;
 use std::fs::File;
 use std::io;
 use std::io::{BufWriter, Write};
@@ -86,7 +86,7 @@ impl Canvas {
         return content.join("\n");
     }
 
-    fn prepare_file<P: AsRef<Path>>(&self, file_name: &P) -> io::Result<()> {
+    fn prepare_file<P: AsRef<Path>>(file_name: &P) -> io::Result<()> {
         let path = Path::new(file_name.as_ref());
         let prefix = path
             .parent()
@@ -95,14 +95,14 @@ impl Canvas {
     }
 
     pub fn to_ppm_file<P: AsRef<Path>>(&self, file_name: P) -> io::Result<()> {
-        self.prepare_file(&file_name)?;
+        Self::prepare_file(&file_name)?;
         let content = self.to_ppm();
         let mut file = File::create(file_name.as_ref())?;
         return file.write_all(content.as_bytes());
     }
 
     pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) -> Result<(), Box<dyn Error>> {
-        self.prepare_file(&file_name)?;
+        Self::prepare_file(&file_name)?;
 
         let buffer: Vec<u8> = self
             .pixels
