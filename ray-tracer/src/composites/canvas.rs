@@ -3,7 +3,7 @@ use crate::primitives::Color;
 use core::ops::Deref;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::ImageEncoder;
-use core::error::Error;
+use std::error::Error;
 use std::fs::File;
 use std::io;
 use std::io::{BufWriter, Write};
