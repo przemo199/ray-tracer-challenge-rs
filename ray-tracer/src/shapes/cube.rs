@@ -120,7 +120,7 @@ impl Display for Cube {
         return formatter
             .debug_struct("Cube")
             .field("material", &self.material)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

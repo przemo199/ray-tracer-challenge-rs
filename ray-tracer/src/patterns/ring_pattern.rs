@@ -66,7 +66,7 @@ impl Display for RingPattern {
             .debug_struct("CircularPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

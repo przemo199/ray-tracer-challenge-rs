@@ -44,7 +44,7 @@ impl Display for Light {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::primitives::{Color, Light, Point};
 
     #[test]
     fn light_has_position_and_intensity() {

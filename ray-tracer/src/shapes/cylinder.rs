@@ -155,7 +155,7 @@ impl Display for Cylinder {
             .field("max", &self.max)
             .field("closed", &self.closed)
             .field("material", &self.material)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

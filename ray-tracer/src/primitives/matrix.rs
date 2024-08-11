@@ -50,6 +50,19 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         }
         return result;
     }
+
+    pub fn is_identity(&self) -> bool {
+        for row in 0..SIDE_LENGTH {
+            for column in 0..SIDE_LENGTH {
+                if row == column && !self[row][column].coarse_eq(1.0)
+                    || !self[row][column].coarse_eq(0.0)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
 
 impl Matrix<2> {
@@ -220,6 +233,10 @@ impl Matrix<4> {
 
     #[inline(always)]
     pub fn inverse(&self) -> Self {
+        if self.is_identity() {
+            return Self::IDENTITY;
+        }
+
         let mut result = Self::EMPTY;
         let determinant = self.determinant();
         for row in 0..4 {

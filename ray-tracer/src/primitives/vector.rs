@@ -104,6 +104,10 @@ impl Vector {
     pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
+
+    pub fn abs(&self) -> Self {
+        return self.map(|value| value.abs());
+    }
 }
 
 impl Default for Vector {

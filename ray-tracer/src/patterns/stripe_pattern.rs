@@ -65,7 +65,7 @@ impl Display for StripePattern {
             .debug_struct("StripePattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

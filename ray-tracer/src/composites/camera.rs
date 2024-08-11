@@ -26,7 +26,7 @@ impl Camera {
     pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: impl Into<f64>) -> Self {
         let field_of_view = field_of_view.into();
         let half_view = (field_of_view / 2.0).tan();
-        let aspect = f64::from(horizontal_size) / f64::from(vertical_size as f64);
+        let aspect = f64::from(horizontal_size) / f64::from(vertical_size);
         let half_width: f64;
         let half_height: f64;
         if aspect >= 1.0 {
@@ -69,7 +69,7 @@ impl Camera {
 
     fn render_pixel(&self, index: usize, pixel: &mut Color, world: &World) {
         let x: u32 = index as u32 % self.horizontal_size;
-        let y: u32 = index as u32 / self.vertical_size;
+        let y: u32 = index as u32 / self.horizontal_size;
         let ray = self.ray_for_pixel(x, y);
         let mut intersections = Intersections::new();
         *pixel = world.color_at(&ray, &mut intersections);
@@ -158,7 +158,7 @@ impl Display for Camera {
             .field("half_width", &self.half_width)
             .field("half_height", &self.half_height)
             .field("pixel_size", &self.pixel_size)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

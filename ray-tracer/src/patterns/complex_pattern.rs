@@ -66,7 +66,7 @@ impl Display for ComplexPattern {
             .debug_struct("ComplexPattern")
             .field("pattern_a", &self.pattern_a)
             .field("pattern_b", &self.pattern_b)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

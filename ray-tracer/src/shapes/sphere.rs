@@ -80,7 +80,7 @@ impl Display for Sphere {
         return formatter
             .debug_struct("Sphere")
             .field("material", &self.material)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

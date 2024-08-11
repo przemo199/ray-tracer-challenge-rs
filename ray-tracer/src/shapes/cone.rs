@@ -163,7 +163,7 @@ impl Display for Cone {
             .field("max", &self.max)
             .field("closed", &self.closed)
             .field("material", &self.material)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

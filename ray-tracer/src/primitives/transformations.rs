@@ -60,7 +60,7 @@ pub fn rotation_z(theta: impl Into<f64>) -> Transformation {
 }
 
 #[inline]
-pub fn shearing_matrix(
+pub fn shearing(
     xy: impl Into<f64>,
     xz: impl Into<f64>,
     yx: impl Into<f64>,
@@ -195,29 +195,29 @@ mod tests {
 
     #[test]
     fn point_shearing() {
-        let shearing = shearing_matrix(1, 0, 0, 0, 0, 0);
+        let shearing_transformation = shearing(1, 0, 0, 0, 0, 0);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(5, 3, 4));
+        assert_eq!(shearing_transformation * point, Point::new(5, 3, 4));
 
-        let shearing = shearing_matrix(0, 1, 0, 0, 0, 0);
+        let shearing_transformation = shearing(0, 1, 0, 0, 0, 0);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(6, 3, 4));
+        assert_eq!(shearing_transformation * point, Point::new(6, 3, 4));
 
-        let shearing = shearing_matrix(0, 0, 1, 0, 0, 0);
+        let shearing_transformation = shearing(0, 0, 1, 0, 0, 0);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(2, 5, 4));
+        assert_eq!(shearing_transformation * point, Point::new(2, 5, 4));
 
-        let shearing = shearing_matrix(0, 0, 0, 1, 0, 0);
+        let shearing_transformation = shearing(0, 0, 0, 1, 0, 0);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(2, 7, 4));
+        assert_eq!(shearing_transformation * point, Point::new(2, 7, 4));
 
-        let shearing = shearing_matrix(0, 0, 0, 0, 1, 0);
+        let shearing_transformation = shearing(0, 0, 0, 0, 1, 0);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(2, 3, 6));
+        assert_eq!(shearing_transformation * point, Point::new(2, 3, 6));
 
-        let shearing = shearing_matrix(0, 0, 0, 0, 0, 1);
+        let shearing_transformation = shearing(0, 0, 0, 0, 0, 1);
         let point = Point::new(2, 3, 4);
-        assert_eq!(shearing * point, Point::new(2, 3, 7));
+        assert_eq!(shearing_transformation * point, Point::new(2, 3, 7));
     }
 
     #[test]

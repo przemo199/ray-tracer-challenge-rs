@@ -81,7 +81,7 @@ impl Display for TestPattern {
     fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
         return formatter
             .debug_struct("TestPattern")
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

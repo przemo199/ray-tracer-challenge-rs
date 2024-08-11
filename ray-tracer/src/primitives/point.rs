@@ -45,6 +45,10 @@ impl Point {
     pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
+
+    pub fn abs(&self) -> Self {
+        return self.map(|value| value.abs());
+    }
 }
 
 impl Default for Point {
@@ -83,7 +87,7 @@ impl Sub for Point {
     type Output = Vector;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        return Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
+        return Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 

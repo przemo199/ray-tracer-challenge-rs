@@ -4,10 +4,9 @@ use core::fmt::{Debug, Display};
 
 pub trait Shape: Debug + Display + Send + Sync + Transform + Intersect {
     fn normal_at(&self, point: Point) -> Vector {
-        let transform_inverse = self.transformation_inverse();
-        let local_point = transform_inverse * point;
+        let local_point = self.transformation_inverse() * point;
         let local_normal = self.local_normal_at(local_point);
-        let world_normal = transform_inverse.transpose() * local_normal;
+        let world_normal = self.transformation_inverse().transpose() * local_normal;
         return world_normal.normalized();
     }
 

@@ -65,7 +65,7 @@ impl Display for GradientPattern {
             .debug_struct("GradientPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }

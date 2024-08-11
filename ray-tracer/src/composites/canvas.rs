@@ -38,7 +38,7 @@ impl Canvas {
     }
 
     pub const fn coords_to_index(canvas_width: u32, (x, y): (u32, u32)) -> usize {
-        return ((y * canvas_width) + x) as usize;
+        return (x + (y * canvas_width)) as usize;
     }
 
     pub const fn index_to_xy(&self, index: usize) -> (u32, u32) {

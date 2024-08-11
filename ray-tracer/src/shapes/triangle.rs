@@ -42,16 +42,15 @@ impl Intersect for Triangle {
         if determinant.abs() < EPSILON {
             return;
         }
-        let determinant_inverse = 1.0 / determinant;
         let vertex1_to_origin = ray.origin - self.vertex_1;
-        let u = determinant_inverse * vertex1_to_origin.dot(&direction_cross_edge2);
+        let u = vertex1_to_origin.dot(&direction_cross_edge2) / determinant;
         if !(0.0..1.0).contains(&u) {
             return;
         }
         let origin_cross_edge1 = vertex1_to_origin.cross(&self.edge_1);
-        let v = determinant_inverse * ray.direction.dot(&origin_cross_edge1);
+        let v = ray.direction.dot(&origin_cross_edge1) / determinant;
         if v > 0.0 && u + v < 1.0 {
-            let distance = determinant_inverse * self.edge_2.dot(&origin_cross_edge1);
+            let distance = self.edge_2.dot(&origin_cross_edge1) / determinant;
             intersections.push(Intersection::new(distance, self));
         }
     }
@@ -100,7 +99,7 @@ impl Display for Triangle {
             .field("e2", &self.edge_1)
             .field("normal", &self.normal)
             .field("material", &self.material)
-            .field("transformation", &self.transformation_inverse)
+            .field("transformation", &self.transformation())
             .finish();
     }
 }
