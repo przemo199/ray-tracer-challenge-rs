@@ -3,7 +3,7 @@ use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Encode)]
@@ -61,7 +61,7 @@ impl Transform for ComplexPattern {
 }
 
 impl Display for ComplexPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("ComplexPattern")
             .field("pattern_a", &self.pattern_a)

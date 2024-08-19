@@ -4,7 +4,7 @@ use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cube {
@@ -88,13 +88,14 @@ impl Intersect for Cube {
 
 impl Shape for Cube {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let max_value = [point.x.abs(), point.y.abs(), point.z.abs()]
-            .iter()
-            .copied()
+        let values = point.abs();
+        let max_value = Into::<[f64; 3]>::into(values)
+            .into_iter()
             .fold(MIN, f64::max);
-        if max_value == point.x.abs() {
+
+        if max_value == values.x {
             return Vector::new(point.x, 0, 0);
-        } else if max_value == point.y.abs() {
+        } else if max_value == values.y {
             return Vector::new(0, point.y, 0);
         }
         return Vector::new(0, 0, point.z);
@@ -116,7 +117,7 @@ impl Default for Cube {
 }
 
 impl Display for Cube {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Cube")
             .field("material", &self.material)

@@ -4,7 +4,7 @@ use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Encode)]
@@ -48,18 +48,14 @@ impl Material {
         };
     }
 
-    pub fn empty() -> Self {
-        return Self::new(Color::BLACK, None, 0, 0, 0, 0, 0, 0, 1, false);
-    }
-
     #[inline(always)]
     pub fn lighting(
         &self,
         shape: &dyn Shape,
         light: &Light,
         point: &Point,
-        camera_vector: &Vector,
-        normal_vector: &Vector,
+        camera_direction: &Vector,
+        normal: &Vector,
         in_shadow: bool,
     ) -> Color {
         let effective_color = self.resolve_color(shape, point) * light.intensity;
@@ -68,8 +64,8 @@ impl Material {
             &effective_color,
             light,
             point,
-            camera_vector,
-            normal_vector,
+            camera_direction,
+            normal,
             in_shadow,
         );
     }
@@ -88,8 +84,8 @@ impl Material {
         effective_color: &Color,
         light: &Light,
         point: &Point,
-        camera_vector: &Vector,
-        normal_vector: &Vector,
+        camera_direction: &Vector,
+        normal: &Vector,
         in_shadow: bool,
     ) -> Color {
         let ambient = *effective_color * self.ambient;
@@ -98,14 +94,14 @@ impl Material {
             return ambient;
         }
 
-        let light_vector = (light.position - *point).normalized();
-        let light_dot_normal = light_vector.dot(normal_vector);
+        let light_direction = (light.position - *point).normalized();
+        let light_dot_normal = light_direction.dot(normal);
         if light_dot_normal < 0.0 {
             return ambient;
         }
         let diffuse = *effective_color * self.diffuse * light_dot_normal;
-        let reflect_vector = (-light_vector).reflect(normal_vector);
-        let reflect_dot_camera = reflect_vector.dot(camera_vector);
+        let reflect_direction = (-light_direction).reflect(normal);
+        let reflect_dot_camera = reflect_direction.dot(camera_direction);
 
         if reflect_dot_camera <= 0.0 {
             return ambient + diffuse;
@@ -126,7 +122,7 @@ impl Material {
             computed_hit.shape,
             light,
             &computed_hit.over_point,
-            &computed_hit.camera_vector,
+            &computed_hit.camera_direction,
             &computed_hit.normal,
             in_shadow,
         );
@@ -148,7 +144,7 @@ impl Default for Material {
 }
 
 impl Display for Material {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Material")
             .field("color", &self.color)

@@ -295,8 +295,8 @@ impl SceneParser {
                         let mut cone = Cone::default();
                         cone.material = material;
                         cone.set_transformation(transformation);
-                        if let Yaml::Boolean(value) = &entry["closed"] {
-                            cone.closed = *value;
+                        if let Yaml::Boolean(value) = entry["closed"] {
+                            cone.closed = value;
                         }
                         if entry["max"] != BadValue {
                             cone.max = parse_f64(&entry["max"])?;

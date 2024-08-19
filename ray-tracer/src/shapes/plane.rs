@@ -3,7 +3,7 @@ use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Plane {
@@ -69,7 +69,7 @@ impl Default for Plane {
 }
 
 impl Display for Plane {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
         return formatter
             .debug_struct("Plane")
             .field("material", &self.material)

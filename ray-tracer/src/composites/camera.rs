@@ -2,7 +2,7 @@ use crate::composites::{Canvas, Intersections, Ray, World};
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
 use crate::utils::CoarseEq;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use rayon::prelude::IndexedParallelIterator;
@@ -149,7 +149,7 @@ impl PartialEq for Camera {
 }
 
 impl Display for Camera {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Camera")
             .field("horizontal_size", &self.horizontal_size)

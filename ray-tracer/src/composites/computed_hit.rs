@@ -10,9 +10,9 @@ pub struct ComputedHit<'shape> {
     pub point: Point,
     pub over_point: Point,
     pub under_point: Point,
-    pub camera_vector: Vector,
+    pub camera_direction: Vector,
     pub normal: Vector,
-    pub reflection_vector: Vector,
+    pub reflect_direction: Vector,
     pub is_inside: bool,
     pub refractive_index_1: f64,
     pub refractive_index_2: f64,
@@ -23,9 +23,9 @@ impl ComputedHit<'_> {
         distance: impl Into<f64>,
         shape: &dyn Shape,
         point: Point,
-        camera_vector: Vector,
+        camera_direction: Vector,
         normal: Vector,
-        reflection_vector: Vector,
+        reflect_direction: Vector,
         is_inside: bool,
         refractive_index_1: impl Into<f64>,
         refractive_index_2: impl Into<f64>,
@@ -38,9 +38,9 @@ impl ComputedHit<'_> {
             point,
             over_point,
             under_point,
-            camera_vector,
+            camera_direction,
             normal,
-            reflection_vector,
+            reflect_direction,
             is_inside,
             refractive_index_1: refractive_index_1.into(),
             refractive_index_2: refractive_index_2.into(),
@@ -48,7 +48,7 @@ impl ComputedHit<'_> {
     }
 
     pub fn schlick(&self) -> f64 {
-        let mut cos = self.camera_vector.dot(&self.normal);
+        let mut cos = self.camera_direction.dot(&self.normal);
 
         if self.refractive_index_1 > self.refractive_index_2 {
             let refraction_ratio = self.refractive_index_1 / self.refractive_index_2;

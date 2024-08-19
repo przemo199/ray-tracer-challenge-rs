@@ -1,7 +1,7 @@
 use crate::primitives::{Point, Vector};
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use core::mem;
 use core::ops::{Deref, DerefMut, Mul};
 
@@ -270,7 +270,7 @@ impl<const SIDE_LENGTH: usize> DerefMut for Matrix<SIDE_LENGTH> {
 }
 
 impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
         return formatter
             .debug_struct("Matrix")
             .field("elements", &self)

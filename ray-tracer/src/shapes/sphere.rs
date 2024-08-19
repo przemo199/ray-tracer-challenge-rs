@@ -4,7 +4,7 @@ use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::solve_quadratic;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Sphere {
@@ -76,7 +76,7 @@ impl Default for Sphere {
 }
 
 impl Display for Sphere {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Sphere")
             .field("material", &self.material)

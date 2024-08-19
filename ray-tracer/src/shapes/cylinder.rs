@@ -4,7 +4,7 @@ use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{solve_quadratic, Squared};
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Cylinder {
@@ -148,7 +148,7 @@ impl Default for Cylinder {
 }
 
 impl Display for Cylinder {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Cylinder")
             .field("min", &self.min)

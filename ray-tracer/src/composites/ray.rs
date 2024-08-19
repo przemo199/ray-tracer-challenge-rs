@@ -1,7 +1,7 @@
 use crate::composites::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::shapes::{Intersect, Transform};
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Ray {
@@ -46,7 +46,7 @@ impl Ray {
 }
 
 impl Display for Ray {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Ray")
             .field("origin", &self.origin)

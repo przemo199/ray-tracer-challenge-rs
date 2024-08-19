@@ -2,7 +2,7 @@ use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Debug)]
 pub struct World {
@@ -96,9 +96,9 @@ impl World {
         point: &Point,
         intersections: &mut Intersections<'shapes>,
     ) -> bool {
-        let point_to_light_vector = light.position - *point;
-        let distance_to_light = point_to_light_vector.magnitude();
-        let shadow_ray = Ray::new(*point, point_to_light_vector.normalized());
+        let point_to_light_direction = light.position - *point;
+        let distance_to_light = point_to_light_direction.magnitude();
+        let shadow_ray = Ray::new(*point, point_to_light_direction.normalized());
         self.collect_intersections(&shadow_ray, intersections);
         return intersections.into_iter().any(|intersection| {
             intersection.shape.material().casts_shadow
@@ -116,7 +116,7 @@ impl World {
             return Self::DEFAULT_COLOR;
         }
 
-        let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflection_vector);
+        let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflect_direction);
         let reflected_color =
             self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
         return reflected_color * computed_hit.shape.material().reflectiveness;
@@ -133,7 +133,7 @@ impl World {
         }
 
         let n_ratio = computed_hit.refractive_index_1 / computed_hit.refractive_index_2;
-        let cos_i = computed_hit.camera_vector.dot(&computed_hit.normal);
+        let cos_i = computed_hit.camera_direction.dot(&computed_hit.normal);
         let sin2_t = n_ratio.squared() * (1.0 - cos_i.squared());
         let is_total_internal_reflection = sin2_t > 1.0;
 
@@ -143,7 +143,7 @@ impl World {
 
         let cos_t = (1.0 - sin2_t).sqrt();
         let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
-            - (computed_hit.camera_vector * n_ratio);
+            - (computed_hit.camera_direction * n_ratio);
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color =
             self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
@@ -176,7 +176,7 @@ impl PartialEq for World {
 }
 
 impl Display for World {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("World")
             .field("light", &self.lights)

@@ -1,8 +1,8 @@
 use crate::composites::{Intersections, Material, Ray};
 use crate::primitives::{Point, Transformation, Vector};
-use core::fmt::{Debug, Display};
+use core::fmt::Debug;
 
-pub trait Shape: Debug + Display + Send + Sync + Transform + Intersect {
+pub trait Shape: Debug + Send + Sync + Transform + Intersect {
     fn normal_at(&self, point: Point) -> Vector {
         let local_point = self.transformation_inverse() * point;
         let local_normal = self.local_normal_at(local_point);

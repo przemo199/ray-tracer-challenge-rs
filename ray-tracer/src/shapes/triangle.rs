@@ -3,7 +3,7 @@ use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON};
 use crate::primitives::{Point, Transformation, Vector};
 use bincode::Encode;
-use core::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct Triangle {
@@ -89,7 +89,7 @@ impl Shape for Triangle {
 }
 
 impl Display for Triangle {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
         return formatter
             .debug_struct("Triangle")
             .field("p1", &self.vertex_1)

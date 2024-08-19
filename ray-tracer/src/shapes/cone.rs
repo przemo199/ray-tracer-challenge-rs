@@ -5,7 +5,7 @@ use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{solve_quadratic, CoarseEq, Squared};
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, Encode)]
 pub struct Cone {
@@ -156,7 +156,7 @@ impl Default for Cone {
 }
 
 impl Display for Cone {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Cone")
             .field("min", &self.min)

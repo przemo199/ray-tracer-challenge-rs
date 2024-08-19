@@ -3,7 +3,7 @@ use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct StripePattern {
@@ -60,7 +60,7 @@ impl Transform for StripePattern {
 }
 
 impl Display for StripePattern {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("StripePattern")
             .field("color_a", &self.color_a)

@@ -1,6 +1,6 @@
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Sub};
 
 /// Struct representing RGB values of a color
@@ -78,7 +78,7 @@ impl Color {
         return [self.red, self.green, self.blue];
     }
 
-    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+    pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 
@@ -98,7 +98,7 @@ impl Default for Color {
 }
 
 impl Display for Color {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Color")
             .field("red", &self.red)

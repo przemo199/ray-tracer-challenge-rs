@@ -21,14 +21,14 @@ impl Intersection<'_> {
     pub fn prepare_computations(&self, ray: &Ray, intersections: &Intersections) -> ComputedHit {
         let point = ray.position(self.distance);
         let mut normal = self.shape.normal_at(point);
-        let camera_vector = -ray.direction;
-        let is_inside = normal.dot(&camera_vector) < 0.0;
+        let camera_direction = -ray.direction;
+        let is_inside = normal.dot(&camera_direction) < 0.0;
 
         if is_inside {
             normal = -normal;
         }
 
-        let reflection_vector = ray.direction.reflect(&normal);
+        let reflect_direction = ray.direction.reflect(&normal);
 
         let mut containers: Vec<&dyn Shape> = Vec::new();
         const DEFAULT_REFRACTIVE_INDEX: f64 = 1.0;
@@ -69,9 +69,9 @@ impl Intersection<'_> {
             self.distance,
             self.shape,
             point,
-            camera_vector,
+            camera_direction,
             normal,
-            reflection_vector,
+            reflect_direction,
             is_inside,
             refractive_index_1,
             refractive_index_2,
@@ -134,7 +134,7 @@ mod tests {
         assert_eq!(computed_hit.distance, intersection.distance);
         assert_eq!(computed_hit.shape, boxed_shape.as_ref());
         assert_eq!(computed_hit.point, Point::new(0, 0, -1));
-        assert_eq!(computed_hit.camera_vector, Vector::BACKWARD);
+        assert_eq!(computed_hit.camera_direction, Vector::BACKWARD);
         assert_eq!(computed_hit.normal, Vector::BACKWARD);
     }
 
@@ -159,7 +159,7 @@ mod tests {
         let computations = intersection.prepare_computations(&ray, &intersections);
         assert!(computations.is_inside);
         assert_eq!(computations.point, Point::new(0, 0, 1));
-        assert_eq!(computations.camera_vector, Vector::BACKWARD);
+        assert_eq!(computations.camera_direction, Vector::BACKWARD);
     }
 
     #[test]
@@ -187,7 +187,7 @@ mod tests {
         let intersections = Intersections::new();
         let prepared_computations = intersection.prepare_computations(&ray, &intersections);
         assert_eq!(
-            prepared_computations.reflection_vector,
+            prepared_computations.reflect_direction,
             Vector::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
         );
     }

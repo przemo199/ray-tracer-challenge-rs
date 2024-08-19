@@ -1,5 +1,5 @@
 use crate::primitives::{Color, Point};
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Light {
@@ -33,7 +33,7 @@ impl Default for Light {
 }
 
 impl Display for Light {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Light")
             .field("position", &self.position)

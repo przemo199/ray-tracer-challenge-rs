@@ -1,6 +1,6 @@
 use crate::utils::{CoarseEq, Squared};
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::Point;
@@ -82,7 +82,7 @@ impl Vector {
 
     pub fn normalized(&self) -> Self {
         let magnitude = self.magnitude();
-        return Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
+        return self.map(|value| value / magnitude);
     }
 
     pub fn dot(&self, rhs: &Self) -> f64 {
@@ -101,7 +101,7 @@ impl Vector {
         return *self - (*normal * 2.0_f64 * self.dot(normal));
     }
 
-    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+    pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 
@@ -117,7 +117,7 @@ impl Default for Vector {
 }
 
 impl Display for Vector {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
         return formatter
             .debug_struct("Vector")
             .field("x", &self.x)

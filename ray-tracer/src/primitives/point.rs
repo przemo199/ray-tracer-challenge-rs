@@ -1,7 +1,7 @@
 use crate::primitives::Vector;
 use crate::utils::CoarseEq;
 use bincode::Encode;
-use core::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Struct representing point in three dimensional space
@@ -42,7 +42,7 @@ impl Point {
         return [self.x, self.y, self.z, 1.0];
     }
 
-    pub fn map<F: FnMut(f64) -> f64>(&self, f: F) -> Self {
+    pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 
@@ -58,7 +58,7 @@ impl Default for Point {
 }
 
 impl Display for Point {
-    fn fmt(&self, formatter: &mut Formatter) -> core::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
             .debug_struct("Point")
             .field("x", &self.x)
