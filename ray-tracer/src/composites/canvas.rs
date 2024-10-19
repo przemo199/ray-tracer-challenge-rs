@@ -73,7 +73,7 @@ impl Canvas {
             .map(|line| {
                 return line
                     .iter()
-                    .map(Color::normalized)
+                    .map(Color::clamped)
                     .flat_map(|color| color.channels().into_iter())
                     .map(|channel: f64| {
                         ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string()
@@ -107,7 +107,7 @@ impl Canvas {
         let buffer: Vec<u8> = self
             .pixels
             .iter()
-            .map(Color::normalized)
+            .map(Color::clamped)
             .flat_map(|color| color.channels().into_iter())
             .map(|channel| (channel * Self::MAX_COLOR_VALUE).round() as u8)
             .collect();

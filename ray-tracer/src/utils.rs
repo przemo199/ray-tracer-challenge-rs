@@ -49,7 +49,7 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
 #[inline(always)]
 pub const fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
     return unsafe {
-        core::slice::from_raw_parts((value as *const T) as *const u8, core::mem::size_of::<T>())
+        core::slice::from_raw_parts((value as *const T) as *const u8, size_of::<T>())
     };
 }
 

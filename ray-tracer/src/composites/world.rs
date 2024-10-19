@@ -96,13 +96,13 @@ impl World {
         point: &Point,
         intersections: &mut Intersections<'shapes>,
     ) -> bool {
-        let point_to_light_direction = light.position - *point;
-        let distance_to_light = point_to_light_direction.magnitude();
-        let shadow_ray = Ray::new(*point, point_to_light_direction.normalized());
+        let light_direction = light.position - *point;
+        let light_distance = light_direction.magnitude();
+        let shadow_ray = Ray::new(*point, light_direction.normalized());
         self.collect_intersections(&shadow_ray, intersections);
         return intersections.into_iter().any(|intersection| {
             intersection.shape.material().casts_shadow
-                && intersection.is_within_distance(distance_to_light)
+                && intersection.is_within_distance(light_distance)
         });
     }
 

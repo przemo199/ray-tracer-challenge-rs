@@ -1,9 +1,9 @@
+use crate::primitives::Point;
 use crate::utils::{CoarseEq, Squared};
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Neg, Sub};
-
-use super::Point;
+use std::ops::Index;
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -171,6 +171,23 @@ impl Neg for Vector {
 
     fn neg(self) -> Self::Output {
         return self.map(|value| -value);
+    }
+}
+
+impl Index<usize> for Vector {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        return match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &0.0,
+            _ => panic!(
+                "index out of bounds: the len is 4 but the index is {}",
+                index
+            ),
+        };
     }
 }
 

@@ -82,11 +82,11 @@ impl Color {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 
-    pub fn normalized(&self) -> Color {
-        return self.map(Self::clamp_value).into();
+    pub fn clamped(&self) -> Color {
+        return self.map(Self::clamp).into();
     }
 
-    fn clamp_value(color_value: f64) -> f64 {
+    fn clamp(color_value: f64) -> f64 {
         return color_value.clamp(Self::MIN_COLOR_VALUE, Self::MAX_COLOR_VALUE);
     }
 }

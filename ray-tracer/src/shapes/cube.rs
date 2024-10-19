@@ -3,6 +3,7 @@ use super::{Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
+use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 
@@ -88,14 +89,14 @@ impl Intersect for Cube {
 
 impl Shape for Cube {
     fn local_normal_at(&self, point: Point) -> Vector {
-        let values = point.abs();
-        let max_value = Into::<[f64; 3]>::into(values)
+        let abs_point = point.abs();
+        let max_value = Into::<[f64; 3]>::into(abs_point)
             .into_iter()
             .fold(MIN, f64::max);
 
-        if max_value == values.x {
+        if max_value.coarse_eq(abs_point.x) {
             return Vector::new(point.x, 0, 0);
-        } else if max_value == values.y {
+        } else if max_value.coarse_eq(abs_point.y) {
             return Vector::new(0, point.y, 0);
         }
         return Vector::new(0, 0, point.z);

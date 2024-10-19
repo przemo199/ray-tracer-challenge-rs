@@ -3,6 +3,7 @@ use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::Index;
 
 /// Struct representing point in three dimensional space
 #[derive(Clone, Copy, Debug, Encode)]
@@ -119,7 +120,24 @@ impl Neg for Point {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        return self.map(|value| -value);
+        return self.map(f64::neg);
+    }
+}
+
+impl Index<usize> for Point {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        return match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &1.0,
+            _ => panic!(
+                "index out of bounds: the len is 4 but the index is {}",
+                index
+            ),
+        };
     }
 }
 
