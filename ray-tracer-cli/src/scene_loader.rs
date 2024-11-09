@@ -12,14 +12,18 @@ use std::sync::Arc;
 use yaml_rust::Yaml::BadValue;
 use yaml_rust::{Yaml, YamlLoader};
 
-const ADD: &str = "add";
-const COLOR: &str = "color";
-const VALUE: &str = "value";
-const TYPE: &str = "type";
-const DEFINE: &str = "define";
-const EXTEND: &str = "extend";
-const MATERIAL: &str = "material";
-const TRANSFORMATION: &str = "transform";
+pub struct Keyword {}
+
+impl Keyword {
+    pub const ADD: &'static str = "add";
+    pub const COLOR: &'static str = "color";
+    pub const VALUE: &'static str = "value";
+    pub const TYPE: &'static str = "type";
+    pub const DEFINE: &'static str = "define";
+    pub const EXTEND: &'static str = "extend";
+    pub const MATERIAL: &'static str = "material";
+    pub const TRANSFORMATION: &'static str = "transform";
+}
 
 #[derive(Clone, Debug)]
 struct SceneParser {
@@ -41,7 +45,7 @@ impl SceneParser {
 
     fn process_definitions(&mut self, yaml: &Yaml) -> Result<(), Box<dyn Error>> {
         for entry in yaml.clone() {
-            if let Yaml::String(name) = &entry[DEFINE] {
+            if let Yaml::String(name) = &entry[Keyword::DEFINE] {
                 if name.ends_with("-color") {
                     let color = self.parse_color(&entry)?;
                     self.colors.insert(name.clone(), color);
@@ -60,13 +64,13 @@ impl SceneParser {
     fn parse_color(&self, yaml: &Yaml) -> Result<Color, ParseFloatError> {
         match yaml {
             Yaml::Hash(_) => {
-                return self.parse_color(
-                    &yaml[if yaml[COLOR] == BadValue {
-                        VALUE
-                    } else {
-                        COLOR
-                    }],
-                );
+                let is_color = yaml[Keyword::COLOR] != BadValue;
+                let keyword = if is_color {
+                    Keyword::COLOR
+                } else {
+                    Keyword::VALUE
+                };
+                return self.parse_color(&yaml[keyword]);
             }
             Yaml::Array(color_values) => {
                 let color_channels = parse_array_of_3(color_values)?;
@@ -90,19 +94,19 @@ impl SceneParser {
             return Ok(self.materials[name].clone());
         }
 
-        let mut material = if yaml[EXTEND] == BadValue {
+        let mut material = if yaml[Keyword::EXTEND] == BadValue {
             Material::default()
         } else {
-            self.materials[yaml[EXTEND].as_str().unwrap()].clone()
+            self.materials[yaml[Keyword::EXTEND].as_str().unwrap()].clone()
         };
 
-        let yaml = if yaml[VALUE] != BadValue {
-            &yaml[VALUE]
+        let yaml = if yaml[Keyword::VALUE] != BadValue {
+            &yaml[Keyword::VALUE]
         } else {
             yaml
         };
-        if yaml[COLOR] != BadValue {
-            material.color = self.parse_color(&yaml[COLOR])?;
+        if yaml[Keyword::COLOR] != BadValue {
+            material.color = self.parse_color(&yaml[Keyword::COLOR])?;
         }
 
         if yaml["pattern"] != BadValue {
@@ -148,11 +152,11 @@ impl SceneParser {
         let colors = yaml["colors"].as_vec().unwrap();
         let color_a = self.parse_color(&colors[0])?;
         let color_b = self.parse_color(&colors[1])?;
-        let maybe_transformation = match yaml[TRANSFORMATION] {
+        let maybe_transformation = match yaml[Keyword::TRANSFORMATION] {
             BadValue => None,
-            _ => Some(self.parse_transformation(&yaml[TRANSFORMATION])?),
+            _ => Some(self.parse_transformation(&yaml[Keyword::TRANSFORMATION])?),
         };
-        return match &yaml[TYPE] {
+        return match &yaml[Keyword::TYPE] {
             Yaml::String(value) => match value.as_str() {
                 "stripes" => {
                     let mut pattern = StripePattern::new(color_a, color_b);
@@ -191,8 +195,8 @@ impl SceneParser {
     fn parse_transformation(&self, yaml: &Yaml) -> Result<Transformation, Box<dyn Error>> {
         let mut transformation = Transformation::IDENTITY;
 
-        let yaml = if yaml[VALUE] != BadValue {
-            &yaml[VALUE]
+        let yaml = if yaml[Keyword::VALUE] != BadValue {
+            &yaml[Keyword::VALUE]
         } else {
             yaml
         };
@@ -200,7 +204,7 @@ impl SceneParser {
         for transform in yaml.clone().into_iter() {
             match transform {
                 Yaml::String(value) => {
-                    transformation = transformation * self.transformations[&value.clone()];
+                    transformation = transformation * self.transformations[&value];
                 }
                 Yaml::Array(values) => match values[0].as_str().unwrap() {
                     "scale" => {
@@ -237,8 +241,8 @@ impl SceneParser {
         &self,
         yaml: &Yaml,
     ) -> Result<(Material, Transformation), Box<dyn Error>> {
-        let material = self.parse_material(&yaml[MATERIAL])?;
-        let transformation = self.parse_transformation(&yaml[TRANSFORMATION])?;
+        let material = self.parse_material(&yaml[Keyword::MATERIAL])?;
+        let transformation = self.parse_transformation(&yaml[Keyword::TRANSFORMATION])?;
         return Ok((material, transformation));
     }
 
@@ -246,7 +250,7 @@ impl SceneParser {
         let mut world = World::new(Vec::new(), Vec::new());
         let mut camera = Camera::new(0, 0, 0);
         for entry in yaml.clone().into_iter() {
-            if let Yaml::String(name) = &entry[ADD] {
+            if let Yaml::String(name) = &entry[Keyword::ADD] {
                 match name.as_str() {
                     "camera" => {
                         let horizontal_size = parse_f64(&entry["width"])? as u32;

@@ -1,4 +1,4 @@
-use crate::composites::{ComputedHit, Intersections, Ray};
+use crate::composites::{ComputedHit, Intersections, Material, Ray};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
 use core::cmp::Ordering;
@@ -31,9 +31,8 @@ impl Intersection<'_> {
         let reflect_direction = ray.direction.reflect(&normal);
 
         let mut containers: Vec<&dyn Shape> = Vec::new();
-        const DEFAULT_REFRACTIVE_INDEX: f64 = 1.0;
-        let mut refractive_index_1: f64 = DEFAULT_REFRACTIVE_INDEX;
-        let mut refractive_index_2: f64 = DEFAULT_REFRACTIVE_INDEX;
+        let mut refractive_index_1: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
+        let mut refractive_index_2: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
 
         // since no intersections can be produced at this point comparing pointers should be enough to test for equality
         for intersection in intersections {
@@ -41,7 +40,7 @@ impl Intersection<'_> {
             if is_self {
                 refractive_index_1 = containers
                     .last()
-                    .map_or(DEFAULT_REFRACTIVE_INDEX, |intersection| {
+                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |intersection| {
                         intersection.material().refractive_index
                     });
             }
@@ -58,7 +57,7 @@ impl Intersection<'_> {
             if is_self {
                 refractive_index_2 = containers
                     .last()
-                    .map_or(DEFAULT_REFRACTIVE_INDEX, |intersection| {
+                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |intersection| {
                         intersection.material().refractive_index
                     });
                 break;
@@ -72,9 +71,9 @@ impl Intersection<'_> {
             camera_direction,
             normal,
             reflect_direction,
-            is_inside,
             refractive_index_1,
             refractive_index_2,
+            is_inside,
         );
     }
 

@@ -120,6 +120,7 @@ impl PartialEq for Color {
 impl Add for Color {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         return Self::new(
             self.red + rhs.red,
@@ -132,6 +133,7 @@ impl Add for Color {
 impl Sub for Color {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         return Self::new(
             self.red - rhs.red,
@@ -144,6 +146,7 @@ impl Sub for Color {
 impl Mul for Color {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         return Self::new(
             self.red * rhs.red,
@@ -156,6 +159,7 @@ impl Mul for Color {
 impl Mul<f64> for Color {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: f64) -> Self::Output {
         return self.map(|value| value * rhs);
     }
@@ -164,6 +168,7 @@ impl Mul<f64> for Color {
 impl Div<f64> for Color {
     type Output = Self;
 
+    #[inline]
     fn div(self, rhs: f64) -> Self::Output {
         return self.map(|value| value / rhs);
     }

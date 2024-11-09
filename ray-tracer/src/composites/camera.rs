@@ -4,8 +4,7 @@ use crate::shapes::Transform;
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
-use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
-use rayon::prelude::IndexedParallelIterator;
+use rayon::prelude::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
@@ -49,6 +48,7 @@ impl Camera {
         };
     }
 
+    #[inline]
     pub fn ray_for_pixel(&self, pixel_x: u32, pixel_y: u32) -> Ray {
         // the offset from the edge of the canvas to the pixel's center
         let offset_x = (pixel_x as f64 + 0.5) * self.pixel_size;
@@ -67,6 +67,7 @@ impl Camera {
         return Ray::new(self.origin, direction);
     }
 
+    #[inline]
     fn render_pixel(&self, index: usize, pixel: &mut Color, world: &World) {
         let x: u32 = index as u32 % self.horizontal_size;
         let y: u32 = index as u32 / self.horizontal_size;

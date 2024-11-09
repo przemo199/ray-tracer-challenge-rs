@@ -9,6 +9,7 @@ use std::io;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Canvas {
     pub width: u32,
     pub height: u32,
@@ -33,26 +34,32 @@ impl Canvas {
         };
     }
 
+    #[inline]
     pub const fn xy_to_index(&self, x: u32, y: u32) -> usize {
         return Self::coords_to_index(self.width, (x, y));
     }
 
+    #[inline]
     pub const fn coords_to_index(canvas_width: u32, (x, y): (u32, u32)) -> usize {
         return (x + (y * canvas_width)) as usize;
     }
 
+    #[inline]
     pub const fn index_to_xy(&self, index: usize) -> (u32, u32) {
         return Self::index_to_coords(self.width, index);
     }
 
+    #[inline]
     pub const fn index_to_coords(canvas_width: u32, index: usize) -> (u32, u32) {
         return (index as u32 % canvas_width, index as u32 / canvas_width);
     }
 
+    #[inline]
     pub fn get_pixel(&self, x: u32, y: u32) -> &Color {
         return &self.pixels[self.xy_to_index(x, y)];
     }
 
+    #[inline]
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let index = self.xy_to_index(x, y);
         self.pixels[index] = color;
@@ -155,7 +162,7 @@ mod tests {
     fn set_pixel() {
         let mut canvas = Canvas::new(10, 20);
         canvas.set_pixel(2, 3, Color::RED);
-        assert_eq!(canvas.get_pixel(2, 3), &Color::new(1, 0, 0));
+        assert_eq!(canvas.get_pixel(2, 3), &Color::RED);
     }
 
     #[test]

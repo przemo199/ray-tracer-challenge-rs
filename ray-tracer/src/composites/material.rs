@@ -22,6 +22,9 @@ pub struct Material {
 }
 
 impl Material {
+    /// Refractive index of air
+    pub const DEFAULT_REFRACTIVE_INDEX: f64 = 1.0;
+
     pub fn new(
         color: Color,
         pattern: Option<Arc<dyn Pattern>>,
@@ -48,7 +51,7 @@ impl Material {
         };
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn lighting(
         &self,
         shape: &dyn Shape,
@@ -70,7 +73,7 @@ impl Material {
         );
     }
 
-    #[inline(always)]
+    #[inline]
     fn resolve_color(&self, shape: &dyn Shape, point: &Point) -> Color {
         return self
             .pattern
@@ -78,7 +81,7 @@ impl Material {
             .map_or(self.color, |pattern| pattern.color_at_shape(shape, point));
     }
 
-    #[inline(always)]
+    #[inline]
     fn calculate_lighting(
         &self,
         effective_color: &Color,

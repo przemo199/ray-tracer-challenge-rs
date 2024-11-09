@@ -3,13 +3,15 @@ use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::mem;
-use core::ops::{Deref, DerefMut, Mul};
+use core::ops::{Deref, DerefMut, Mul, Neg, Range};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Matrix<const SIDE_LENGTH: usize>([[f64; SIDE_LENGTH]; SIDE_LENGTH]);
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
     pub const EMPTY: Self = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
+
+    pub const SIDE_LENGTH_RANGE: Range<usize> = 0..SIDE_LENGTH;
 
     pub const IDENTITY: Self = {
         let mut result = Self::EMPTY;
@@ -25,18 +27,10 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
         return Self(elements);
     }
 
-    pub const fn get_index(&self, row: usize, column: usize) -> f64 {
-        return self.0[row][column];
-    }
-
-    pub fn set_index(&mut self, row: usize, column: usize, value: impl Into<f64>) {
-        self[row][column] = value.into();
-    }
-
-    #[inline(always)]
+    #[inline]
     pub fn transpose(&self) -> Self {
         let mut result = *self;
-        for row in 0..SIDE_LENGTH {
+        for row in Self::SIDE_LENGTH_RANGE {
             let row_offset = row + 1;
             let (upper_slice, lower_slice) = result.split_at_mut(row_offset);
             for column in row_offset..SIDE_LENGTH {
@@ -50,31 +44,46 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
     }
 
     pub fn is_identity(&self) -> bool {
-        for row in 0..SIDE_LENGTH {
-            for column in 0..SIDE_LENGTH {
-                if row == column && !self[row][column].coarse_eq(1.0)
-                    || !self[row][column].coarse_eq(0.0)
-                {
-                    return false;
-                }
+        return self.iter().enumerate().all(|(row_index, row)| {
+            row.iter().enumerate().all(|(column_index, value)| {
+                return value.coarse_eq(if row_index == column_index { 1.0 } else { 0.0 });
+            })
+        });
+    }
+
+    #[inline]
+    pub fn for_each_mut(&mut self, mut op: impl Fn(usize, usize, &mut f64)) {
+        for (row_index, row) in self.iter_mut().enumerate() {
+            for (column_index, value) in row.iter_mut().enumerate() {
+                op(row_index, column_index, value);
             }
         }
-        return true;
     }
 }
 
 impl Matrix<2> {
-    #[inline(always)]
-    pub const fn submatrix(&self, row: usize, column: usize) -> f64 {
-        return self.0[row][column];
+    #[inline]
+    pub fn submatrix(&self, excluded_row: usize, excluded_column: usize) -> f64 {
+        for row_index in Self::SIDE_LENGTH_RANGE {
+            if row_index == excluded_row {
+                continue;
+            }
+            for column_index in Self::SIDE_LENGTH_RANGE {
+                if column_index == excluded_column {
+                    continue;
+                }
+                return self.0[row_index][column_index];
+            }
+        }
+        unreachable!();
     }
 
-    #[inline(always)]
-    fn determinant(&self) -> f64 {
+    #[inline]
+    pub fn determinant(&self) -> f64 {
         return (self[0][0] * self[1][1]) - (self[0][1] * self[1][0]);
     }
 
-    pub const fn minor(&self, row: usize, column: usize) -> f64 {
+    pub fn minor(&self, row: usize, column: usize) -> f64 {
         return self.submatrix(row, column);
     }
 
@@ -91,56 +100,57 @@ impl Matrix<2> {
         return self.determinant() != 0.0;
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inverse(&self) -> Self {
-        let mut result = Matrix::<2>::EMPTY;
+        if self.is_identity() {
+            return Self::IDENTITY;
+        }
+
+        let mut result = Self::EMPTY;
         let determinant = self.determinant();
 
-        for row in 0..2 {
-            for column in 0..2 {
-                let cofactor = self.cofactor(row, column);
-                result.set_index(column, row, cofactor / determinant);
-            }
-        }
+        result.for_each_mut(|row_index, column_index, value| {
+            *value = self.cofactor(column_index, row_index) / determinant;
+        });
 
         return result;
     }
 }
 
 impl Matrix<3> {
-    #[inline(always)]
-    fn submatrix(&self, row: usize, column: usize) -> Matrix<2> {
+    #[inline]
+    fn submatrix(&self, excluded_row: usize, excluded_column: usize) -> Matrix<2> {
         let mut result = Matrix::<2>::EMPTY;
 
-        for row_index in 0..self.len() {
-            if row_index != row {
-                for column_index in 0..self.len() {
-                    if column_index != column {
-                        let new_row_index = if row_index < row {
-                            row_index
-                        } else {
-                            row_index - 1
-                        };
-                        let new_column_index = if column_index < column {
-                            column_index
-                        } else {
-                            column_index - 1
-                        };
-                        result[new_row_index][new_column_index] = self[row_index][column_index];
-                    }
+        for row_index in Self::SIDE_LENGTH_RANGE {
+            if row_index == excluded_row {
+                continue;
+            }
+            for column_index in Self::SIDE_LENGTH_RANGE {
+                if column_index == excluded_column {
+                    continue;
                 }
+                let new_row_index = if row_index < excluded_row {
+                    row_index
+                } else {
+                    row_index - 1
+                };
+                let new_column_index = if column_index < excluded_column {
+                    column_index
+                } else {
+                    column_index - 1
+                };
+                result[new_row_index][new_column_index] = self[row_index][column_index];
             }
         }
         return result;
     }
 
-    #[inline(always)]
-    fn determinant(&self) -> f64 {
-        let mut determinant = 0.0;
-        for column in 0..self.len() {
-            determinant += self[0][column] * self.cofactor(0, column);
-        }
-        return determinant;
+    #[inline]
+    pub fn determinant(&self) -> f64 {
+        return Self::SIDE_LENGTH_RANGE.fold(0.0, |acc, index| {
+            acc + (self[0][index] * self.cofactor(0, index))
+        });
     }
 
     pub fn minor(&self, row: usize, column: usize) -> f64 {
@@ -160,56 +170,59 @@ impl Matrix<3> {
         return self.determinant() != 0.0;
     }
 
-    #[inline(always)]
-    pub fn inverse(&self) -> Matrix<3> {
-        let mut result = Matrix::<3>::EMPTY;
-        let determinant = self.determinant();
-
-        for row in 0..3 {
-            for column in 0..3 {
-                let cofactor = self.cofactor(row, column);
-                result.set_index(column, row, cofactor / determinant);
-            }
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        if self.is_identity() {
+            return Self::IDENTITY;
         }
 
+        let mut result = Self::EMPTY;
+        let determinant = self.determinant();
+        result.for_each_mut(|row_index, column_index, value| {
+            *value = self.cofactor(column_index, row_index) / determinant;
+        });
         return result;
     }
 }
 
 impl Matrix<4> {
-    #[inline(always)]
-    fn submatrix(&self, row: usize, column: usize) -> Matrix<3> {
+    #[inline]
+    fn submatrix(&self, excluded_row: usize, excluded_column: usize) -> Matrix<3> {
+        if self.is_identity() {
+            return Matrix::<3>::IDENTITY;
+        }
+
         let mut result = Matrix::<3>::EMPTY;
 
-        for row_index in 0..self.len() {
-            if row_index != row {
-                for column_index in 0..self.len() {
-                    if column_index != column {
-                        let new_row_index = if row_index < row {
-                            row_index
-                        } else {
-                            row_index - 1
-                        };
-                        let new_column_index = if column_index < column {
-                            column_index
-                        } else {
-                            column_index - 1
-                        };
-                        result[new_row_index][new_column_index] = self[row_index][column_index];
-                    }
+        for row_index in Self::SIDE_LENGTH_RANGE {
+            if row_index == excluded_row {
+                continue;
+            }
+            for column_index in Self::SIDE_LENGTH_RANGE {
+                if column_index == excluded_column {
+                    continue;
                 }
+                let new_row_index = if row_index < excluded_row {
+                    row_index
+                } else {
+                    row_index - 1
+                };
+                let new_column_index = if column_index < excluded_column {
+                    column_index
+                } else {
+                    column_index - 1
+                };
+                result[new_row_index][new_column_index] = self[row_index][column_index];
             }
         }
         return result;
     }
 
-    #[inline(always)]
-    fn determinant(&self) -> f64 {
-        let mut determinant = 0.0;
-        for column in 0..self.len() {
-            determinant += self[0][column] * self.cofactor(0, column);
-        }
-        return determinant;
+    #[inline]
+    pub fn determinant(&self) -> f64 {
+        return Self::SIDE_LENGTH_RANGE.fold(0.0, |acc, index| {
+            acc + (self[0][index] * self.cofactor(0, index))
+        });
     }
 
     fn minor(&self, row: usize, column: usize) -> f64 {
@@ -229,7 +242,7 @@ impl Matrix<4> {
         return self.determinant() != 0.0;
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inverse(&self) -> Self {
         if self.is_identity() {
             return Self::IDENTITY;
@@ -237,12 +250,9 @@ impl Matrix<4> {
 
         let mut result = Self::EMPTY;
         let determinant = self.determinant();
-        for row in 0..4 {
-            for column in 0..4 {
-                let cofactor = self.cofactor(row, column);
-                result.set_index(column, row, cofactor / determinant);
-            }
-        }
+        result.for_each_mut(|row_index, column_index, value| {
+            *value = self.cofactor(column_index, row_index) / determinant;
+        });
         return result;
     }
 }
@@ -277,6 +287,7 @@ impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
 }
 
 impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
+    #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         if std::ptr::eq(self, rhs) {
             return true;
@@ -290,21 +301,29 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
     }
 }
 
+impl<const SIDE_LENGTH: usize> Neg for Matrix<SIDE_LENGTH> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let mut result = self;
+        result.for_each_mut(|_, _, value| {
+            *value = -*value;
+        });
+        return result;
+    }
+}
+
 impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         let mut result = Self::EMPTY;
-        for (row_index, row) in result.iter_mut().enumerate() {
-            for (column_index, value) in row.iter_mut().enumerate() {
-                let mut sum = 0.0;
-                for i in 0..SIDE_LENGTH {
-                    sum += self.get_index(row_index, i) * rhs.get_index(i, column_index);
-                }
-                *value = sum;
-            }
-        }
-
+        result.for_each_mut(|row_index, column_index, value| {
+            *value = rhs.iter().enumerate().fold(0.0, |acc, (index, row)| {
+                acc + (self[row_index][index] * row[column_index])
+            })
+        });
         return result;
     }
 }
@@ -312,35 +331,32 @@ impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
 impl Mul<Point> for Matrix<4> {
     type Output = Point;
 
+    #[inline]
     fn mul(self, rhs: Point) -> Self::Output {
-        let mut result = [0.0; 4];
-        let point_values = rhs.values();
-        for (index, row) in self.iter().enumerate() {
-            let mut sum = 0.0;
-            for (matrix_value, point_value) in row.iter().zip(point_values) {
-                sum += matrix_value * point_value;
-            }
-            result[index] = sum;
-        }
-        return result.into();
+        return Self::Output::from_fn(|row_index| {
+            return rhs
+                .into_iter()
+                .enumerate()
+                .fold(0.0, |acc, (col_index, value)| {
+                    acc + (self[row_index][col_index] * value)
+                });
+        });
     }
 }
 
 impl Mul<Vector> for Matrix<4> {
     type Output = Vector;
 
+    #[inline]
     fn mul(self, rhs: Vector) -> Self::Output {
-        let mut result = [0.0; 4];
-        let vector_values = rhs.values();
-        for (index, row) in self.iter().enumerate() {
-            let mut sum = 0.0;
-            for (matrix_value, vector_value) in row.iter().zip(vector_values) {
-                sum += matrix_value * vector_value;
-            }
-            result[index] = sum;
-        }
-
-        return result.into();
+        return Self::Output::from_fn(|row_index| {
+            return rhs
+                .into_iter()
+                .enumerate()
+                .fold(0.0, |acc, (col_index, value)| {
+                    acc + (self[row_index][col_index] * value)
+                });
+        });
     }
 }
 
@@ -351,17 +367,17 @@ mod tests {
     #[test]
     fn matrix_indices() {
         let matrix_2 = Matrix::new([[1.0, 2.0], [5.5, 6.5]]);
-        assert_eq!(matrix_2.get_index(0, 0), 1.0);
-        assert_eq!(matrix_2.get_index(0, 1), 2.0);
-        assert_eq!(matrix_2.get_index(1, 0), 5.5);
-        assert_eq!(matrix_2.get_index(1, 1), 6.5);
+        assert_eq!(matrix_2[0][0], 1.0);
+        assert_eq!(matrix_2[0][1], 2.0);
+        assert_eq!(matrix_2[1][0], 5.5);
+        assert_eq!(matrix_2[1][1], 6.5);
 
         let matrix_3 = Matrix::new([[1.0, 2.0, 3.0], [5.5, 6.5, 7.5], [9.0, 10.0, 11.0]]);
-        assert_eq!(matrix_3.get_index(0, 0), 1.0);
-        assert_eq!(matrix_3.get_index(0, 1), 2.0);
-        assert_eq!(matrix_3.get_index(1, 0), 5.5);
-        assert_eq!(matrix_3.get_index(1, 1), 6.5);
-        assert_eq!(matrix_3.get_index(2, 2), 11.0);
+        assert_eq!(matrix_3[0][0], 1.0);
+        assert_eq!(matrix_3[0][1], 2.0);
+        assert_eq!(matrix_3[1][0], 5.5);
+        assert_eq!(matrix_3[1][1], 6.5);
+        assert_eq!(matrix_3[2][2], 11.0);
 
         let matrix_4 = Matrix::new([
             [1.0, 2.0, 3.0, 4.0],
@@ -369,13 +385,13 @@ mod tests {
             [9.0, 10.0, 11.0, 12.0],
             [13.5, 14.5, 15.5, 16.5],
         ]);
-        assert_eq!(matrix_4.get_index(0, 0), 1.0);
-        assert_eq!(matrix_4.get_index(0, 3), 4.0);
-        assert_eq!(matrix_4.get_index(1, 0), 5.5);
-        assert_eq!(matrix_4.get_index(1, 2), 7.5);
-        assert_eq!(matrix_4.get_index(2, 2), 11.0);
-        assert_eq!(matrix_4.get_index(3, 0), 13.5);
-        assert_eq!(matrix_4.get_index(3, 2), 15.5);
+        assert_eq!(matrix_4[0][0], 1.0);
+        assert_eq!(matrix_4[0][3], 4.0);
+        assert_eq!(matrix_4[1][0], 5.5);
+        assert_eq!(matrix_4[1][2], 7.5);
+        assert_eq!(matrix_4[2][2], 11.0);
+        assert_eq!(matrix_4[3][0], 13.5);
+        assert_eq!(matrix_4[3][2], 15.5);
     }
 
     #[test]
@@ -604,9 +620,9 @@ mod tests {
         let matrix_5 = matrix_1.inverse();
         assert_eq!(matrix_1.determinant(), 532.0);
         assert_eq!(matrix_1.cofactor(2, 3), -160.0);
-        assert_eq!(matrix_5.get_index(3, 2), -160.0 / 532.0);
+        assert_eq!(matrix_5[3][2], -160.0 / 532.0);
         assert_eq!(matrix_1.cofactor(3, 2), 105.0);
-        assert_eq!(matrix_5.get_index(2, 3), 105.0 / 532.0);
+        assert_eq!(matrix_5[2][3], 105.0 / 532.0);
         assert_eq!(matrix_5, matrix_2);
         assert_eq!(matrix_3.inverse(), matrix_4);
     }

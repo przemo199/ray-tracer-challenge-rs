@@ -3,6 +3,7 @@ use crate::primitives::{Point, Transformation, Vector};
 use core::fmt::Debug;
 
 pub trait Shape: Debug + Send + Sync + Transform + Intersect {
+    #[inline]
     fn normal_at(&self, point: Point) -> Vector {
         let local_point = self.transformation_inverse() * point;
         let local_normal = self.local_normal_at(local_point);
@@ -10,6 +11,7 @@ pub trait Shape: Debug + Send + Sync + Transform + Intersect {
         return world_normal.normalized();
     }
 
+    #[inline]
     fn local_normal_at(&self, point: Point) -> Vector;
 
     fn material(&self) -> &Material;
@@ -28,6 +30,7 @@ pub trait Transform {
 }
 
 pub trait Intersect {
+    #[inline]
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>);
 }
 

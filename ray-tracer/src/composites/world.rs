@@ -3,6 +3,7 @@ use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
 use core::fmt::{Display, Formatter, Result};
+use std::ops::Add;
 
 #[derive(Debug)]
 pub struct World {
@@ -20,6 +21,7 @@ impl World {
     }
 
     /// Clears intersection buffer and fills it with result of intersecting [Ray] with shapes in [World]
+    #[inline]
     pub fn collect_intersections<'shapes>(
         &'shapes self,
         ray: &Ray,
@@ -32,6 +34,7 @@ impl World {
         intersections.sort();
     }
 
+    #[inline]
     fn shade_hit<'shapes>(
         &'shapes self,
         computed_hit: &ComputedHit,
@@ -46,7 +49,7 @@ impl World {
                 let in_shadow = self.is_in_shadow(light, &computed_hit.over_point, intersections);
                 return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
-            .fold(Color::new(0, 0, 0), |acc, color| acc + color);
+            .fold(Color::new(0, 0, 0), Color::add);
 
         let reflected_color =
             self.reflected_color(computed_hit, intersections, remaining_iterations);
@@ -54,7 +57,7 @@ impl World {
             self.refracted_color(computed_hit, intersections, remaining_iterations);
 
         if material.reflectiveness > 0.0 && material.transparency > 0.0 {
-            let reflectance = computed_hit.schlick();
+            let reflectance = computed_hit.schlicks_approximation();
             return surface_color
                 + reflected_color * reflectance
                 + refracted_color * (1.0 - reflectance);
@@ -63,6 +66,7 @@ impl World {
         }
     }
 
+    #[inline]
     fn internal_color_at<'shapes>(
         &'shapes self,
         ray: &Ray,
@@ -81,6 +85,7 @@ impl World {
             .unwrap_or(Self::DEFAULT_COLOR);
     }
 
+    #[inline]
     pub fn color_at<'shapes>(
         &'shapes self,
         ray: &Ray,

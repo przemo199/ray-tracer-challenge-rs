@@ -25,10 +25,12 @@ impl Ray {
         return Self { origin, direction };
     }
 
+    #[inline]
     pub fn position(&self, distance: impl Into<f64>) -> Point {
         return self.origin + self.direction * distance.into();
     }
 
+    #[inline]
     pub fn intersect<'shape, T: Transform + Intersect + ?Sized>(
         &self,
         shape: &'shape T,
@@ -38,6 +40,7 @@ impl Ray {
         shape.local_intersect(&local_ray, intersections);
     }
 
+    #[inline]
     pub fn transform(&self, transformation: Transformation) -> Self {
         let new_origin = transformation * self.origin;
         let new_direction = transformation * self.direction;

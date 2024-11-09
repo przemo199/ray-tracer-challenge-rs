@@ -17,15 +17,19 @@ where
 impl CoarseEq for f64 {
     const EPSILON: Self = EPSILON;
 
-    #[inline(always)]
+    #[inline]
     fn coarse_eq(&self, rhs: impl Into<Self>) -> bool {
-        return (self - rhs.into()).abs() < CoarseEq::EPSILON;
+        let value = rhs.into();
+        if *self == value {
+            return true;
+        }
+        return (self - value).abs() < CoarseEq::EPSILON;
     }
 }
 
 /// Trait for efficiently squaring values
 pub trait Squared: Copy + Mul<Self, Output = Self> {
-    #[inline(always)]
+    #[inline]
     fn squared(self) -> Self {
         return self * self;
     }
@@ -33,7 +37,7 @@ pub trait Squared: Copy + Mul<Self, Output = Self> {
 
 impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
 
-#[inline(always)]
+#[inline]
 pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
     let discriminant = (4.0 * a).mul_add(-c, b.squared());
     if discriminant < 0.0 {
@@ -46,7 +50,7 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
     return Some((solution_1, solution_2));
 }
 
-#[inline(always)]
+#[inline]
 pub const fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
     return unsafe {
         core::slice::from_raw_parts((value as *const T) as *const u8, size_of::<T>())

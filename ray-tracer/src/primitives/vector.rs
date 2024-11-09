@@ -13,6 +13,8 @@ pub struct Vector {
 }
 
 impl Vector {
+    pub const W: f64 = 0.0;
+
     pub const ZERO: Self = Self {
         x: 0.0,
         y: 0.0,
@@ -72,10 +74,15 @@ impl Vector {
         };
     }
 
-    pub const fn values(&self) -> [f64; 4] {
-        return [self.x, self.y, self.z, 0.0];
+    pub fn from_fn(init: impl Fn(usize) -> f64) -> Self {
+        return Vector::new(init(0), init(1), init(2));
     }
 
+    pub const fn values(&self) -> [f64; 4] {
+        return [self.x, self.y, self.z, Self::W];
+    }
+
+    #[inline]
     pub fn magnitude(&self) -> f64 {
         return (self.x.squared() + self.y.squared() + self.z.squared()).sqrt();
     }
@@ -128,6 +135,7 @@ impl Display for Vector {
 }
 
 impl PartialEq for Vector {
+    #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
             || self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
@@ -137,6 +145,7 @@ impl PartialEq for Vector {
 impl Add for Vector {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         return Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
@@ -145,6 +154,7 @@ impl Add for Vector {
 impl Sub for Vector {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         return Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
@@ -153,6 +163,7 @@ impl Sub for Vector {
 impl Mul<f64> for Vector {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: f64) -> Self::Output {
         return self.map(|value| value * rhs);
     }
@@ -161,6 +172,7 @@ impl Mul<f64> for Vector {
 impl Div<f64> for Vector {
     type Output = Self;
 
+    #[inline]
     fn div(self, rhs: f64) -> Self::Output {
         return self.map(|value| value / rhs);
     }
@@ -169,6 +181,7 @@ impl Div<f64> for Vector {
 impl Neg for Vector {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         return self.map(|value| -value);
     }
@@ -177,17 +190,38 @@ impl Neg for Vector {
 impl Index<usize> for Vector {
     type Output = f64;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         return match index {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
-            3 => &0.0,
+            3 => &Self::W,
             _ => panic!(
                 "index out of bounds: the len is 4 but the index is {}",
                 index
             ),
         };
+    }
+}
+
+impl IntoIterator for Vector {
+    type Item = f64;
+    type IntoIter = std::array::IntoIter<f64, 4>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        return IntoIterator::into_iter(self.values());
+    }
+}
+
+impl<'a> IntoIterator for &'a Vector {
+    type Item = &'a f64;
+    type IntoIter = std::array::IntoIter<&'a f64, 4>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        return IntoIterator::into_iter([&self.x, &self.y, &self.z, &Vector::W]);
     }
 }
 
@@ -213,7 +247,7 @@ impl From<Vector> for [f64; 4] {
 
 impl From<Vector> for [f64; 3] {
     fn from(value: Vector) -> Self {
-        let [x, y, z, _] = value.values();
+        let [x, y, z, ..] = value.values();
         return [x, y, z];
     }
 }

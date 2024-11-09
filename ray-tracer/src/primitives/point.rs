@@ -3,9 +3,9 @@ use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Neg, Sub};
-use std::ops::Index;
+use std::ops::{Deref, Index};
 
-/// Struct representing point in three dimensional space
+/// Struct representing point in three-dimensional space
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Point {
     pub x: f64,
@@ -14,6 +14,8 @@ pub struct Point {
 }
 
 impl Point {
+    pub const W: f64 = 1.0;
+
     pub const ORIGIN: Self = Self {
         x: 0.0,
         y: 0.0,
@@ -39,8 +41,12 @@ impl Point {
         };
     }
 
+    pub fn from_fn(init: impl Fn(usize) -> f64) -> Self {
+        return Point::new(init(0), init(1), init(2));
+    }
+
     pub const fn values(&self) -> [f64; 4] {
-        return [self.x, self.y, self.z, 1.0];
+        return [self.x, self.y, self.z, Self::W];
     }
 
     pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
@@ -70,6 +76,7 @@ impl Display for Point {
 }
 
 impl PartialEq for Point {
+    #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
             || self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
@@ -79,6 +86,7 @@ impl PartialEq for Point {
 impl Add<Vector> for Point {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Vector) -> Self::Output {
         return Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
@@ -87,6 +95,7 @@ impl Add<Vector> for Point {
 impl Sub for Point {
     type Output = Vector;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         return Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
@@ -95,6 +104,7 @@ impl Sub for Point {
 impl Sub<Vector> for Point {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Vector) -> Self::Output {
         return Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
@@ -103,6 +113,7 @@ impl Sub<Vector> for Point {
 impl Mul<f64> for Point {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: f64) -> Self::Output {
         return self.map(|value| value * rhs);
     }
@@ -111,6 +122,7 @@ impl Mul<f64> for Point {
 impl Div<f64> for Point {
     type Output = Self;
 
+    #[inline]
     fn div(self, rhs: f64) -> Self::Output {
         return self.map(|value| value / rhs);
     }
@@ -119,6 +131,7 @@ impl Div<f64> for Point {
 impl Neg for Point {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         return self.map(f64::neg);
     }
@@ -127,17 +140,37 @@ impl Neg for Point {
 impl Index<usize> for Point {
     type Output = f64;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         return match index {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
-            3 => &1.0,
+            3 => &Self::W,
             _ => panic!(
                 "index out of bounds: the len is 4 but the index is {}",
                 index
             ),
         };
+    }
+}
+
+impl IntoIterator for Point {
+    type Item = f64;
+    type IntoIter = std::array::IntoIter<f64, 4>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        return IntoIterator::into_iter(self.values());
+    }
+}
+
+impl<'a> IntoIterator for &'a Point {
+    type Item = &'a f64;
+    type IntoIter = std::array::IntoIter<&'a f64, 4>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        return IntoIterator::into_iter([&self.x, &self.y, &self.z, &Point::W]);
     }
 }
 
@@ -163,7 +196,7 @@ impl From<Point> for [f64; 4] {
 
 impl From<Point> for [f64; 3] {
     fn from(value: Point) -> Self {
-        let [x, y, z, _] = value.values();
+        let [x, y, z, ..] = value.values();
         return [x, y, z];
     }
 }

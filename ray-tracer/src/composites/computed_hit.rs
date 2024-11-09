@@ -13,27 +13,27 @@ pub struct ComputedHit<'shape> {
     pub camera_direction: Vector,
     pub normal: Vector,
     pub reflect_direction: Vector,
-    pub is_inside: bool,
     pub refractive_index_1: f64,
     pub refractive_index_2: f64,
+    pub is_inside: bool,
 }
 
 impl ComputedHit<'_> {
     pub fn new(
-        distance: impl Into<f64>,
+        distance: f64,
         shape: &dyn Shape,
         point: Point,
         camera_direction: Vector,
         normal: Vector,
         reflect_direction: Vector,
+        refractive_index_1: f64,
+        refractive_index_2: f64,
         is_inside: bool,
-        refractive_index_1: impl Into<f64>,
-        refractive_index_2: impl Into<f64>,
     ) -> ComputedHit {
         let over_point = point + (normal * EPSILON);
         let under_point = point - (normal * EPSILON);
         return ComputedHit {
-            distance: distance.into(),
+            distance,
             shape,
             point,
             over_point,
@@ -41,13 +41,13 @@ impl ComputedHit<'_> {
             camera_direction,
             normal,
             reflect_direction,
+            refractive_index_1,
+            refractive_index_2,
             is_inside,
-            refractive_index_1: refractive_index_1.into(),
-            refractive_index_2: refractive_index_2.into(),
         };
     }
 
-    pub fn schlick(&self) -> f64 {
+    pub fn schlicks_approximation(&self) -> f64 {
         let mut cos = self.camera_direction.dot(&self.normal);
 
         if self.refractive_index_1 > self.refractive_index_2 {
@@ -61,10 +61,10 @@ impl ComputedHit<'_> {
             cos = (1.0 - sin2_t).sqrt();
         }
 
-        let r0 = ((self.refractive_index_1 - self.refractive_index_2)
+        let reflection_coefficient = ((self.refractive_index_1 - self.refractive_index_2)
             / (self.refractive_index_1 + self.refractive_index_2))
             .squared();
-        return (1.0 - r0).mul_add((1.0 - cos).powi(5), r0);
+        return (1.0 - reflection_coefficient).mul_add((1.0 - cos).powi(5), reflection_coefficient);
     }
 }
 
@@ -91,7 +91,7 @@ mod tests {
             boxed_shape.as_ref(),
         ));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
-        assert_eq!(computed_hit.schlick(), 1.0);
+        assert_eq!(computed_hit.schlicks_approximation(), 1.0);
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod tests {
         intersections.push(Intersection::new(-1, boxed_shape.as_ref()));
         intersections.push(Intersection::new(1, boxed_shape.as_ref()));
         let computed_hit = intersections[1].prepare_computations(&ray, &intersections);
-        assert_eq!(computed_hit.schlick(), 0.04000000000000001);
+        assert_eq!(computed_hit.schlicks_approximation(), 0.04000000000000001);
     }
 
     #[test]
@@ -116,6 +116,8 @@ mod tests {
         let boxed_shape = Box::new(sphere);
         intersections.push(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        assert!(computed_hit.schlick().coarse_eq(0.4887308101221217));
+        assert!(computed_hit
+            .schlicks_approximation()
+            .coarse_eq(0.4887308101221217));
     }
 }

@@ -2,64 +2,58 @@ use crate::primitives::{Matrix, Point, Vector};
 
 pub type Transformation = Matrix<4>;
 
-#[inline]
 pub fn translation(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = Transformation::IDENTITY;
-    result.set_index(0, 3, x);
-    result.set_index(1, 3, y);
-    result.set_index(2, 3, z);
+    result[0][3] = x.into();
+    result[1][3] = y.into();
+    result[2][3] = z.into();
     return result;
 }
 
-#[inline]
 pub fn scaling(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Transformation {
     let mut result = Transformation::IDENTITY;
-    result.set_index(0, 0, x);
-    result.set_index(1, 1, y);
-    result.set_index(2, 2, z);
+    result[0][0] = x.into();
+    result[1][1] = y.into();
+    result[2][2] = z.into();
     return result;
 }
 
-#[inline]
 pub fn rotation_x(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
     let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
-    result.set_index(1, 1, cos);
-    result.set_index(1, 2, -sin);
-    result.set_index(2, 1, sin);
-    result.set_index(2, 2, cos);
+    result[1][1] = cos;
+    result[1][2] = -sin;
+    result[2][1] = sin;
+    result[2][2] = cos;
     return result;
 }
 
-#[inline]
 pub fn rotation_y(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
     let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
-    result.set_index(0, 0, cos);
-    result.set_index(0, 2, sin);
-    result.set_index(2, 0, -sin);
-    result.set_index(2, 2, cos);
+    result[0][0] = cos;
+    result[0][2] = sin;
+    result[2][0] = -sin;
+    result[2][2] = cos;
     return result;
 }
 
-#[inline]
 pub fn rotation_z(theta: impl Into<f64>) -> Transformation {
     let theta = theta.into();
     let mut result = Transformation::IDENTITY;
     let cos = theta.cos();
     let sin = theta.sin();
-    result.set_index(0, 0, cos);
-    result.set_index(0, 1, -sin);
-    result.set_index(1, 0, sin);
-    result.set_index(1, 1, cos);
+    result[0][0] = cos;
+    result[0][1] = -sin;
+    result[1][0] = sin;
+    result[1][1] = cos;
     return result;
 }
 
-#[inline]
 pub fn shearing(
     xy: impl Into<f64>,
     xz: impl Into<f64>,
@@ -69,16 +63,15 @@ pub fn shearing(
     zy: impl Into<f64>,
 ) -> Transformation {
     let mut result = Transformation::IDENTITY;
-    result.set_index(0, 1, xy);
-    result.set_index(0, 2, xz);
-    result.set_index(1, 0, yx);
-    result.set_index(1, 2, yz);
-    result.set_index(2, 0, zx);
-    result.set_index(2, 1, zy);
+    result[0][1] = xy.into();
+    result[0][2] = xz.into();
+    result[1][0] = yx.into();
+    result[1][2] = yz.into();
+    result[2][0] = zx.into();
+    result[2][1] = zy.into();
     return result;
 }
 
-#[inline]
 pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
     let forward = (to - from).normalized();
     let up_normalized = up.normalized();
