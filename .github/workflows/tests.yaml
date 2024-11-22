@@ -15,22 +15,15 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        rust: [stable, beta, nightly]
-
+        rust: [stable, nightly]
     steps:
     - name: Checkout project sources
       uses: actions/checkout@v4
     - name: Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: ${{ matrix.rust }}
-        override: true
     - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
+      run: cargo test
     - name: Run release tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --release
+      run: cargo test --release
