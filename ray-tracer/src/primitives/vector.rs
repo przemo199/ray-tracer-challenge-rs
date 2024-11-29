@@ -108,7 +108,7 @@ impl Vector {
         return *self - (*normal * 2.0_f64 * self.dot(normal));
     }
 
-    pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
+    pub fn map(&self, f: impl Fn(f64) -> f64) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 

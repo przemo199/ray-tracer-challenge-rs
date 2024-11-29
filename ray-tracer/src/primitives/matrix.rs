@@ -52,12 +52,12 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
     }
 
     #[inline]
-    pub fn for_each_mut(&mut self, mut op: impl Fn(usize, usize, &mut f64)) {
-        for (row_index, row) in self.iter_mut().enumerate() {
-            for (column_index, value) in row.iter_mut().enumerate() {
+    pub fn for_each_mut(&mut self, op: impl Fn(usize, usize, &mut f64)) {
+        self.iter_mut().enumerate().for_each(|(row_index, row)| {
+            row.iter_mut().enumerate().for_each(|(column_index, value)| {
                 op(row_index, column_index, value);
-            }
-        }
+            })
+        });
     }
 }
 

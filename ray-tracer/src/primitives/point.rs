@@ -49,7 +49,7 @@ impl Point {
         return [self.x, self.y, self.z, Self::W];
     }
 
-    pub fn map<F: Fn(f64) -> f64>(&self, f: F) -> Self {
+    pub fn map(&self, f: impl Fn(f64) -> f64) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
 

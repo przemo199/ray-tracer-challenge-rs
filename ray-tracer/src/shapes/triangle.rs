@@ -44,7 +44,7 @@ impl Intersect for Triangle {
         }
         let vertex1_to_origin = ray.origin - self.vertex_1;
         let u = vertex1_to_origin.dot(&direction_cross_edge2) / determinant;
-        if !(0.0..1.0).contains(&u) {
+        if !(0.0..=1.0).contains(&u) {
             return;
         }
         let origin_cross_edge1 = vertex1_to_origin.cross(&self.edge_1);
