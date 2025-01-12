@@ -11,7 +11,6 @@ pub trait Shape: Debug + Send + Sync + Transform + Intersect {
         return world_normal.normalized();
     }
 
-    #[inline]
     fn local_normal_at(&self, point: Point) -> Vector;
 
     fn material(&self) -> &Material;
@@ -30,7 +29,6 @@ pub trait Transform {
 }
 
 pub trait Intersect {
-    #[inline]
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>);
 }
 
