@@ -2,7 +2,7 @@ use crate::primitives::Vector;
 use crate::utils::CoarseEq;
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
-use core::ops::{Add, Div, Mul, Neg, Index, Sub};
+use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
 /// Struct representing point in three-dimensional space
 #[derive(Clone, Copy, Debug, Encode)]

@@ -2,8 +2,7 @@ use crate::primitives::Point;
 use crate::utils::{CoarseEq, Squared};
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
-use core::ops::{Add, Div, Mul, Neg, Sub};
-use std::ops::Index;
+use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
 #[derive(Clone, Copy, Debug, Encode)]
 pub struct Vector {
@@ -183,7 +182,7 @@ impl Neg for Vector {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        return self.map(|value| -value);
+        return self.map(f64::neg);
     }
 }
 

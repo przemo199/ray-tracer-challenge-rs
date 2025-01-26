@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.dependencies]
 bincode = "2.0.0-rc.3"
-clap = { version = "4.5.26", features = ["derive"] }
+clap = { version = "4.5.27", features = ["derive"] }
 image = { version = "0.25.5", features = ["rayon", "png"] }
 indicatif = { version = "0.17.9", features = ["rayon"] }
 rayon = "1.10.0"

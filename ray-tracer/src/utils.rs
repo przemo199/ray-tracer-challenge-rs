@@ -11,19 +11,18 @@ where
 {
     const EPSILON: Self;
 
-    fn coarse_eq(&self, rhs: impl Into<Self>) -> bool;
+    fn coarse_eq(&self, rhs: Self) -> bool;
 }
 
 impl CoarseEq for f64 {
     const EPSILON: Self = EPSILON;
 
     #[inline]
-    fn coarse_eq(&self, rhs: impl Into<Self>) -> bool {
-        let value = rhs.into();
-        if *self == value {
+    fn coarse_eq(&self, rhs: Self) -> bool {
+        if *self == rhs {
             return true;
         }
-        return (self - value).abs() < CoarseEq::EPSILON;
+        return (self - rhs).abs() < CoarseEq::EPSILON;
     }
 }
 
@@ -36,6 +35,16 @@ pub trait Squared: Copy + Mul<Self, Output = Self> {
 }
 
 impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
+
+/// Trait for efficiently cubing values
+pub trait Cubed: Squared {
+    #[inline]
+    fn cubed(self) -> Self {
+        return self.squared() * self;
+    }
+}
+
+impl<T> Cubed for T where T: Squared {}
 
 #[inline]
 pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {

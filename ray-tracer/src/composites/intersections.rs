@@ -36,7 +36,7 @@ impl<'intersections> Deref for Intersections<'intersections> {
     }
 }
 
-impl<'intersections> DerefMut for Intersections<'intersections> {
+impl DerefMut for Intersections<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         return &mut (self.0);
     }

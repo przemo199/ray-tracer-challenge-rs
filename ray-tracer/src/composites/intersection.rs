@@ -30,35 +30,35 @@ impl Intersection<'_> {
 
         let reflect_direction = ray.direction.reflect(&normal);
 
-        let mut containers: Vec<&dyn Shape> = Vec::new();
+        let mut shapes: Vec<&dyn Shape> = Vec::new();
         let mut refractive_index_1: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
         let mut refractive_index_2: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
 
-        // since no intersections can be produced at this point comparing pointers should be enough to test for equality
+        // since self and intersections are immutable comparing pointers is sufficient to establish equality
         for intersection in intersections {
             let is_self = std::ptr::eq(self, intersection);
             if is_self {
-                refractive_index_1 = containers
+                refractive_index_1 = shapes
                     .last()
-                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |intersection| {
-                        intersection.material().refractive_index
+                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |shape| {
+                        shape.material().refractive_index
                     });
             }
 
-            let position = containers
+            let position = shapes
                 .iter_mut()
-                .position(|entry| std::ptr::eq(intersection.shape, *entry));
+                .position(|shape| std::ptr::eq(intersection.shape, *shape));
             if let Some(value) = position {
-                containers.remove(value);
+                shapes.remove(value);
             } else {
-                containers.push(intersection.shape);
+                shapes.push(intersection.shape);
             }
 
             if is_self {
-                refractive_index_2 = containers
+                refractive_index_2 = shapes
                     .last()
-                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |intersection| {
-                        intersection.material().refractive_index
+                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |shape| {
+                        shape.material().refractive_index
                     });
                 break;
             }

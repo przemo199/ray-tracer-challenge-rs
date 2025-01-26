@@ -3,7 +3,7 @@ use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
 use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
 use core::fmt::{Display, Formatter, Result};
-use std::ops::Add;
+use core::ops::Add;
 
 #[derive(Debug)]
 pub struct World {
@@ -49,7 +49,7 @@ impl World {
                 let in_shadow = self.is_in_shadow(light, &computed_hit.over_point, intersections);
                 return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
-            .fold(Color::new(0, 0, 0), Color::add);
+            .fold(Self::DEFAULT_COLOR, Color::add);
 
         let reflected_color =
             self.reflected_color(computed_hit, intersections, remaining_iterations);
