@@ -238,6 +238,12 @@ impl<T: Into<f64>> From<[T; 4]> for Vector {
     }
 }
 
+impl<T: Into<f64>> From<(T, T, T)> for Vector {
+    fn from(value: (T, T, T)) -> Self {
+        return Self::new(value.0, value.1, value.2);
+    }
+}
+
 impl From<Vector> for [f64; 4] {
     fn from(value: Vector) -> Self {
         return value.values();

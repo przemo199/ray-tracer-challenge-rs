@@ -1,6 +1,6 @@
 use crate::consts::EPSILON;
-use crate::primitives::transformations;
 use crate::primitives::Color;
+use crate::primitives::transformations;
 use crate::shapes::{Sphere, Transform};
 use core::ops::Mul;
 

@@ -192,6 +192,12 @@ impl Into<[f64; 3]> for Color {
     }
 }
 
+impl<T: Into<f64>> From<(T, T, T)> for Color {
+    fn from(value: (T, T, T)) -> Self {
+        return Self::new(value.0, value.1, value.2);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

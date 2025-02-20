@@ -168,7 +168,7 @@ impl Display for Camera {
 mod tests {
     use super::*;
     use crate::consts::PI;
-    use crate::primitives::{transformations, Color, Vector};
+    use crate::primitives::{Color, Vector, transformations};
 
     #[test]
     fn constructing_camera() {

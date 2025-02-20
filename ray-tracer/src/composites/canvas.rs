@@ -1,9 +1,9 @@
 use crate::composites::World;
 use crate::primitives::Color;
-use core::ops::Deref;
-use image::codecs::png::{CompressionType, FilterType, PngEncoder};
-use image::ImageEncoder;
 use core::error::Error;
+use core::ops::Deref;
+use image::ImageEncoder;
+use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use std::fs::File;
 use std::io;
 use std::io::{BufWriter, Write};
@@ -73,21 +73,24 @@ impl Canvas {
     }
 
     fn to_ppm(&self) -> String {
-        let ppm_image = self
-            .pixels
-            .chunks(self.width as usize)
-            .into_iter()
-            .map(|line| {
-                return line
-                    .iter()
-                    .map(Color::clamped)
-                    .flat_map(|color| color.channels().into_iter())
-                    .map(|channel: f64| {
-                        ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string()
-                    })
-                    .collect::<Vec<String>>()
-                    .join(" ");
-            });
+        let pixels_per_line: usize = (70.0_f64 / (3.0 * 4.0)).floor() as usize;
+        let ppm_image = self.pixels.chunks(pixels_per_line).into_iter().map(|line| {
+            return line
+                .iter()
+                .flat_map(|color| color.clamped().channels().into_iter())
+                .map(|channel| ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string())
+                .map(|number| {
+                    if number.len() == 2 {
+                        return format!(" {number}");
+                    }
+                    if number.len() == 1 {
+                        return format!("  {number}");
+                    }
+                    return number;
+                })
+                .collect::<Vec<String>>()
+                .join(" ");
+        });
         let mut content = self.get_header();
         content.extend(ppm_image);
         return content.join("\n");
@@ -184,8 +187,17 @@ mod tests {
         canvas.set_pixel(2, 1, color_2);
         canvas.set_pixel(4, 2, color_3);
         let ppm: Vec<String> = canvas.to_ppm().lines().map(str::to_owned).collect();
-        assert_eq!(ppm[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
-        assert_eq!(ppm[4], "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0");
-        assert_eq!(ppm[5], "0 0 0 0 0 0 0 0 0 0 0 0 0 0 255");
+        assert_eq!(
+            ppm[3],
+            "255   0   0   0   0   0   0   0   0   0   0   0   0   0   0"
+        );
+        assert_eq!(
+            ppm[4],
+            "  0   0   0   0   0   0   0 128   0   0   0   0   0   0   0"
+        );
+        assert_eq!(
+            ppm[5],
+            "  0   0   0   0   0   0   0   0   0   0   0   0   0   0 255"
+        );
     }
 }

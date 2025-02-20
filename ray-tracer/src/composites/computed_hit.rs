@@ -116,8 +116,10 @@ mod tests {
         let boxed_shape = Box::new(sphere);
         intersections.push(Intersection::new(1.8589, boxed_shape.as_ref()));
         let computed_hit = intersections[0].prepare_computations(&ray, &intersections);
-        assert!(computed_hit
-            .schlicks_approximation()
-            .coarse_eq(0.4887308101221217));
+        assert!(
+            computed_hit
+                .schlicks_approximation()
+                .coarse_eq(0.4887308101221217)
+        );
     }
 }

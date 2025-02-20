@@ -89,7 +89,7 @@ impl Display for Sphere {
 mod tests {
     use super::*;
     use crate::consts::PI;
-    use crate::primitives::{transformations, Vector};
+    use crate::primitives::{Vector, transformations};
     use core::default::Default;
 
     #[test]

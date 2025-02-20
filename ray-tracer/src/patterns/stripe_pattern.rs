@@ -74,7 +74,7 @@ impl Display for StripePattern {
 mod tests {
     use super::*;
     use crate::composites::Material;
-    use crate::primitives::{transformations, Light, Vector};
+    use crate::primitives::{Light, Vector, transformations};
     use crate::shapes::{Sphere, Transform};
     use std::sync::Arc;
 

@@ -1,7 +1,7 @@
 use crate::composites::{ComputedHit, Intersections, Ray};
 use crate::primitives::{Color, Light, Point};
 use crate::shapes::Shape;
-use crate::utils::{world_default_sphere_1, world_default_sphere_2, Squared};
+use crate::utils::{Squared, world_default_sphere_1, world_default_sphere_2};
 use core::fmt::{Display, Formatter, Result};
 use core::ops::Add;
 
@@ -78,9 +78,9 @@ impl World {
         let shading_intersections = &mut Intersections::new();
         return intersections
             .hit()
-            .map(|hit| hit.prepare_computations(ray, intersections))
-            .map(|computed_hit| {
-                self.shade_hit(&computed_hit, shading_intersections, remaining_iterations)
+            .map(|hit| {
+                let computed_hit = &hit.prepare_computations(ray, intersections);
+                return self.shade_hit(computed_hit, shading_intersections, remaining_iterations);
             })
             .unwrap_or(Self::DEFAULT_COLOR);
     }
@@ -106,8 +106,8 @@ impl World {
         let shadow_ray = Ray::new(*point, light_direction.normalized());
         self.collect_intersections(&shadow_ray, intersections);
         return intersections.into_iter().any(|intersection| {
-            intersection.shape.material().casts_shadow
-                && intersection.is_within_distance(light_distance)
+            return intersection.shape.material().casts_shadow
+                && intersection.is_within_distance(light_distance);
         });
     }
 
@@ -196,8 +196,8 @@ mod tests {
     use crate::composites::{Intersection, Intersections, Material, Ray};
     use crate::consts::PI;
     use crate::patterns::TestPattern;
-    use crate::primitives::transformations;
     use crate::primitives::Vector;
+    use crate::primitives::transformations;
     use crate::shapes::{Plane, Sphere, Transform};
     use std::sync::Arc;
 
@@ -213,14 +213,18 @@ mod tests {
         sphere_2.set_transformation(transformations::scaling(0.5, 0.5, 0.5));
         assert_eq!(world.lights[0], light);
         assert_eq!(world.shapes.len(), 2);
-        assert!(world
-            .shapes
-            .iter()
-            .any(|element| element.as_ref() == &sphere_1));
-        assert!(world
-            .shapes
-            .iter()
-            .any(|element| element.as_ref() == &sphere_2));
+        assert!(
+            world
+                .shapes
+                .iter()
+                .any(|element| element.as_ref() == &sphere_1)
+        );
+        assert!(
+            world
+                .shapes
+                .iter()
+                .any(|element| element.as_ref() == &sphere_2)
+        );
     }
 
     #[test]

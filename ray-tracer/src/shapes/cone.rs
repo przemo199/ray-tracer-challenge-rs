@@ -3,7 +3,7 @@ use super::{Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
-use crate::utils::{solve_quadratic, CoarseEq, Squared};
+use crate::utils::{CoarseEq, Squared, solve_quadratic};
 use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 

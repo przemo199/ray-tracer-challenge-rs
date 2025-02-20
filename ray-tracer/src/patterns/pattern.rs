@@ -1,10 +1,10 @@
 use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::{Shape, Transform};
-use bincode::enc::write::Writer;
-use bincode::enc::Encoder;
-use bincode::error::EncodeError;
 use bincode::Encode;
+use bincode::enc::Encoder;
+use bincode::enc::write::Writer;
+use bincode::error::EncodeError;
 use core::fmt::{Debug, Display, Formatter};
 
 pub trait Pattern: Transform + Debug + Display + Send + Sync {
@@ -89,7 +89,7 @@ impl Display for TestPattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primitives::{transformations, Color, Point};
+    use crate::primitives::{Color, Point, transformations};
     use crate::shapes::{Sphere, Transform};
 
     #[test]
