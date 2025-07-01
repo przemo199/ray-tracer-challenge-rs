@@ -1,9 +1,10 @@
 use crate::composites::Intersections;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::shapes::{Intersect, Transform};
+use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
@@ -36,14 +37,14 @@ impl Ray {
         shape: &'shape T,
         intersections: &mut Intersections<'shape>,
     ) {
-        let local_ray = self.transform(shape.transformation_inverse());
+        let local_ray = self.transform(&shape.transformation_inverse());
         shape.local_intersect(&local_ray, intersections);
     }
 
     #[inline]
-    pub fn transform(&self, transformation: Transformation) -> Self {
-        let new_origin = transformation * self.origin;
-        let new_direction = transformation * self.direction;
+    pub fn transform(&self, transformation: &Transformation) -> Self {
+        let new_origin = *transformation * self.origin;
+        let new_direction = *transformation * self.direction;
         return Self::new(new_origin, new_direction);
     }
 }
@@ -55,6 +56,13 @@ impl Display for Ray {
             .field("origin", &self.origin)
             .field("direction", &self.direction)
             .finish();
+    }
+}
+
+impl CoarseEq for Ray {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.origin.coarse_eq(&rhs.origin) && self.direction.coarse_eq(&rhs.direction);
     }
 }
 
@@ -152,7 +160,7 @@ mod tests {
     fn ray_translation() {
         let ray = Ray::new(Point::new(1, 2, 3), Vector::UP);
         let matrix = transformations::translation(3, 4, 5);
-        let transformed_ray = ray.transform(matrix);
+        let transformed_ray = ray.transform(&matrix);
         assert_eq!(transformed_ray.origin, Point::new(4, 6, 8));
         assert_eq!(transformed_ray.direction, Vector::UP);
     }
@@ -161,7 +169,7 @@ mod tests {
     fn ray_scaling() {
         let ray = Ray::new(Point::new(1, 2, 3), Vector::UP);
         let matrix = transformations::scaling(2, 3, 4);
-        let transformed_ray = ray.transform(matrix);
+        let transformed_ray = ray.transform(&matrix);
         assert_eq!(transformed_ray.origin, Point::new(2, 6, 12));
         assert_eq!(transformed_ray.direction, Vector::new(0, 3, 0));
     }

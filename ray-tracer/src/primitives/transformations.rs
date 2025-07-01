@@ -90,6 +90,7 @@ pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
 mod tests {
     use super::*;
     use crate::consts::PI;
+    use crate::utils::CoarseEq;
 
     #[test]
     fn point_translation() {
@@ -149,17 +150,15 @@ mod tests {
             half_quarter_rotation * point,
             Point::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
         );
-        assert_eq!(full_quarter_rotation * point, Point::new(0, 0, 1));
+        assert!((full_quarter_rotation * point).coarse_eq(&Point::new(0, 0, 1)));
     }
 
     #[test]
     fn point_rotation_inverse_around_x() {
         let point = Point::new(0, 1, 0);
         let full_quarter_rotation_inverse = rotation_x(PI / 4.0).inverse();
-        assert_eq!(
-            full_quarter_rotation_inverse * point,
-            Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0)
-        );
+        let expected = Point::new(0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt()) / 2.0);
+        assert!((full_quarter_rotation_inverse * point).coarse_eq(&expected));
     }
 
     #[test]
@@ -171,7 +170,7 @@ mod tests {
             half_quarter_rotation * point,
             Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0)
         );
-        assert_eq!(full_quarter_rotation * point, Point::new(1, 0, 0));
+        assert!((full_quarter_rotation * point).coarse_eq(&Point::new(1, 0, 0)));
     }
 
     #[test]
@@ -183,7 +182,7 @@ mod tests {
             half_quarter_rotation * point,
             Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0)
         );
-        assert_eq!(full_quarter_rotation * point, Point::new(-1, 0, 0));
+        assert!((full_quarter_rotation * point).coarse_eq(&Point::new(-1, 0, 0)));
     }
 
     #[test]
@@ -220,15 +219,15 @@ mod tests {
         let scaling = scaling(5, 5, 5);
         let translation = translation(10, 5, 7);
         let point_2 = rotation * point_1;
-        assert_eq!(point_2, Point::new(1, -1, 0));
+        assert!(point_2.coarse_eq(&Point::new(1, -1, 0)));
         let point_3 = scaling * point_2;
-        assert_eq!(point_3, Point::new(5, -5, 0));
+        assert!(point_3.coarse_eq(&Point::new(5, -5, 0)));
         let point_4 = translation * point_3;
-        assert_eq!(point_4, Point::new(15, 0, 7));
+        assert!(point_4.coarse_eq(&Point::new(15, 0, 7)));
 
         let total_transform = translation * scaling * rotation;
         let point_5 = total_transform * point_1;
-        assert_eq!(point_5, Point::new(15, 0, 7));
+        assert!(point_5.coarse_eq(&Point::new(15, 0, 7)));
     }
 
     #[test]
@@ -285,6 +284,6 @@ mod tests {
             ],
             [0.0, 0.0, 0.0, 1.0],
         ]);
-        assert_eq!(orientation, result);
+        assert!(orientation.coarse_eq(&result));
     }
 }

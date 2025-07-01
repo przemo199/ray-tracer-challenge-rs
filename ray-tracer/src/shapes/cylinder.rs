@@ -1,12 +1,11 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
+use crate::consts::{EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
-use crate::utils::{Squared, solve_quadratic};
-use bincode::Encode;
+use crate::utils::{CoarseEq, Squared, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Cylinder {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -129,10 +128,6 @@ impl Shape for Cylinder {
     fn material(&self) -> &Material {
         return &self.material;
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Cylinder");
-    }
 }
 
 impl Default for Cylinder {
@@ -157,6 +152,19 @@ impl Display for Cylinder {
             .field("material", &self.material)
             .field("transformation", &self.transformation())
             .finish();
+    }
+}
+
+impl CoarseEq for Cylinder {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+                && self.closed == rhs.closed
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&rhs.transformation_inverse)
+                && self.min.coarse_eq(&rhs.min)
+                && self.max.coarse_eq(&rhs.max);
     }
 }
 

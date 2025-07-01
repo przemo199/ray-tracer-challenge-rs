@@ -5,7 +5,6 @@ authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-bincode.workspace = true
 image.workspace = true
 indicatif.workspace = true
 rayon.workspace = true

@@ -4,7 +4,7 @@ use crate::utils::CoarseEq;
 use core::cmp::Ordering;
 use core::fmt::Debug;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Intersection<'shape> {
     pub distance: f64,
     pub shape: &'shape dyn Shape,
@@ -34,9 +34,8 @@ impl Intersection<'_> {
         let mut refractive_index_1: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
         let mut refractive_index_2: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
 
-        // since self and intersections are immutable comparing pointers is sufficient to establish equality
         for intersection in intersections {
-            let is_self = std::ptr::eq(self, intersection);
+            let is_self = self == intersection;
             if is_self {
                 refractive_index_1 = shapes
                     .last()
@@ -47,7 +46,7 @@ impl Intersection<'_> {
 
             let position = shapes
                 .iter_mut()
-                .position(|shape| std::ptr::eq(intersection.shape, *shape));
+                .position(|shape| intersection.shape == *shape);
             if let Some(value) = position {
                 shapes.remove(value);
             } else {
@@ -82,25 +81,24 @@ impl Intersection<'_> {
     }
 }
 
-impl PartialEq<Intersection<'_>> for Intersection<'_> {
-    fn eq(&self, rhs: &Intersection) -> bool {
+impl CoarseEq<Intersection<'_>> for Intersection<'_> {
+    fn coarse_eq(&self, rhs: &Intersection) -> bool {
         return std::ptr::eq(self, rhs)
-            || self.distance.coarse_eq(rhs.distance)
-                && self.shape.encoded() == rhs.shape.encoded();
+            || self.distance.coarse_eq(&rhs.distance) && self.shape == rhs.shape;
     }
 }
 
 impl Eq for Intersection<'_> {}
 
 impl PartialOrd for Intersection<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        return self.distance.partial_cmp(&other.distance);
+    fn partial_cmp(&self, rhs: &Self) -> Option<Ordering> {
+        return self.distance.partial_cmp(&rhs.distance);
     }
 }
 
 impl Ord for Intersection<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        return self.partial_cmp(other).unwrap_or(Ordering::Equal);
+    fn cmp(&self, rhs: &Self) -> Ordering {
+        return self.partial_cmp(rhs).unwrap_or(Ordering::Equal);
     }
 }
 

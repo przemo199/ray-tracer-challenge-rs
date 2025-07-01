@@ -1,13 +1,11 @@
-use super::shape::Intersect;
-use super::{Shape, Transform};
+use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
+use crate::consts::{EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Cube {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -94,9 +92,9 @@ impl Shape for Cube {
             .into_iter()
             .fold(MIN, f64::max);
 
-        if max_value.coarse_eq(abs_point.x) {
+        if max_value.coarse_eq(&abs_point.x) {
             return Vector::new(point.x, 0, 0);
-        } else if max_value.coarse_eq(abs_point.y) {
+        } else if max_value.coarse_eq(&abs_point.y) {
             return Vector::new(0, point.y, 0);
         }
         return Vector::new(0, 0, point.z);
@@ -104,10 +102,6 @@ impl Shape for Cube {
 
     fn material(&self) -> &Material {
         return &self.material;
-    }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Cube");
     }
 }
 
@@ -124,6 +118,16 @@ impl Display for Cube {
             .field("material", &self.material)
             .field("transformation", &self.transformation())
             .finish();
+    }
+}
+
+impl CoarseEq for Cube {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&rhs.transformation_inverse);
     }
 }
 

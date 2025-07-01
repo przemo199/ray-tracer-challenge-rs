@@ -1,11 +1,9 @@
-use crate::consts::BINCODE_CONFIG;
 use crate::patterns::pattern::Pattern;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CheckerPattern {
     color_a: Color,
     color_b: Color,
@@ -13,8 +11,6 @@ pub struct CheckerPattern {
 }
 
 impl CheckerPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = b"CheckerPattern";
-
     pub const fn new(color_a: Color, color_b: Color) -> Self {
         return Self {
             color_a,
@@ -32,15 +28,6 @@ impl Pattern for CheckerPattern {
         } else {
             self.color_b
         };
-    }
-
-    fn encoded(&self) -> Vec<u8> {
-        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
-        encoded.extend(
-            bincode::encode_to_vec(self, BINCODE_CONFIG)
-                .expect("Failed to serialise CheckerPattern"),
-        );
-        return encoded;
     }
 }
 

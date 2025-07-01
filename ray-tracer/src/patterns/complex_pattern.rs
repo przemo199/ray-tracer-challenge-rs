@@ -1,12 +1,10 @@
-use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use std::sync::Arc;
 
-#[derive(Clone, Debug, Encode)]
+#[derive(Clone, Debug)]
 pub struct ComplexPattern {
     pattern_a: Arc<dyn Pattern>,
     pattern_b: Arc<dyn Pattern>,
@@ -14,8 +12,6 @@ pub struct ComplexPattern {
 }
 
 impl ComplexPattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = b"ComplexPattern";
-
     pub const fn new(pattern_a: Arc<dyn Pattern>, pattern_b: Arc<dyn Pattern>) -> Self {
         return Self {
             pattern_a,
@@ -34,12 +30,6 @@ impl Pattern for ComplexPattern {
             self.pattern_b.color_at(point)
         };
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
-        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
-        return encoded;
-    }
 }
 
 impl Transform for ComplexPattern {
@@ -57,6 +47,15 @@ impl Transform for ComplexPattern {
 
     fn set_transformation_inverse(&mut self, transformation: Transformation) {
         self.transformation_inverse = transformation;
+    }
+}
+
+impl PartialEq for ComplexPattern {
+    fn eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.pattern_a.as_ref() == rhs.pattern_a.as_ref()
+                && self.pattern_b.as_ref() == rhs.pattern_b.as_ref()
+                && self.transformation_inverse == rhs.transformation_inverse;
     }
 }
 

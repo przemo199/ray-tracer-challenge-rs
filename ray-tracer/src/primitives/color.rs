@@ -1,10 +1,9 @@
 use crate::utils::CoarseEq;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Sub};
 
 /// Struct representing RGB values of a color
-#[derive(Clone, Copy, Debug, Encode)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Color {
     pub red: f64,
     pub green: f64,
@@ -108,12 +107,12 @@ impl Display for Color {
     }
 }
 
-impl PartialEq for Color {
-    fn eq(&self, rhs: &Self) -> bool {
+impl CoarseEq for Color {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
-            || self.red.coarse_eq(rhs.red)
-                && self.green.coarse_eq(rhs.green)
-                && self.blue.coarse_eq(rhs.blue);
+            || self.red.coarse_eq(&rhs.red)
+                && self.green.coarse_eq(&rhs.green)
+                && self.blue.coarse_eq(&rhs.blue);
     }
 }
 
@@ -230,7 +229,7 @@ mod tests {
     fn sub_color() {
         let color_1 = Color::new(0.9, 0.6, 0.75);
         let color_2 = Color::new(0.7, 0.1, 0.25);
-        assert_eq!(color_1 - color_2, Color::new(0.2, 0.5, 0.5));
+        assert!((color_1 - color_2).coarse_eq(&Color::new(0.2, 0.5, 0.5)));
     }
 
     #[test]
@@ -243,6 +242,6 @@ mod tests {
     fn mul_colors() {
         let color_1 = Color::new(1, 0.2, 0.4);
         let color_2 = Color::new(0.9, 1, 0.1);
-        assert_eq!(color_1 * color_2, Color::new(0.9, 0.2, 0.04));
+        assert!((color_1 * color_2).coarse_eq(&Color::new(0.9, 0.2, 0.04)));
     }
 }

@@ -1,12 +1,10 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::BINCODE_CONFIG;
 use crate::primitives::{Point, Transformation, Vector};
-use crate::utils::solve_quadratic;
-use bincode::Encode;
+use crate::utils::{CoarseEq, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Sphere {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -63,10 +61,6 @@ impl Shape for Sphere {
     fn material(&self) -> &Material {
         return &self.material;
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Sphere");
-    }
 }
 
 impl Default for Sphere {
@@ -85,11 +79,22 @@ impl Display for Sphere {
     }
 }
 
+impl CoarseEq for Sphere {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+            || self
+                .transformation_inverse
+                .coarse_eq(&rhs.transformation_inverse);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::consts::PI;
     use crate::primitives::{Vector, transformations};
+    use crate::utils::CoarseEq;
     use core::default::Default;
 
     #[test]
@@ -151,14 +156,12 @@ mod tests {
             1.0 + core::f64::consts::FRAC_1_SQRT_2,
             -core::f64::consts::FRAC_1_SQRT_2,
         ));
-        assert_eq!(
-            normal,
-            Vector::new(
-                0,
-                core::f64::consts::FRAC_1_SQRT_2,
-                -core::f64::consts::FRAC_1_SQRT_2
-            )
+        let expected = Vector::new(
+            0,
+            core::f64::consts::FRAC_1_SQRT_2,
+            -core::f64::consts::FRAC_1_SQRT_2,
         );
+        assert!(normal.coarse_eq(&expected));
     }
 
     #[test]

@@ -6,7 +6,7 @@ use core::fmt::{Display, Formatter, Result};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
     horizontal_size: u32,
     vertical_size: u32,
@@ -136,19 +136,6 @@ impl Transform for Camera {
     }
 }
 
-impl PartialEq for Camera {
-    fn eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.horizontal_size == rhs.horizontal_size
-                && self.vertical_size == rhs.vertical_size
-                && self.horizontal_size == rhs.horizontal_size
-                && self.field_of_view.coarse_eq(rhs.field_of_view)
-                && self.half_width.coarse_eq(rhs.half_width)
-                && self.half_height.coarse_eq(rhs.half_height)
-                && self.pixel_size.coarse_eq(rhs.pixel_size);
-    }
-}
-
 impl Display for Camera {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         return formatter
@@ -199,7 +186,7 @@ mod tests {
         let camera = Camera::new(201, 101, PI / 2.0);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Point::ORIGIN);
-        assert_eq!(ray.direction, Vector::BACKWARD);
+        assert!(ray.direction.coarse_eq(&Vector::BACKWARD));
     }
 
     #[test]
@@ -221,10 +208,8 @@ mod tests {
         );
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Point::new(0, 2, -5));
-        assert_eq!(
-            ray.direction,
-            Vector::new(2.0_f64.sqrt() / 2.0, 0, -(2.0_f64.sqrt()) / 2.0)
-        );
+        let expected = Vector::new(2.0_f64.sqrt() / 2.0, 0, -(2.0_f64.sqrt()) / 2.0);
+        assert!(ray.direction.coarse_eq(&expected));
     }
 
     #[test]
@@ -236,14 +221,13 @@ mod tests {
         let up = Vector::UP;
         camera.set_transformation(transformations::view_transform(from, to, up));
         let canvas = camera.render(&world);
-        assert_eq!(
-            canvas.get_pixel(5, 5),
-            &Color::new(
-                0.38066119308103435,
-                0.47582649135129296,
-                0.28549589481077575
-            )
+        let pixel = canvas.get_pixel(5, 5);
+        let expected = Color::new(
+            0.38066119308103435,
+            0.47582649135129296,
+            0.28549589481077575,
         );
+        assert!(pixel.coarse_eq(&expected));
     }
 
     #[test]
@@ -255,13 +239,12 @@ mod tests {
         let up = Vector::UP;
         camera.set_transformation(transformations::view_transform(from, to, up));
         let canvas = camera.render_parallel(&world);
-        assert_eq!(
-            canvas.get_pixel(5, 5),
-            &Color::new(
-                0.38066119308103435,
-                0.47582649135129296,
-                0.28549589481077575
-            )
+        let pixel = canvas.get_pixel(5, 5);
+        let expected = Color::new(
+            0.38066119308103435,
+            0.47582649135129296,
+            0.28549589481077575,
         );
+        assert!(pixel.coarse_eq(&expected));
     }
 }

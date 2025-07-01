@@ -1,11 +1,10 @@
 use crate::primitives::Vector;
 use crate::utils::CoarseEq;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
 /// Struct representing point in three-dimensional space
-#[derive(Clone, Copy, Debug, Encode)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -74,11 +73,10 @@ impl Display for Point {
     }
 }
 
-impl PartialEq for Point {
-    #[inline]
-    fn eq(&self, rhs: &Self) -> bool {
+impl CoarseEq for Point {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
-            || self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
+            || self.x.coarse_eq(&rhs.x) && self.y.coarse_eq(&rhs.y) && self.z.coarse_eq(&rhs.z);
     }
 }
 
@@ -233,7 +231,7 @@ mod tests {
         let point_4 = Point::new(4.0 + EPSILON - (EPSILON / 2.0), -4, 3);
         assert_eq!(point_1, point_2);
         assert_ne!(point_2, point_3);
-        assert_eq!(point_2, point_4);
+        assert!(point_2.coarse_eq(&point_4));
     }
 
     #[test]

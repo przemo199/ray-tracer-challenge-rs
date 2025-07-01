@@ -1,11 +1,11 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::EPSILON;
 use crate::primitives::{Point, Transformation, Vector};
-use bincode::Encode;
+use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -56,10 +56,6 @@ impl Shape for Plane {
     fn material(&self) -> &Material {
         return &self.material;
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Plane");
-    }
 }
 
 impl Default for Plane {
@@ -75,6 +71,16 @@ impl Display for Plane {
             .field("material", &self.material)
             .field("transformation", &self.transformation())
             .finish();
+    }
+}
+
+impl CoarseEq for Plane {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&rhs.transformation_inverse);
     }
 }
 

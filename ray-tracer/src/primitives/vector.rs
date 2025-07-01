@@ -1,10 +1,9 @@
 use crate::primitives::Point;
 use crate::utils::{CoarseEq, Squared};
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
-#[derive(Clone, Copy, Debug, Encode)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -133,11 +132,11 @@ impl Display for Vector {
     }
 }
 
-impl PartialEq for Vector {
+impl CoarseEq for Vector {
     #[inline]
-    fn eq(&self, rhs: &Self) -> bool {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
-            || self.x.coarse_eq(rhs.x) && self.y.coarse_eq(rhs.y) && self.z.coarse_eq(rhs.z);
+            || self.x.coarse_eq(&rhs.x) && self.y.coarse_eq(&rhs.y) && self.z.coarse_eq(&rhs.z);
     }
 }
 
@@ -285,7 +284,7 @@ mod tests {
         let vector_4 = Vector::new(4.0 + EPSILON - (EPSILON / 2.0), -4, 3);
         assert_eq!(vector_1, vector_2);
         assert_ne!(vector_2, vector_3);
-        assert_eq!(vector_2, vector_4);
+        assert!(vector_2.coarse_eq(&vector_4));
     }
 
     #[test]
@@ -391,6 +390,6 @@ mod tests {
         let vector = Vector::DOWN;
         let normal = Vector::new(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0);
         let reflected = vector.reflect(&normal);
-        assert_eq!(reflected, Vector::RIGHT);
+        assert!(reflected.coarse_eq(&Vector::RIGHT));
     }
 }

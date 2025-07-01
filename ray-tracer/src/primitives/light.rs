@@ -1,4 +1,5 @@
 use crate::primitives::{Color, Point};
+use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -23,6 +24,13 @@ impl Light {
             position,
             intensity,
         };
+    }
+}
+
+impl CoarseEq for Light {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.position.coarse_eq(&rhs.position) && self.intensity.coarse_eq(&rhs.intensity);
     }
 }
 

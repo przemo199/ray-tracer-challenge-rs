@@ -1,13 +1,11 @@
-use super::shape::Intersect;
-use super::{Shape, Transform};
+use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON, MAX, MIN};
+use crate::consts::{EPSILON, MAX, MIN};
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, Squared, solve_quadratic};
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Cone {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -137,10 +135,6 @@ impl Shape for Cone {
     fn material(&self) -> &Material {
         return &self.material;
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Cone");
-    }
 }
 
 impl Default for Cone {
@@ -168,14 +162,16 @@ impl Display for Cone {
     }
 }
 
-impl PartialEq for Cone {
-    fn eq(&self, rhs: &Self) -> bool {
+impl CoarseEq for Cone {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
         return std::ptr::eq(self, rhs)
             || self.material == rhs.material
-                && self.transformation_inverse == rhs.transformation_inverse
                 && self.closed == rhs.closed
-                && self.min.coarse_eq(rhs.min)
-                && self.max.coarse_eq(rhs.max);
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&rhs.transformation_inverse)
+                && self.min.coarse_eq(&rhs.min)
+                && self.max.coarse_eq(&rhs.max);
     }
 }
 

@@ -4,29 +4,26 @@ use crate::primitives::transformations;
 use crate::shapes::{Sphere, Transform};
 use core::ops::Mul;
 
-/// Trait for imprecise comparison between floats
-pub trait CoarseEq
-where
-    Self: Sized,
-{
-    const EPSILON: Self;
+/// Trait for comparison using epsilon value
+pub trait CoarseEq<Rhs = Self> {
+    fn coarse_eq(&self, rhs: &Rhs) -> bool;
 
-    fn coarse_eq(&self, rhs: Self) -> bool;
-}
-
-impl CoarseEq for f64 {
-    const EPSILON: Self = EPSILON;
-
-    #[inline]
-    fn coarse_eq(&self, rhs: Self) -> bool {
-        if *self == rhs {
-            return true;
-        }
-        return (self - rhs).abs() < CoarseEq::EPSILON;
+    fn coarse_ne(&self, rhs: &Rhs) -> bool {
+        return !self.coarse_eq(rhs);
     }
 }
 
-/// Trait for efficiently squaring values
+impl CoarseEq for f64 {
+    #[inline]
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        if self == rhs {
+            return true;
+        }
+        return (self - rhs).abs() < EPSILON;
+    }
+}
+
+/// Trait for squaring values
 pub trait Squared: Copy + Mul<Self, Output = Self> {
     #[inline]
     fn squared(self) -> Self {
@@ -36,7 +33,7 @@ pub trait Squared: Copy + Mul<Self, Output = Self> {
 
 impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
 
-/// Trait for efficiently cubing values
+/// Trait for cubing values
 pub trait Cubed: Squared {
     #[inline]
     fn cubed(self) -> Self {
@@ -57,13 +54,6 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
     let solution_1 = (-b - discriminant_root) / double_a;
     let solution_2 = (-b + discriminant_root) / double_a;
     return Some((solution_1, solution_2));
-}
-
-#[inline]
-pub const fn any_as_u8_slice<T: Sized>(value: &T) -> &[u8] {
-    return unsafe {
-        core::slice::from_raw_parts((value as *const T) as *const u8, size_of::<T>())
-    };
 }
 
 pub fn world_default_sphere_1() -> Sphere {

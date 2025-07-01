@@ -1,20 +1,19 @@
 use crate::primitives::{Point, Vector};
 use crate::utils::CoarseEq;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use core::mem;
 use core::ops::{Deref, DerefMut, Mul, Neg, Range};
 
-#[derive(Clone, Copy, Debug, Encode)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Matrix<const SIDE_LENGTH: usize>([[f64; SIDE_LENGTH]; SIDE_LENGTH]);
 
 impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
-    pub const EMPTY: Self = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
+    pub const NULL: Self = Self([[0.0; SIDE_LENGTH]; SIDE_LENGTH]);
 
     pub const SIDE_LENGTH_RANGE: Range<usize> = 0..SIDE_LENGTH;
 
     pub const IDENTITY: Self = {
-        let mut result = Self::EMPTY;
+        let mut result = Self::NULL;
         let mut index = 0;
         while index < SIDE_LENGTH {
             result.0[index][index] = 1.0;
@@ -46,7 +45,7 @@ impl<const SIDE_LENGTH: usize> Matrix<SIDE_LENGTH> {
     pub fn is_identity(&self) -> bool {
         return self.iter().enumerate().all(|(row_index, row)| {
             row.iter().enumerate().all(|(column_index, value)| {
-                return value.coarse_eq(if row_index == column_index { 1.0 } else { 0.0 });
+                return value.coarse_eq(&if row_index == column_index { 1.0 } else { 0.0 });
             })
         });
     }
@@ -108,7 +107,7 @@ impl Matrix<2> {
             return Self::IDENTITY;
         }
 
-        let mut result = Self::EMPTY;
+        let mut result = Self::NULL;
         let determinant = self.determinant();
 
         result.for_each_mut(|row_index, column_index, value| {
@@ -122,7 +121,7 @@ impl Matrix<2> {
 impl Matrix<3> {
     #[inline]
     fn submatrix(&self, excluded_row: usize, excluded_column: usize) -> Matrix<2> {
-        let mut result = Matrix::<2>::EMPTY;
+        let mut result = Matrix::<2>::NULL;
 
         for row_index in Self::SIDE_LENGTH_RANGE {
             if row_index == excluded_row {
@@ -178,7 +177,7 @@ impl Matrix<3> {
             return Self::IDENTITY;
         }
 
-        let mut result = Self::EMPTY;
+        let mut result = Self::NULL;
         let determinant = self.determinant();
         result.for_each_mut(|row_index, column_index, value| {
             *value = self.cofactor(column_index, row_index) / determinant;
@@ -194,7 +193,7 @@ impl Matrix<4> {
             return Matrix::<3>::IDENTITY;
         }
 
-        let mut result = Matrix::<3>::EMPTY;
+        let mut result = Matrix::<3>::NULL;
 
         for row_index in Self::SIDE_LENGTH_RANGE {
             if row_index == excluded_row {
@@ -250,7 +249,7 @@ impl Matrix<4> {
             return Self::IDENTITY;
         }
 
-        let mut result = Self::EMPTY;
+        let mut result = Self::NULL;
         let determinant = self.determinant();
         result.for_each_mut(|row_index, column_index, value| {
             *value = self.cofactor(column_index, row_index) / determinant;
@@ -288,9 +287,9 @@ impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
     }
 }
 
-impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
+impl<const SIDE_LENGTH: usize> CoarseEq for Matrix<SIDE_LENGTH> {
     #[inline]
-    fn eq(&self, rhs: &Self) -> bool {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
         if std::ptr::eq(self, rhs) {
             return true;
         }
@@ -299,7 +298,7 @@ impl<const SIDE_LENGTH: usize> PartialEq for Matrix<SIDE_LENGTH> {
             .iter()
             .zip(rhs.iter())
             .flat_map(|(self_row, rhs_row)| self_row.iter().zip(rhs_row.iter()))
-            .all(|(self_value, rhs_value)| self_value.coarse_eq(*rhs_value));
+            .all(|(self_value, rhs_value)| self_value.coarse_eq(rhs_value));
     }
 }
 
@@ -320,7 +319,7 @@ impl<const SIDE_LENGTH: usize> Mul for Matrix<SIDE_LENGTH> {
 
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut result = Self::EMPTY;
+        let mut result = Self::NULL;
         result.for_each_mut(|row_index, column_index, value| {
             *value = rhs.iter().enumerate().fold(0.0, |acc, (index, row)| {
                 acc + (self[row_index][index] * row[column_index])
@@ -365,6 +364,7 @@ impl Mul<Vector> for Matrix<4> {
 #[cfg(test)]
 mod tests {
     use crate::primitives::{Matrix, Point};
+    use crate::utils::CoarseEq;
 
     #[test]
     fn matrix_indices() {
@@ -644,6 +644,6 @@ mod tests {
             [6.0, -2.0, 0.0, 5.0],
         ]);
         let matrix_3 = matrix_1 * matrix_2;
-        assert_eq!(matrix_3 * matrix_2.inverse(), matrix_1);
+        assert!((matrix_3 * matrix_2.inverse()).coarse_eq(&matrix_1));
     }
 }

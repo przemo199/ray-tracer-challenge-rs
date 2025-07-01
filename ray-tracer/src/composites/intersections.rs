@@ -10,10 +10,6 @@ impl<'intersections> Intersections<'intersections> {
         return Intersections(Vec::new());
     }
 
-    pub fn is_empty(&self) -> bool {
-        return self.len() == 0;
-    }
-
     pub fn hit(&self) -> Option<&Intersection> {
         return self
             .iter()
@@ -38,7 +34,7 @@ impl<'intersections> Deref for Intersections<'intersections> {
 
 impl DerefMut for Intersections<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        return &mut (self.0);
+        return &mut self.0;
     }
 }
 

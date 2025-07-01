@@ -1,13 +1,9 @@
-use crate::consts::BINCODE_CONFIG;
+use crate::dyn_partial_eq::DynPartialEq;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::{Shape, Transform};
-use bincode::Encode;
-use bincode::enc::Encoder;
-use bincode::enc::write::Writer;
-use bincode::error::EncodeError;
 use core::fmt::{Debug, Display, Formatter};
 
-pub trait Pattern: Transform + Debug + Display + Send + Sync {
+pub trait Pattern: Transform + Debug + Display + Send + Sync + DynPartialEq {
     fn color_at(&self, point: &Point) -> Color;
 
     #[inline]
@@ -16,23 +12,21 @@ pub trait Pattern: Transform + Debug + Display + Send + Sync {
         let pattern_point = self.transformation_inverse() * object_point;
         return self.color_at(&pattern_point);
     }
-
-    fn encoded(&self) -> Vec<u8>;
 }
 
 impl PartialEq for dyn Pattern {
-    fn eq(&self, rhs: &dyn Pattern) -> bool {
-        return std::ptr::eq(self, rhs) || self.encoded() == rhs.encoded();
+    fn eq(&self, other: &Self) -> bool {
+        return self.dyn_eq(DynPartialEq::as_any(other));
     }
 }
 
-impl Encode for dyn Pattern {
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        return encoder.writer().write(&self.encoded());
+impl PartialEq<&Self> for Box<dyn Pattern> {
+    fn eq(&self, other: &&Self) -> bool {
+        return self == *other;
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TestPattern {
     transformation_inverse: Transformation,
 }
@@ -68,12 +62,6 @@ impl Transform for TestPattern {
 impl Pattern for TestPattern {
     fn color_at(&self, point: &Point) -> Color {
         return Color::new(point.x, point.y, point.z);
-    }
-
-    fn encoded(&self) -> Vec<u8> {
-        let mut encoded = Self::PATTERN_NAME.to_vec();
-        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
-        return encoded;
     }
 }
 

@@ -2,12 +2,10 @@ use crate::composites::ComputedHit;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
-use crate::utils::CoarseEq;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 use std::sync::Arc;
 
-#[derive(Clone, Debug, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Material {
     pub color: Color,
     pub pattern: Option<Arc<dyn Pattern>>,
@@ -131,6 +129,22 @@ impl Material {
         );
     }
 
+    pub fn is_unreflective(&self) -> bool {
+        return self.reflectiveness == 0.0;
+    }
+
+    pub fn is_reflective(&self) -> bool {
+        return self.reflectiveness > 0.0;
+    }
+
+    pub fn is_opaque(&self) -> bool {
+        return self.transparency == 0.0;
+    }
+
+    pub fn is_transparent(&self) -> bool {
+        return self.transparency > 0.0;
+    }
+
     pub fn glass() -> Self {
         return Self {
             transparency: 1.0,
@@ -160,21 +174,6 @@ impl Display for Material {
             .field("refractive_index", &self.refractive_index)
             .field("transparency", &self.transparency)
             .finish();
-    }
-}
-
-impl PartialEq for Material {
-    fn eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.color == rhs.color
-                && self.pattern == rhs.pattern
-                && self.ambient.coarse_eq(rhs.ambient)
-                && self.diffuse.coarse_eq(rhs.diffuse)
-                && self.specular.coarse_eq(rhs.specular)
-                && self.shininess.coarse_eq(rhs.shininess)
-                && self.reflectiveness.coarse_eq(rhs.reflectiveness)
-                && self.refractive_index.coarse_eq(rhs.refractive_index)
-                && self.transparency.coarse_eq(rhs.transparency);
     }
 }
 

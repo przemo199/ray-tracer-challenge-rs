@@ -1,11 +1,9 @@
-use crate::consts::BINCODE_CONFIG;
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
-use bincode::Encode;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct StripePattern {
     color_a: Color,
     color_b: Color,
@@ -13,8 +11,6 @@ pub struct StripePattern {
 }
 
 impl StripePattern {
-    const PATTERN_IDENTIFIER: &'static [u8] = b"StripePattern";
-
     pub const fn new(color_a: Color, color_b: Color) -> Self {
         return Self {
             color_a,
@@ -32,12 +28,6 @@ impl Pattern for StripePattern {
         } else {
             self.color_b
         };
-    }
-
-    fn encoded(&self) -> Vec<u8> {
-        let mut encoded = Self::PATTERN_IDENTIFIER.to_vec();
-        encoded.extend(bincode::encode_to_vec(self, BINCODE_CONFIG).unwrap());
-        return encoded;
     }
 }
 

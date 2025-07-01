@@ -3,7 +3,7 @@ use crate::primitives::{Point, Vector};
 use crate::shapes::Shape;
 use crate::utils::Squared;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ComputedHit<'shape> {
     pub distance: f64,
     pub shape: &'shape dyn Shape,
@@ -119,7 +119,7 @@ mod tests {
         assert!(
             computed_hit
                 .schlicks_approximation()
-                .coarse_eq(0.4887308101221217)
+                .coarse_eq(&0.4887308101221217)
         );
     }
 }

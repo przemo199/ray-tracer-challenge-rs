@@ -1,11 +1,11 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::consts::{BINCODE_CONFIG, EPSILON};
+use crate::consts::EPSILON;
 use crate::primitives::{Point, Transformation, Vector};
-use bincode::Encode;
+use crate::utils::CoarseEq;
 use core::fmt::{Debug, Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq, Encode)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Triangle {
     pub material: Material,
     transformation_inverse: Transformation,
@@ -82,10 +82,6 @@ impl Shape for Triangle {
     fn material(&self) -> &Material {
         return &self.material;
     }
-
-    fn encoded(&self) -> Vec<u8> {
-        return bincode::encode_to_vec(self, BINCODE_CONFIG).expect("Failed to serialise Triangle");
-    }
 }
 
 impl Display for Triangle {
@@ -101,6 +97,22 @@ impl Display for Triangle {
             .field("material", &self.material)
             .field("transformation", &self.transformation())
             .finish();
+    }
+}
+
+impl CoarseEq for Triangle {
+    fn coarse_eq(&self, rhs: &Self) -> bool {
+        return std::ptr::eq(self, rhs)
+            || self.material == rhs.material
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&rhs.transformation_inverse)
+                && self.vertex_1.coarse_eq(&rhs.vertex_1)
+                && self.vertex_2.coarse_eq(&rhs.vertex_2)
+                && self.vertex_3.coarse_eq(&rhs.vertex_3)
+                && self.edge_1.coarse_eq(&self.edge_1)
+                && self.edge_2.coarse_eq(&self.edge_2)
+                && self.normal.coarse_eq(&self.normal);
     }
 }
 
