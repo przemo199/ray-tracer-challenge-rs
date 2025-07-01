@@ -44,9 +44,7 @@ impl Intersection<'_> {
                     });
             }
 
-            let position = shapes
-                .iter_mut()
-                .position(|shape| intersection.shape == *shape);
+            let position = shapes.iter().position(|shape| *shape == intersection.shape);
             if let Some(value) = position {
                 shapes.remove(value);
             } else {
@@ -76,8 +74,8 @@ impl Intersection<'_> {
         );
     }
 
-    pub fn is_within_distance(&self, distance: impl Into<f64>) -> bool {
-        return self.distance >= 0.0 && self.distance < distance.into();
+    pub fn is_within_distance(&self, distance: f64) -> bool {
+        return self.distance >= 0.0 && self.distance < distance;
     }
 }
 

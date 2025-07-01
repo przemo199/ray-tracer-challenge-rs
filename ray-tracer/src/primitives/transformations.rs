@@ -146,10 +146,11 @@ mod tests {
         let point = Point::new(0, 1, 0);
         let half_quarter_rotation = rotation_x(PI / 4.0);
         let full_quarter_rotation = rotation_x(PI / 2.0);
-        assert_eq!(
-            half_quarter_rotation * point,
-            Point::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
-        );
+        assert!((half_quarter_rotation * point).coarse_eq(&Point::new(
+            0,
+            2.0_f64.sqrt() / 2.0,
+            2.0_f64.sqrt() / 2.0
+        )));
         assert!((full_quarter_rotation * point).coarse_eq(&Point::new(0, 0, 1)));
     }
 
@@ -166,10 +167,11 @@ mod tests {
         let point = Point::new(0, 0, 1);
         let half_quarter_rotation = rotation_y(PI / 4.0);
         let full_quarter_rotation = rotation_y(PI / 2.0);
-        assert_eq!(
-            half_quarter_rotation * point,
-            Point::new(2.0_f64.sqrt() / 2.0, 0, 2.0_f64.sqrt() / 2.0)
-        );
+        assert!((half_quarter_rotation * point).coarse_eq(&Point::new(
+            2.0_f64.sqrt() / 2.0,
+            0,
+            2.0_f64.sqrt() / 2.0
+        )));
         assert!((full_quarter_rotation * point).coarse_eq(&Point::new(1, 0, 0)));
     }
 
@@ -178,10 +180,11 @@ mod tests {
         let point = Point::new(0, 1, 0);
         let half_quarter_rotation = rotation_z(PI / 4.0);
         let full_quarter_rotation = rotation_z(PI / 2.0);
-        assert_eq!(
-            half_quarter_rotation * point,
-            Point::new(-(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0, 0)
-        );
+        assert!((half_quarter_rotation * point).coarse_eq(&Point::new(
+            -(2.0_f64.sqrt()) / 2.0,
+            2.0_f64.sqrt() / 2.0,
+            0
+        )));
         assert!((full_quarter_rotation * point).coarse_eq(&Point::new(-1, 0, 0)));
     }
 

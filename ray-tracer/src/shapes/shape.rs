@@ -43,30 +43,6 @@ impl PartialEq<&Self> for Box<dyn Shape> {
     }
 }
 
-// impl PartialEq for dyn Shape + 'static {
-//     fn eq(&self, rhs: &Self) -> bool {
-//         return self.level_one(rhs.as_dyn_eq_helper());
-//     }
-// }
-
-// impl PartialEq for dyn Shape {
-//     fn eq(&self, rhs: &Self) -> bool {
-//         return self.level_one(rhs.as_dyn_eq_helper());
-//     }
-// }
-
-// impl PartialEq for &dyn Shape {
-//     fn eq(&self, rhs: &Self) -> bool {
-//         return std::ptr::eq(self, rhs) || self == rhs;
-//     }
-// }
-//
-// impl PartialEq for Box<dyn Shape> {
-//     fn eq(&self, rhs: &Self) -> bool {
-//         return std::ptr::eq(self, rhs) || self == rhs;
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use crate::composites::Material;
