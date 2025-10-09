@@ -106,6 +106,7 @@ impl Vector {
         return *self - (*normal * 2.0_f64 * self.dot(normal));
     }
 
+    #[inline]
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
@@ -122,8 +123,8 @@ impl Default for Vector {
 }
 
 impl Display for Vector {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        return f
             .debug_struct("Vector")
             .field("x", &self.x)
             .field("y", &self.y)
@@ -134,9 +135,11 @@ impl Display for Vector {
 
 impl CoarseEq for Vector {
     #[inline]
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.x.coarse_eq(&rhs.x) && self.y.coarse_eq(&rhs.y) && self.z.coarse_eq(&rhs.z);
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.x.coarse_eq(&other.x)
+                && self.y.coarse_eq(&other.y)
+                && self.z.coarse_eq(&other.z);
     }
 }
 

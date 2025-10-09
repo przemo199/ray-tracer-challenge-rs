@@ -3,7 +3,7 @@ use core::any::Any;
 pub trait DynPartialEq: Any + private::Sealed {
     fn as_any(&self) -> &dyn Any;
 
-    fn dyn_eq(&self, rhs: &dyn Any) -> bool;
+    fn dyn_eq(&self, other: &dyn Any) -> bool;
 }
 
 impl<T: PartialEq + 'static> DynPartialEq for T {
@@ -11,8 +11,10 @@ impl<T: PartialEq + 'static> DynPartialEq for T {
         return self;
     }
 
-    fn dyn_eq(&self, rhs: &dyn Any) -> bool {
-        return rhs.downcast_ref().map_or(false, |element| self == element);
+    fn dyn_eq(&self, other: &dyn Any) -> bool {
+        return other
+            .downcast_ref()
+            .map_or(false, |element| self == element);
     }
 }
 

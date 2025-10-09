@@ -1,6 +1,7 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{EPSILON, MAX, MIN};
+use crate::impl_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, Squared, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
@@ -59,23 +60,7 @@ impl Cylinder {
     }
 }
 
-impl Transform for Cylinder {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
+impl_transform_for!(Cylinder);
 
 impl Intersect for Cylinder {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
@@ -143,8 +128,8 @@ impl Default for Cylinder {
 }
 
 impl Display for Cylinder {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Cylinder")
             .field("min", &self.min)
             .field("max", &self.max)
@@ -156,15 +141,15 @@ impl Display for Cylinder {
 }
 
 impl CoarseEq for Cylinder {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.material == rhs.material
-                && self.closed == rhs.closed
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.material == other.material
+                && self.closed == other.closed
                 && self
                     .transformation_inverse
-                    .coarse_eq(&rhs.transformation_inverse)
-                && self.min.coarse_eq(&rhs.min)
-                && self.max.coarse_eq(&rhs.max);
+                    .coarse_eq(&other.transformation_inverse)
+                && self.min.coarse_eq(&other.min)
+                && self.max.coarse_eq(&other.max);
     }
 }
 

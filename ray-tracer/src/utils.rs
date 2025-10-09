@@ -6,20 +6,20 @@ use core::ops::Mul;
 
 /// Trait for comparison using epsilon value
 pub trait CoarseEq<Rhs = Self> {
-    fn coarse_eq(&self, rhs: &Rhs) -> bool;
+    fn coarse_eq(&self, other: &Rhs) -> bool;
 
-    fn coarse_ne(&self, rhs: &Rhs) -> bool {
-        return !self.coarse_eq(rhs);
+    fn coarse_ne(&self, other: &Rhs) -> bool {
+        return !self.coarse_eq(other);
     }
 }
 
 impl CoarseEq for f64 {
     #[inline]
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn coarse_eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
-        return (self - rhs).abs() < EPSILON;
+        return (self - other).abs() < EPSILON;
     }
 }
 

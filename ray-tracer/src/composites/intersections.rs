@@ -10,7 +10,7 @@ impl<'intersections> Intersections<'intersections> {
         return Intersections(Vec::new());
     }
 
-    pub fn hit(&self) -> Option<&Intersection> {
+    pub fn hit(&self) -> Option<&Intersection<'_>> {
         return self
             .iter()
             .filter(|intersection| intersection.distance >= 0.0)
@@ -39,11 +39,11 @@ impl DerefMut for Intersections<'_> {
 }
 
 impl PartialEq for Intersections<'_> {
-    fn eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.len() == rhs.len()
+    fn eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.len() == other.len()
                 && self.into_iter().all(|intersection| {
-                    return rhs.contains(intersection);
+                    return other.contains(intersection);
                 });
     }
 }

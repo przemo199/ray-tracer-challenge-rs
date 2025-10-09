@@ -1,10 +1,9 @@
 use crate::composites::{Canvas, Intersections, Ray, World};
 use crate::primitives::{Color, Point, Transformation};
 use crate::shapes::Transform;
-use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
-use rayon::prelude::*;
+use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
@@ -129,16 +128,11 @@ impl Transform for Camera {
     fn transformation_inverse(&self) -> Transformation {
         return self.transformation_inverse;
     }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-        self.update_origin();
-    }
 }
 
 impl Display for Camera {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Camera")
             .field("horizontal_size", &self.horizontal_size)
             .field("vertical_size", &self.vertical_size)
@@ -156,6 +150,7 @@ mod tests {
     use super::*;
     use crate::consts::PI;
     use crate::primitives::{Color, Vector, transformations};
+    use crate::utils::CoarseEq;
 
     #[test]
     fn constructing_camera() {

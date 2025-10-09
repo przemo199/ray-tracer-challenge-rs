@@ -6,7 +6,7 @@ edition = "2024"
 
 [dependencies]
 clap.workspace = true
-yaml-rust.workspace = true
+yaml-rust2.workspace = true
 ray-tracer = { path = "../ray-tracer"}
 
 [dev-dependencies]

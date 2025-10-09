@@ -47,6 +47,7 @@ impl Point {
         return [self.x, self.y, self.z, Self::W];
     }
 
+    #[inline]
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Self {
         return Into::<[f64; 3]>::into(*self).map(f).into();
     }
@@ -63,8 +64,8 @@ impl Default for Point {
 }
 
 impl Display for Point {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Point")
             .field("x", &self.x)
             .field("y", &self.y)
@@ -74,9 +75,11 @@ impl Display for Point {
 }
 
 impl CoarseEq for Point {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.x.coarse_eq(&rhs.x) && self.y.coarse_eq(&rhs.y) && self.z.coarse_eq(&rhs.z);
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.x.coarse_eq(&other.x)
+                && self.y.coarse_eq(&other.y)
+                && self.z.coarse_eq(&other.z);
     }
 }
 

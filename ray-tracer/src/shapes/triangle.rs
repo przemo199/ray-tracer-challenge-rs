@@ -1,6 +1,7 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::EPSILON;
+use crate::impl_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Debug, Display, Formatter, Result};
@@ -56,23 +57,7 @@ impl Intersect for Triangle {
     }
 }
 
-impl Transform for Triangle {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
+impl_transform_for!(Triangle);
 
 impl Shape for Triangle {
     fn local_normal_at(&self, _: Point) -> Vector {
@@ -85,8 +70,8 @@ impl Shape for Triangle {
 }
 
 impl Display for Triangle {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        return f
             .debug_struct("Triangle")
             .field("p1", &self.vertex_1)
             .field("p2", &self.vertex_2)
@@ -101,15 +86,15 @@ impl Display for Triangle {
 }
 
 impl CoarseEq for Triangle {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.material == rhs.material
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.material == other.material
                 && self
                     .transformation_inverse
-                    .coarse_eq(&rhs.transformation_inverse)
-                && self.vertex_1.coarse_eq(&rhs.vertex_1)
-                && self.vertex_2.coarse_eq(&rhs.vertex_2)
-                && self.vertex_3.coarse_eq(&rhs.vertex_3)
+                    .coarse_eq(&other.transformation_inverse)
+                && self.vertex_1.coarse_eq(&other.vertex_1)
+                && self.vertex_2.coarse_eq(&other.vertex_2)
+                && self.vertex_3.coarse_eq(&other.vertex_3)
                 && self.edge_1.coarse_eq(&self.edge_1)
                 && self.edge_2.coarse_eq(&self.edge_2)
                 && self.normal.coarse_eq(&self.normal);

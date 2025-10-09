@@ -1,4 +1,5 @@
 pub use checker_pattern::CheckerPattern;
+pub use color_provider::ColorProvider;
 pub use complex_pattern::ComplexPattern;
 pub use gradient_pattern::GradientPattern;
 pub use pattern::Pattern;
@@ -7,8 +8,13 @@ pub use ring_pattern::RingPattern;
 pub use stripe_pattern::StripePattern;
 
 mod checker_pattern;
+mod checkered_texture;
+mod color_provider;
 mod complex_pattern;
+mod custom_texture;
 mod gradient_pattern;
+mod mapping;
 mod pattern;
 mod ring_pattern;
 mod stripe_pattern;
+mod texture;

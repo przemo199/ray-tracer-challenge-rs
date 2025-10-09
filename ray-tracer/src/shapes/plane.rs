@@ -1,6 +1,7 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::EPSILON;
+use crate::impl_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
@@ -20,23 +21,7 @@ impl Plane {
     }
 }
 
-impl Transform for Plane {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
+impl_transform_for!(Plane);
 
 impl Intersect for Plane {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
@@ -65,8 +50,8 @@ impl Default for Plane {
 }
 
 impl Display for Plane {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        return f
             .debug_struct("Plane")
             .field("material", &self.material)
             .field("transformation", &self.transformation())
@@ -75,12 +60,12 @@ impl Display for Plane {
 }
 
 impl CoarseEq for Plane {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.material == rhs.material
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.material == other.material
                 && self
                     .transformation_inverse
-                    .coarse_eq(&rhs.transformation_inverse);
+                    .coarse_eq(&other.transformation_inverse);
     }
 }
 

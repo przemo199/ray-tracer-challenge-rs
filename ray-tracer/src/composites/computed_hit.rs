@@ -29,7 +29,7 @@ impl ComputedHit<'_> {
         refractive_index_1: f64,
         refractive_index_2: f64,
         is_inside: bool,
-    ) -> ComputedHit {
+    ) -> ComputedHit<'_> {
         let over_point = point + (normal * EPSILON);
         let under_point = point - (normal * EPSILON);
         return ComputedHit {

@@ -279,24 +279,21 @@ impl<const SIDE_LENGTH: usize> DerefMut for Matrix<SIDE_LENGTH> {
 }
 
 impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
-        return formatter
-            .debug_struct("Matrix")
-            .field("elements", &self)
-            .finish();
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        return f.debug_struct("Matrix").field("elements", &self).finish();
     }
 }
 
 impl<const SIDE_LENGTH: usize> CoarseEq for Matrix<SIDE_LENGTH> {
     #[inline]
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        if std::ptr::eq(self, rhs) {
+    fn coarse_eq(&self, other: &Self) -> bool {
+        if std::ptr::eq(self, other) {
             return true;
         }
 
         return self
             .iter()
-            .zip(rhs.iter())
+            .zip(other.iter())
             .flat_map(|(self_row, rhs_row)| self_row.iter().zip(rhs_row.iter()))
             .all(|(self_value, rhs_value)| self_value.coarse_eq(rhs_value));
     }

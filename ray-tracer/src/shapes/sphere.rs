@@ -1,5 +1,6 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
+use crate::impl_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
@@ -19,23 +20,7 @@ impl Sphere {
     }
 }
 
-impl Transform for Sphere {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
+impl_transform_for!(Sphere);
 
 impl Intersect for Sphere {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
@@ -70,8 +55,8 @@ impl Default for Sphere {
 }
 
 impl Display for Sphere {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Sphere")
             .field("material", &self.material)
             .field("transformation", &self.transformation())
@@ -80,12 +65,12 @@ impl Display for Sphere {
 }
 
 impl CoarseEq for Sphere {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.material == rhs.material
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.material == other.material
             || self
                 .transformation_inverse
-                .coarse_eq(&rhs.transformation_inverse);
+                .coarse_eq(&other.transformation_inverse);
     }
 }
 
@@ -94,6 +79,7 @@ mod tests {
     use super::*;
     use crate::consts::PI;
     use crate::primitives::{Vector, transformations};
+    use crate::shapes::Transform;
     use crate::utils::CoarseEq;
     use core::default::Default;
 

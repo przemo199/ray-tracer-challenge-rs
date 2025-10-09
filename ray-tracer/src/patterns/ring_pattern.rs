@@ -1,7 +1,7 @@
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
-use crate::shapes::Transform;
 use crate::utils::Squared;
+use crate::{impl_color_provider_for_pattern, impl_transform_for};
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -21,6 +21,10 @@ impl RingPattern {
     }
 }
 
+impl_transform_for!(RingPattern);
+
+impl_color_provider_for_pattern!(RingPattern);
+
 impl Pattern for RingPattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = (point.x.squared() + point.z.squared()).sqrt().floor() as i64;
@@ -32,27 +36,9 @@ impl Pattern for RingPattern {
     }
 }
 
-impl Transform for RingPattern {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
-
 impl Display for RingPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("CircularPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
@@ -64,6 +50,7 @@ impl Display for RingPattern {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Point;
 
     #[test]
     fn ring_pattern_extends_in_x_and_z() {

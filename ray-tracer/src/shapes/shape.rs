@@ -9,8 +9,25 @@ pub trait Transform {
     fn set_transformation(&mut self, transformation: Transformation);
 
     fn transformation_inverse(&self) -> Transformation;
+}
 
-    fn set_transformation_inverse(&mut self, transformation: Transformation);
+#[macro_export]
+macro_rules! impl_transform_for {
+    ($type:ty) => {
+        impl $crate::shapes::Transform for $type {
+            fn transformation(&self) -> Transformation {
+                return self.transformation_inverse.inverse();
+            }
+
+            fn set_transformation(&mut self, transformation: Transformation) {
+                self.transformation_inverse = transformation.inverse();
+            }
+
+            fn transformation_inverse(&self) -> Transformation {
+                return self.transformation_inverse;
+            }
+        }
+    };
 }
 
 pub trait Intersect {

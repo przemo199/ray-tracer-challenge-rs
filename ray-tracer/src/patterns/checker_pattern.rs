@@ -1,6 +1,6 @@
 use crate::patterns::pattern::Pattern;
 use crate::primitives::{Color, Point, Transformation};
-use crate::shapes::Transform;
+use crate::{impl_color_provider_for_pattern, impl_transform_for};
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -20,6 +20,10 @@ impl CheckerPattern {
     }
 }
 
+impl_transform_for!(CheckerPattern);
+
+impl_color_provider_for_pattern!(CheckerPattern);
+
 impl Pattern for CheckerPattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = (point.x.floor() + point.y.floor() + point.z.floor()) as i64;
@@ -31,27 +35,9 @@ impl Pattern for CheckerPattern {
     }
 }
 
-impl Transform for CheckerPattern {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
-
 impl Display for CheckerPattern {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("CheckerPattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
@@ -63,6 +49,7 @@ impl Display for CheckerPattern {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Point;
 
     #[test]
     fn checker_pattern_repeats_in_x() {

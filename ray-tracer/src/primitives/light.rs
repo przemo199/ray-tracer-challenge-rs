@@ -28,9 +28,10 @@ impl Light {
 }
 
 impl CoarseEq for Light {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.position.coarse_eq(&rhs.position) && self.intensity.coarse_eq(&rhs.intensity);
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.position.coarse_eq(&other.position)
+                && self.intensity.coarse_eq(&other.intensity);
     }
 }
 
@@ -41,8 +42,8 @@ impl Default for Light {
 }
 
 impl Display for Light {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Light")
             .field("position", &self.position)
             .field("intensity", &self.intensity)

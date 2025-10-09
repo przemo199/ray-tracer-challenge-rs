@@ -97,8 +97,8 @@ impl Default for Color {
 }
 
 impl Display for Color {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Color")
             .field("red", &self.red)
             .field("green", &self.green)
@@ -108,11 +108,11 @@ impl Display for Color {
 }
 
 impl CoarseEq for Color {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.red.coarse_eq(&rhs.red)
-                && self.green.coarse_eq(&rhs.green)
-                && self.blue.coarse_eq(&rhs.blue);
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.red.coarse_eq(&other.red)
+                && self.green.coarse_eq(&other.green)
+                && self.blue.coarse_eq(&other.blue);
     }
 }
 
@@ -192,8 +192,8 @@ impl Into<[f64; 3]> for Color {
 }
 
 impl<T: Into<f64>> From<(T, T, T)> for Color {
-    fn from(value: (T, T, T)) -> Self {
-        return Self::new(value.0, value.1, value.2);
+    fn from((x, y, z): (T, T, T)) -> Self {
+        return Self::new(x, y, z);
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::composites::ComputedHit;
-use crate::patterns::Pattern;
+use crate::patterns::ColorProvider;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use core::fmt::{Display, Formatter, Result};
@@ -8,7 +8,7 @@ use std::sync::Arc;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Material {
     pub color: Color,
-    pub pattern: Option<Arc<dyn Pattern>>,
+    pub pattern: Option<Arc<dyn ColorProvider>>,
     pub ambient: f64,
     pub diffuse: f64,
     pub specular: f64,
@@ -25,7 +25,7 @@ impl Material {
 
     pub fn new(
         color: Color,
-        pattern: Option<Arc<dyn Pattern>>,
+        color_provider: Option<Arc<dyn ColorProvider>>,
         ambient: impl Into<f64>,
         diffuse: impl Into<f64>,
         specular: impl Into<f64>,
@@ -37,7 +37,7 @@ impl Material {
     ) -> Self {
         return Self {
             color,
-            pattern,
+            pattern: color_provider,
             ambient: ambient.into(),
             diffuse: diffuse.into(),
             specular: specular.into(),
@@ -161,8 +161,8 @@ impl Default for Material {
 }
 
 impl Display for Material {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Material")
             .field("color", &self.color)
             .field("pattern", &self.pattern)

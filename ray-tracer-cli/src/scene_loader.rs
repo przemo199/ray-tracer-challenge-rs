@@ -1,5 +1,7 @@
 use ray_tracer::composites::{Camera, Material, World};
-use ray_tracer::patterns::{CheckerPattern, GradientPattern, Pattern, RingPattern, StripePattern};
+use ray_tracer::patterns::{
+    CheckerPattern, ColorProvider, GradientPattern, Pattern, RingPattern, StripePattern,
+};
 use ray_tracer::primitives::{Color, Light, Point, Vector};
 use ray_tracer::primitives::{Transformation, transformations};
 use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Sphere, Transform};
@@ -9,8 +11,8 @@ use std::fs;
 use std::num::ParseFloatError;
 use std::path::Path;
 use std::sync::Arc;
-use yaml_rust::Yaml::BadValue;
-use yaml_rust::{Yaml, YamlLoader};
+use yaml_rust2::Yaml::BadValue;
+use yaml_rust2::{Yaml, YamlLoader};
 
 pub struct Keyword {}
 
@@ -148,7 +150,7 @@ impl SceneParser {
         return Ok(material);
     }
 
-    fn parse_pattern(&self, yaml: &Yaml) -> Result<Arc<dyn Pattern>, Box<dyn Error>> {
+    fn parse_pattern(&self, yaml: &Yaml) -> Result<Arc<dyn ColorProvider>, Box<dyn Error>> {
         let colors = yaml["colors"].as_vec().unwrap();
         let color_a = self.parse_color(&colors[0])?;
         let color_b = self.parse_color(&colors[1])?;
@@ -370,6 +372,7 @@ pub fn load_scene_description<P: AsRef<Path>>(path: P) -> Result<(World, Camera)
 mod tests {
     use super::*;
     use rstest::rstest;
+    use yaml_rust2::{Yaml, YamlLoader};
 
     fn parse_yaml(value: &str) -> Yaml {
         return YamlLoader::load_from_str(value).unwrap().remove(0);

@@ -1,6 +1,7 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{EPSILON, MAX, MIN};
+use crate::impl_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
@@ -43,23 +44,7 @@ impl Cube {
     }
 }
 
-impl Transform for Cube {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
+impl_transform_for!(Cube);
 
 impl Intersect for Cube {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
@@ -112,8 +97,8 @@ impl Default for Cube {
 }
 
 impl Display for Cube {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Cube")
             .field("material", &self.material)
             .field("transformation", &self.transformation())
@@ -122,12 +107,12 @@ impl Display for Cube {
 }
 
 impl CoarseEq for Cube {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.material == rhs.material
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.material == other.material
                 && self
                     .transformation_inverse
-                    .coarse_eq(&rhs.transformation_inverse);
+                    .coarse_eq(&other.transformation_inverse);
     }
 }
 

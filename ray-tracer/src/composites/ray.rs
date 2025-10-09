@@ -50,8 +50,8 @@ impl Ray {
 }
 
 impl Display for Ray {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("Ray")
             .field("origin", &self.origin)
             .field("direction", &self.direction)
@@ -60,9 +60,9 @@ impl Display for Ray {
 }
 
 impl CoarseEq for Ray {
-    fn coarse_eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.origin.coarse_eq(&rhs.origin) && self.direction.coarse_eq(&rhs.direction);
+    fn coarse_eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.origin.coarse_eq(&other.origin) && self.direction.coarse_eq(&other.direction);
     }
 }
 

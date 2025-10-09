@@ -169,20 +169,20 @@ impl Default for World {
 }
 
 impl PartialEq for World {
-    fn eq(&self, rhs: &Self) -> bool {
-        return std::ptr::eq(self, rhs)
-            || self.lights.len() == rhs.lights.len()
-                && self.shapes.len() == rhs.shapes.len()
-                && self.lights.iter().all(|light| rhs.lights.contains(light))
+    fn eq(&self, other: &Self) -> bool {
+        return std::ptr::eq(self, other)
+            || self.lights.len() == other.lights.len()
+                && self.shapes.len() == other.shapes.len()
+                && self.lights.iter().all(|light| other.lights.contains(light))
                 && self.shapes.iter().all(|shape| {
-                    return rhs.shapes.iter().any(|entry| entry == shape);
+                    return other.shapes.iter().any(|entry| entry == shape);
                 });
     }
 }
 
 impl Display for World {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("World")
             .field("light", &self.lights)
             .field("shapes", &self.shapes)

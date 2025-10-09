@@ -1,6 +1,6 @@
 use crate::patterns::Pattern;
 use crate::primitives::{Color, Point, Transformation};
-use crate::shapes::Transform;
+use crate::{impl_color_provider_for_pattern, impl_transform_for};
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -20,6 +20,10 @@ impl StripePattern {
     }
 }
 
+impl_transform_for!(StripePattern);
+
+impl_color_provider_for_pattern!(StripePattern);
+
 impl Pattern for StripePattern {
     fn color_at(&self, point: &Point) -> Color {
         let distance = point.x.floor() as i64;
@@ -31,27 +35,9 @@ impl Pattern for StripePattern {
     }
 }
 
-impl Transform for StripePattern {
-    fn transformation(&self) -> Transformation {
-        return self.transformation_inverse.inverse();
-    }
-
-    fn set_transformation(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation.inverse();
-    }
-
-    fn transformation_inverse(&self) -> Transformation {
-        return self.transformation_inverse;
-    }
-
-    fn set_transformation_inverse(&mut self, transformation: Transformation) {
-        self.transformation_inverse = transformation;
-    }
-}
-
 impl Display for StripePattern {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
-        return formatter
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        return f
             .debug_struct("StripePattern")
             .field("color_a", &self.color_a)
             .field("color_b", &self.color_b)
@@ -64,7 +50,8 @@ impl Display for StripePattern {
 mod tests {
     use super::*;
     use crate::composites::Material;
-    use crate::primitives::{Light, Vector, transformations};
+    use crate::patterns::ColorProvider;
+    use crate::primitives::{Light, Point, Vector, transformations};
     use crate::shapes::{Sphere, Transform};
     use std::sync::Arc;
 
@@ -100,7 +87,7 @@ mod tests {
         let shape = Sphere::default();
         let mut material = Material::default();
         material.pattern = Option::from(
-            Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn Pattern>
+            Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn ColorProvider>
         );
         material.ambient = 1.0;
         material.diffuse = 0.0;
