@@ -1,6 +1,6 @@
 # ray tracer challenge
 
-[![Tests](https://github.com/przemo199/ray-tracer-challenge-rs/actions/workflows/tests.yaml/badge.svg)](https://github.com/przemo199/ray-tracer-challenge-rs/actions/workflows/tests.yaml)
+[![CI](https://github.com/przemo199/ray-tracer-challenge-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/przemo199/ray-tracer-challenge-rs/actions/workflows/ci.yml)
 
 Implementation of ray tracer from Ray Tracer Challenge book by [Jamis Buck](mailto:jamis@jamisbuck.org) using Rust programming language.
 

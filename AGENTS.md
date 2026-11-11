@@ -12,7 +12,6 @@ Cargo workspace, edition 2024, stable toolchain (`rust-toolchain.toml`).
 |---|---|---|
 | `ray-tracer/` | lib (`ray_tracer`) | All rendering math and logic. No I/O except `Canvas::to_png_file`. |
 | `ray-tracer-cli/` | bin (`ray-tracer-cli`) | Parses a YAML scene file, renders it, writes a PNG. |
-| `github-workflow/` | **not** a workspace member | `build.rs` that generates `.github/workflows/ci.yml` via the `gh-workflow` crate. |
 
 Other top-level directories:
 - `scenes/*.yaml` – example scenes (the book's YAML scene format).
@@ -47,7 +46,7 @@ cargo test --workspace                     # unit + doc tests, ~seconds
 cargo test --workspace --release           # CI also runs this; float/overflow behaviour can differ
 cargo test -p ray-tracer <filter>          # one crate / name filter
 cargo clippy --workspace --all-targets
-cargo fmt --all --check                    # CI uses `cargo +nightly fmt --check`; output is currently identical
+cargo fmt --all --check
 cargo doc --workspace --no-deps
 
 # End-to-end render (ALWAYS --release; debug builds are extremely slow)
@@ -160,8 +159,8 @@ add to `SceneParser::parse_pattern` if it should be usable from YAML.
 ## Gotchas
 
 - Windows dev machine with `core.autocrlf=true`; files are LF in the repo. Don't mass-convert line endings.
-- `.github/workflows/ci.yml` is **generated** — edit `github-workflow/build.rs` and regenerate instead.
-  `.github/workflows/tests.yaml` is the hand-written workflow currently used by the README badge.
+- CI is `.github/workflows/ci.yml` (hand-written YAML): `cargo fmt --check`, `cargo clippy` and debug +
+  release tests on Linux, Windows and macOS. Keep it in sync when the commands above change.
 - `.cargo/config.toml`'s `target-cpu=native` is intentionally disabled (`cfg(any())`).
 - Keep all build output, benchmark builds, scratch renders and
   temporary worktrees under the repo's `target/` (excluded from scanning); never build or run binaries
