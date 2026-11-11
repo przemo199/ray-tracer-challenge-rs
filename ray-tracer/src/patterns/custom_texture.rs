@@ -6,19 +6,18 @@ use crate::{impl_color_provider_for_texture, impl_transform_for};
 use core::fmt::{Display, Formatter};
 use image::ImageBuffer;
 use std::path::Path;
-use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct CustomTexture {
     pub texture: ImageBuffer<image::Rgba<u8>, Vec<u8>>,
-    pub mapping: Arc<dyn Mapping>,
+    pub mapping: Box<dyn Mapping>,
     transformation_inverse: Transformation,
 }
 
 impl CustomTexture {
     pub fn from_buffer(
         image: ImageBuffer<image::Rgba<u8>, Vec<u8>>,
-        mapping: Arc<dyn Mapping>,
+        mapping: Box<dyn Mapping>,
     ) -> Self {
         return CustomTexture {
             texture: image,
@@ -27,7 +26,7 @@ impl CustomTexture {
         };
     }
 
-    pub fn from_path<P: AsRef<Path>>(path: P, mapping: Arc<dyn Mapping>) -> Self {
+    pub fn from_path<P: AsRef<Path>>(path: P, mapping: Box<dyn Mapping>) -> Self {
         let image = image::open(path).expect("Failed to open image").to_rgba8();
         return CustomTexture {
             texture: image,

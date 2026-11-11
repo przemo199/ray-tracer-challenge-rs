@@ -3,8 +3,27 @@ use crate::patterns::ColorProvider;
 use crate::primitives::{Color, Point, Transformation};
 use core::fmt::{Debug, Display, Formatter};
 
-pub trait Pattern: Transform + ColorProvider {
+pub trait Pattern: Transform + ColorProvider + ClonePattern {
     fn color_at(&self, point: &Point) -> Color;
+}
+
+/// Makes `Box<dyn Pattern>` cloneable (for nested patterns): `Clone` itself can't be called
+/// through `dyn`. Implemented automatically for every `Clone` pattern.
+pub trait ClonePattern {
+    fn clone_box(&self) -> Box<dyn Pattern>;
+}
+
+impl<T: Pattern + Clone + 'static> ClonePattern for T {
+    fn clone_box(&self) -> Box<dyn Pattern> {
+        return Box::new(self.clone());
+    }
+}
+
+impl Clone for Box<dyn Pattern> {
+    fn clone(&self) -> Self {
+        // `dyn Pattern` also has `CloneColorProvider::clone_box`; this one returns a `dyn Pattern`
+        return ClonePattern::clone_box(self.as_ref());
+    }
 }
 
 #[macro_export]

@@ -92,8 +92,18 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   with a macro rather than by hand: `impl_shape_transform_for!` for shapes (which also store the
   transposed inverse as `normal_transformation`), `impl_transform_for!` for patterns.
 - **Trait objects**: shapes live in `World` as `Box<dyn Shape>`; patterns in `Material` as
-  `Option<Arc<dyn ColorProvider>>`. New implementors must derive `PartialEq` (blanket `DynPartialEq`),
-  and implement `Debug`, `Display`, `Send + Sync`.
+  `Option<Box<dyn ColorProvider>>` (nested patterns as `Box<dyn Pattern>`). New implementors must derive
+  `PartialEq` (blanket `DynPartialEq`) and `Clone` (blanket `CloneColorProvider`/`ClonePattern`/
+  `CloneMapping`, defined next to each trait, which make the boxes cloneable), and implement `Debug`,
+  `Display`, `Send + Sync`. A new trait whose boxes must be cloneable gets its own `Clone…` helper the
+  same way: one shared generic helper isn't possible (a supertrait can't name `dyn Self`).
+  Don't reintroduce `Arc`: cloning a `Material` copies its pattern, which only happens at scene load.
+- **Prefer trait objects over enums** for families of types, especially ones library users may want to
+  extend with their own types: shapes, patterns, textures, mappings, and future lights or cameras. A
+  trait lets a user add a `Torus` or a custom pattern in their own crate; an enum would force them to
+  edit this library. Use an enum only for small, closed sets this crate fully owns and no user would
+  extend (e.g. `RenderingMode`, or the YAML loader's `ShapeKind`/`PatternKind`, which name what the
+  file format supports). Don't convert a trait into an enum for speed without measuring it first.
 - **Comparing shapes**: always use `==`; there is no separate identity method. `==` on `dyn Shape` /
   `dyn ColorProvider` (via `DynPartialEq::dyn_eq`) is true for the same object (an address check, so
   cheap) or for the same type with equal contents (every field compared, so slow for distinct shapes of

@@ -200,7 +200,6 @@ mod tests {
     use crate::primitives::transformations;
     use crate::shapes::{Plane, Shape, Sphere, Transform};
     use crate::utils::CoarseEq;
-    use std::sync::Arc;
 
     #[test]
     fn default_world() {
@@ -488,7 +487,7 @@ mod tests {
         let mut sphere1 = world_default_sphere_1();
         let mut material1 = sphere1.material().clone();
         material1.ambient = 1.0;
-        material1.pattern = Some(Arc::new(TestPattern::new()));
+        material1.pattern = Some(Box::new(TestPattern::new()));
         sphere1.material = material1;
         world.shapes[0] = Box::new(sphere1);
         let mut sphere2 = world_default_sphere_2();

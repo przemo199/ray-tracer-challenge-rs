@@ -13,7 +13,6 @@ use ray_tracer::patterns::{
 use ray_tracer::primitives::{Color, Light, Point, Transformation, Vector, transformations};
 use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Shape, Sphere, Transform};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 pub fn build(entries: Vec<Entry>) -> Result<(World, Camera), SceneError> {
     // Definitions first, so `add` entries may refer to names defined further down the file.
@@ -150,7 +149,7 @@ impl Definitions {
         };
     }
 
-    fn pattern(&self, definition: &PatternDef) -> Result<Arc<dyn ColorProvider>, SceneError> {
+    fn pattern(&self, definition: &PatternDef) -> Result<Box<dyn ColorProvider>, SceneError> {
         let [color_a, color_b] = &definition.colors;
         let (a, b) = (self.color(color_a)?, self.color(color_b)?);
         let transformation = match &definition.transform {
@@ -160,11 +159,11 @@ impl Definitions {
         fn with<P: Transform + ColorProvider>(
             mut pattern: P,
             transformation: Option<Transformation>,
-        ) -> Arc<dyn ColorProvider> {
+        ) -> Box<dyn ColorProvider> {
             if let Some(transformation) = transformation {
                 pattern.set_transformation(transformation);
             }
-            return Arc::new(pattern);
+            return Box::new(pattern);
         }
         return Ok(match definition.kind {
             PatternKind::Stripes => with(StripePattern::new(a, b), transformation),

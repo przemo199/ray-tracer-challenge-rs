@@ -3,7 +3,6 @@ use crate::patterns::texture::Texture;
 use crate::primitives::{Coordinates, Transformation};
 use crate::{impl_color_provider_for_texture, impl_transform_for};
 use core::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct CheckeredTexture {
@@ -11,7 +10,7 @@ pub struct CheckeredTexture {
     color_b: Color,
     width: i32,
     height: i32,
-    mapping: Arc<dyn Mapping>,
+    mapping: Box<dyn Mapping>,
     transformation_inverse: Transformation,
 }
 
@@ -21,7 +20,7 @@ impl CheckeredTexture {
         color_b: Color,
         width: i32,
         height: i32,
-        mapping: Arc<dyn Mapping>,
+        mapping: Box<dyn Mapping>,
     ) -> Self {
         return Self {
             color_a,
@@ -104,14 +103,14 @@ mod tests {
     #[case(1.0, 1.0, Color::BLACK)]
     fn checker_pattern_in_2d(#[case] u: f64, #[case] v: f64, #[case] expected: Color) {
         let texture =
-            CheckeredTexture::new(Color::BLACK, Color::WHITE, 2, 2, Arc::new(IdentityMapping));
+            CheckeredTexture::new(Color::BLACK, Color::WHITE, 2, 2, Box::new(IdentityMapping));
         assert_eq!(texture.color_at(&Coordinates::new(u, v)), expected);
     }
 
     #[test]
     fn checker_pattern_uses_separate_width_and_height() {
         let texture =
-            CheckeredTexture::new(Color::BLACK, Color::WHITE, 4, 2, Arc::new(IdentityMapping));
+            CheckeredTexture::new(Color::BLACK, Color::WHITE, 4, 2, Box::new(IdentityMapping));
         assert_eq!(texture.color_at(&Coordinates::new(0.0, 0.4)), Color::BLACK);
         assert_eq!(texture.color_at(&Coordinates::new(0.0, 0.6)), Color::WHITE);
         assert_eq!(texture.color_at(&Coordinates::new(0.3, 0.0)), Color::WHITE);

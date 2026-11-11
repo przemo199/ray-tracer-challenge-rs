@@ -3,8 +3,26 @@ use crate::dyn_partial_eq::DynPartialEq;
 use crate::primitives::{Coordinates, Point, Vector};
 use core::fmt::Debug;
 
-pub trait Mapping: Debug + Send + Sync + DynPartialEq {
+pub trait Mapping: Debug + Send + Sync + DynPartialEq + CloneMapping {
     fn map(&self, point: &Point) -> Coordinates;
+}
+
+/// Makes `Box<dyn Mapping>` cloneable: `Clone` itself can't be called through `dyn`.
+/// Implemented automatically for every `Clone` mapping.
+pub trait CloneMapping {
+    fn clone_box(&self) -> Box<dyn Mapping>;
+}
+
+impl<T: Mapping + Clone + 'static> CloneMapping for T {
+    fn clone_box(&self) -> Box<dyn Mapping> {
+        return Box::new(self.clone());
+    }
+}
+
+impl Clone for Box<dyn Mapping> {
+    fn clone(&self) -> Self {
+        return self.clone_box();
+    }
 }
 
 impl PartialEq for dyn Mapping {

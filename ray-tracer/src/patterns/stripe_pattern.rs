@@ -53,7 +53,6 @@ mod tests {
     use crate::patterns::ColorProvider;
     use crate::primitives::{Light, Point, Vector, transformations};
     use crate::shapes::{Sphere, Transform};
-    use std::sync::Arc;
 
     #[test]
     fn stripe_pattern_alternates_in_x() {
@@ -87,7 +86,7 @@ mod tests {
         let shape = Sphere::default();
         let mut material = Material::default();
         material.pattern = Option::from(
-            Arc::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Arc<dyn ColorProvider>
+            Box::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Box<dyn ColorProvider>
         );
         material.ambient = 1.0;
         material.diffuse = 0.0;

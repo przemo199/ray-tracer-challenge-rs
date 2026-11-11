@@ -3,12 +3,11 @@ use crate::patterns::ColorProvider;
 use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use core::fmt::{Display, Formatter, Result};
-use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Material {
     pub color: Color,
-    pub pattern: Option<Arc<dyn ColorProvider>>,
+    pub pattern: Option<Box<dyn ColorProvider>>,
     pub ambient: f64,
     pub diffuse: f64,
     pub specular: f64,
@@ -25,7 +24,7 @@ impl Material {
 
     pub fn new(
         color: Color,
-        color_provider: Option<Arc<dyn ColorProvider>>,
+        color_provider: Option<Box<dyn ColorProvider>>,
         ambient: impl Into<f64>,
         diffuse: impl Into<f64>,
         specular: impl Into<f64>,

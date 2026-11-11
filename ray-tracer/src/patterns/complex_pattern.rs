@@ -2,17 +2,16 @@ use crate::patterns::{ColorProvider, Pattern};
 use crate::primitives::{Color, Point, Transformation};
 use crate::{impl_color_provider_for_pattern, impl_transform_for};
 use core::fmt::{Display, Formatter, Result};
-use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct ComplexPattern {
-    pattern_a: Arc<dyn Pattern>,
-    pattern_b: Arc<dyn Pattern>,
+    pattern_a: Box<dyn Pattern>,
+    pattern_b: Box<dyn Pattern>,
     transformation_inverse: Transformation,
 }
 
 impl ComplexPattern {
-    pub const fn new(pattern_a: Arc<dyn Pattern>, pattern_b: Arc<dyn Pattern>) -> Self {
+    pub const fn new(pattern_a: Box<dyn Pattern>, pattern_b: Box<dyn Pattern>) -> Self {
         return Self {
             pattern_a,
             pattern_b,
@@ -63,7 +62,7 @@ impl Display for ComplexPattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::patterns::StripePattern;
+    use crate::patterns::{RingPattern, StripePattern};
     use crate::primitives::transformations;
     use crate::shapes::{Sphere, Transform};
     use rstest::rstest;
@@ -73,8 +72,8 @@ mod tests {
 
     fn red_or_blue() -> ComplexPattern {
         return ComplexPattern::new(
-            Arc::new(StripePattern::new(A, A)),
-            Arc::new(StripePattern::new(B, B)),
+            Box::new(StripePattern::new(A, A)),
+            Box::new(StripePattern::new(B, B)),
         );
     }
 
@@ -102,7 +101,7 @@ mod tests {
     fn sub_pattern_transformations_apply() {
         let mut stripes = StripePattern::new(Color::WHITE, Color::BLACK);
         stripes.set_transformation(transformations::scaling(0.5, 1, 1));
-        let pattern = ComplexPattern::new(Arc::new(stripes), Arc::new(StripePattern::new(B, B)));
+        let pattern = ComplexPattern::new(Box::new(stripes), Box::new(StripePattern::new(B, B)));
         // x = 0.75 is in the first pattern; its half-width stripes put it in the second stripe
         assert_eq!(pattern.color_at(&Point::new(0.75, 0, 0)), Color::BLACK);
         assert_eq!(pattern.color_at(&Point::new(0.25, 0, 0)), Color::WHITE);
@@ -114,5 +113,18 @@ mod tests {
         pattern.set_transformation(transformations::scaling(2, 1, 1));
         let color = pattern.color_at_shape(&Sphere::default(), &Point::new(1.5, 0, 0));
         assert_eq!(color, A);
+    }
+
+    #[test]
+    fn boxed_nested_patterns_clone_deeply() {
+        let nested: Box<dyn Pattern> = Box::new(ComplexPattern::new(
+            Box::new(RingPattern::new(Color::RED, Color::BLUE)),
+            Box::new(StripePattern::new(Color::WHITE, Color::BLACK)),
+        ));
+        let copy = nested.clone();
+        for x in [0.25, 1.25, 2.5] {
+            let point = Point::new(x, 0, 0.75);
+            assert_eq!(copy.color_at(&point), nested.color_at(&point));
+        }
     }
 }

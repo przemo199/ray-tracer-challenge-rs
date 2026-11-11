@@ -6,7 +6,6 @@ use ray_tracer::patterns::{CheckerPattern, GradientPattern, RingPattern, StripeP
 use ray_tracer::primitives::{Color, Light, Point, Vector, transformations};
 use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Shape, Sphere, Transform, Triangle};
 use std::path::PathBuf;
-use std::sync::Arc;
 
 /// Camera the book uses for rendering the default world.
 pub fn default_world_camera(width: u32, height: u32) -> Camera {
@@ -27,7 +26,7 @@ pub fn showcase(width: u32, height: u32) -> (World, Camera) {
     let mut floor = Plane::default();
     let mut checkers = CheckerPattern::new(Color::new(0.9, 0.9, 0.9), Color::new(0.3, 0.3, 0.35));
     checkers.set_transformation(transformations::scaling(0.5, 0.5, 0.5));
-    floor.material.pattern = Some(Arc::new(checkers));
+    floor.material.pattern = Some(Box::new(checkers));
     floor.material.reflectiveness = 0.2;
     shapes.push(Box::new(floor));
 
@@ -37,7 +36,7 @@ pub fn showcase(width: u32, height: u32) -> (World, Camera) {
     );
     let mut stripes = StripePattern::new(Color::new(0.8, 0.5, 0.4), Color::new(0.6, 0.3, 0.3));
     stripes.set_transformation(transformations::rotation_y(PI / 4.0));
-    wall.material.pattern = Some(Arc::new(stripes));
+    wall.material.pattern = Some(Box::new(stripes));
     shapes.push(Box::new(wall));
 
     let mut glass = Sphere::default();
@@ -63,11 +62,11 @@ pub fn showcase(width: u32, height: u32) -> (World, Camera) {
     );
     let mut gradient = GradientPattern::new(Color::RED, Color::BLUE);
     gradient.set_transformation(transformations::scaling(2, 2, 2));
-    cube.material.pattern = Some(Arc::new(gradient));
+    cube.material.pattern = Some(Box::new(gradient));
     shapes.push(Box::new(cube));
 
     let cylinder_material = Material {
-        pattern: Some(Arc::new(RingPattern::new(Color::GREEN, Color::WHITE))),
+        pattern: Some(Box::new(RingPattern::new(Color::GREEN, Color::WHITE))),
         reflectiveness: 0.3,
         ..Material::default()
     };
