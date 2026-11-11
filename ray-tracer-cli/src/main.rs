@@ -6,7 +6,6 @@ use std::time::Instant;
 
 mod cli;
 mod scene_loader;
-mod scenes;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = CliArguments::parse();

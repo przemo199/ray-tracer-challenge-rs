@@ -146,15 +146,18 @@ Close IDE indexing/games first, and only compare baselines from the same machine
    `impl_transform_for!`; `impl Intersect` (object-space ray, push into `intersections`);
    `impl Shape` (`local_normal_at`, `material`); `Default`, `Display`, `CoarseEq`.
 2. Register `mod`/`pub use` in `shapes.rs`.
-3. Optionally wire it into `ray-tracer-cli/src/scene_loader.rs` (`parse_scene` match) and add a scene.
+3. Optionally make it loadable from YAML: add a `ShapeKind` variant and its `add:` name in
+   `scene_loader/format.rs` (`Entry` deserializer), build it in `scene_loader/resolve.rs` (`Definitions::shape`).
 
 **Add a pattern** (model on `patterns/stripe_pattern.rs`): struct + `impl_transform_for!` +
 `impl_color_provider_for_pattern!` + `impl Pattern` + `Display`; export in `patterns.rs`;
-add to `SceneParser::parse_pattern` if it should be usable from YAML.
+for YAML, add a `PatternKind` variant (`format.rs`) and handle it in `Definitions::pattern` (`resolve.rs`).
 
-**Scene YAML keys** are handled in `ray-tracer-cli/src/scene_loader.rs` (`add:`, `define:`, `extend:`,
-`material:`, `transform:` with `scale`/`translate`/`rotate-x|y|z`). Definition names are typed by suffix:
-`*-color`, `*-material`, `*-transform` / `*-object`.
+**Scene files** (`ray-tracer-cli/src/scene_loader/`): `format.rs` is the serde model of the YAML (one type
+per mapping, `deny_unknown_fields`, so new keys must be added there), `resolve.rs` turns it into a `World`.
+Entries start with `add:` (camera, light, shapes) or `define:` (a material, transform list or `[r, g, b]`
+color, recognised by the value's shape); materials may `extend` another. Transform steps apply in list
+order. Errors carry line/column; `every_example_scene_loads` keeps `scenes/*.yaml` valid.
 
 ## Gotchas
 

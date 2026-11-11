@@ -9,7 +9,8 @@ workspace = true
 
 [dependencies]
 clap.workspace = true
-yaml-rust2.workspace = true
+serde.workspace = true
+serde-saphyr.workspace = true
 ray-tracer = { path = "../ray-tracer"}
 
 [dev-dependencies]

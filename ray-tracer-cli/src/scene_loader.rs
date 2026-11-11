@@ -1,402 +1,205 @@
-use ray_tracer::composites::{Camera, Material, World};
-use ray_tracer::patterns::{
-    CheckerPattern, ColorProvider, GradientPattern, Pattern, RingPattern, StripePattern,
-};
-use ray_tracer::primitives::{Color, Light, Point, Vector};
-use ray_tracer::primitives::{Transformation, transformations};
-use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Sphere, Transform};
-use std::collections::HashMap;
+//! Loads YAML scene files: `format` describes the file, `resolve` builds the world from it.
+
+use core::fmt::{self, Debug, Display, Formatter};
+use ray_tracer::composites::{Camera, World};
 use std::error::Error;
 use std::fs;
-use std::num::ParseFloatError;
-use std::path::Path;
-use std::sync::Arc;
-use yaml_rust2::Yaml::BadValue;
-use yaml_rust2::{Yaml, YamlLoader};
+use std::path::{Path, PathBuf};
 
-pub struct Keyword {}
+mod format;
+mod resolve;
 
-impl Keyword {
-    pub const ADD: &'static str = "add";
-    pub const COLOR: &'static str = "color";
-    pub const VALUE: &'static str = "value";
-    pub const TYPE: &'static str = "type";
-    pub const DEFINE: &'static str = "define";
-    pub const EXTEND: &'static str = "extend";
-    pub const MATERIAL: &'static str = "material";
-    pub const TRANSFORMATION: &'static str = "transform";
+pub fn load_scene_description<P: AsRef<Path>>(path: P) -> Result<(World, Camera), SceneError> {
+    let path = path.as_ref();
+    let text = fs::read_to_string(path).map_err(|source| SceneError::Io {
+        path: path.to_owned(),
+        source,
+    })?;
+    return parse_scene(&text);
 }
 
-#[derive(Clone, Debug)]
-struct SceneParser {
-    colors: HashMap<String, Color>,
-    materials: HashMap<String, Material>,
-    patterns: HashMap<String, Arc<dyn Pattern>>,
-    transformations: HashMap<String, Transformation>,
+pub fn parse_scene(text: &str) -> Result<(World, Camera), SceneError> {
+    let entries: Vec<format::Entry> = serde_saphyr::from_str(text).map_err(SceneError::Yaml)?;
+    return resolve::build(entries);
 }
 
-impl SceneParser {
-    pub fn new() -> Self {
-        return Self {
-            colors: HashMap::<String, Color>::new(),
-            materials: HashMap::<String, Material>::new(),
-            patterns: HashMap::<String, Arc<dyn Pattern>>::new(),
-            transformations: HashMap::<String, Transformation>::new(),
+pub enum SceneError {
+    Io {
+        path: PathBuf,
+        source: std::io::Error,
+    },
+    /// Malformed YAML or a value of the wrong shape; the message includes line and column.
+    Yaml(serde_saphyr::Error),
+    Undefined {
+        kind: &'static str,
+        name: String,
+    },
+    MissingCamera,
+    Invalid(String),
+}
+
+impl Display for SceneError {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        return match self {
+            Self::Io { path, source } => {
+                write!(formatter, "cannot read {}: {source}", path.display())
+            }
+            Self::Yaml(error) => write!(formatter, "invalid scene: {error}"),
+            Self::Undefined { kind, name } => write!(formatter, "undefined {kind} `{name}`"),
+            Self::MissingCamera => formatter.write_str("the scene has no camera"),
+            Self::Invalid(message) => formatter.write_str(message),
         };
-    }
-
-    fn process_definitions(&mut self, yaml: &Yaml) -> Result<(), Box<dyn Error>> {
-        for entry in yaml.clone() {
-            if let Yaml::String(name) = &entry[Keyword::DEFINE] {
-                if name.ends_with("-color") {
-                    let color = self.parse_color(&entry)?;
-                    self.colors.insert(name.clone(), color);
-                } else if name.ends_with("-material") {
-                    let material = self.parse_material(&entry)?;
-                    self.materials.insert(name.clone(), material);
-                } else if name.ends_with("-transform") || name.ends_with("-object") {
-                    let transformation = self.parse_transformation(&entry)?;
-                    self.transformations.insert(name.clone(), transformation);
-                }
-            }
-        }
-        return Ok(());
-    }
-
-    fn parse_color(&self, yaml: &Yaml) -> Result<Color, ParseFloatError> {
-        match yaml {
-            Yaml::Hash(_) => {
-                let is_color = yaml[Keyword::COLOR] != BadValue;
-                let keyword = if is_color {
-                    Keyword::COLOR
-                } else {
-                    Keyword::VALUE
-                };
-                return self.parse_color(&yaml[keyword]);
-            }
-            Yaml::Array(color_values) => {
-                let color_channels = parse_array_of_3(color_values)?;
-                return Ok(Color::new(
-                    color_channels[0],
-                    color_channels[1],
-                    color_channels[2],
-                ));
-            }
-            Yaml::String(key) => {
-                return Ok(self.colors[key]);
-            }
-            _ => {
-                panic!("Incorrect color value");
-            }
-        }
-    }
-
-    fn parse_material(&self, yaml: &Yaml) -> Result<Material, Box<dyn Error>> {
-        if let Yaml::String(name) = yaml {
-            return Ok(self.materials[name].clone());
-        }
-
-        let mut material = if yaml[Keyword::EXTEND] == BadValue {
-            Material::default()
-        } else {
-            self.materials[yaml[Keyword::EXTEND].as_str().unwrap()].clone()
-        };
-
-        let yaml = if yaml[Keyword::VALUE] != BadValue {
-            &yaml[Keyword::VALUE]
-        } else {
-            yaml
-        };
-        if yaml[Keyword::COLOR] != BadValue {
-            material.color = self.parse_color(&yaml[Keyword::COLOR])?;
-        }
-
-        if yaml["pattern"] != BadValue {
-            material.pattern = Some(self.parse_pattern(&yaml["pattern"])?);
-        }
-
-        if yaml["ambient"] != BadValue {
-            material.ambient = parse_f64(&yaml["ambient"])?;
-        }
-
-        if yaml["diffuse"] != BadValue {
-            material.diffuse = parse_f64(&yaml["diffuse"])?;
-        }
-
-        if yaml["specular"] != BadValue {
-            material.specular = parse_f64(&yaml["specular"])?;
-        }
-
-        if yaml["shininess"] != BadValue {
-            material.shininess = parse_f64(&yaml["shininess"])?;
-        }
-
-        if yaml["reflective"] != BadValue {
-            material.reflectiveness = parse_f64(&yaml["reflective"])?;
-        }
-
-        if yaml["transparency"] != BadValue {
-            material.transparency = parse_f64(&yaml["transparency"])?;
-        }
-
-        if yaml["refractive-index"] != BadValue {
-            material.refractive_index = parse_f64(&yaml["refractive-index"])?;
-        }
-
-        if let Yaml::Boolean(value) = yaml["casts-shadow"] {
-            material.casts_shadow = value;
-        }
-
-        return Ok(material);
-    }
-
-    fn parse_pattern(&self, yaml: &Yaml) -> Result<Arc<dyn ColorProvider>, Box<dyn Error>> {
-        let colors = yaml["colors"].as_vec().unwrap();
-        let color_a = self.parse_color(&colors[0])?;
-        let color_b = self.parse_color(&colors[1])?;
-        let maybe_transformation = match yaml[Keyword::TRANSFORMATION] {
-            BadValue => None,
-            _ => Some(self.parse_transformation(&yaml[Keyword::TRANSFORMATION])?),
-        };
-        return match &yaml[Keyword::TYPE] {
-            Yaml::String(value) => match value.as_str() {
-                "stripes" => {
-                    let mut pattern = StripePattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Ok(Arc::new(pattern))
-                }
-                "gradient" => {
-                    let mut pattern = GradientPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Ok(Arc::new(pattern))
-                }
-                "rings" => {
-                    let mut pattern = RingPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Ok(Arc::new(pattern))
-                }
-                "checkers" => {
-                    let mut pattern = CheckerPattern::new(color_a, color_b);
-                    if let Some(transformation) = maybe_transformation {
-                        pattern.set_transformation(transformation);
-                    }
-                    Ok(Arc::new(pattern))
-                }
-                _ => panic!("Incorrect pattern type"),
-            },
-            _ => panic!("Incorrect pattern type"),
-        };
-    }
-
-    fn parse_transformation(&self, yaml: &Yaml) -> Result<Transformation, Box<dyn Error>> {
-        let mut transformation = Transformation::IDENTITY;
-
-        let yaml = if yaml[Keyword::VALUE] != BadValue {
-            &yaml[Keyword::VALUE]
-        } else {
-            yaml
-        };
-
-        for transform in yaml.clone().into_iter() {
-            match transform {
-                Yaml::String(value) => {
-                    transformation = transformation * self.transformations[&value];
-                }
-                Yaml::Array(values) => match values[0].as_str().unwrap() {
-                    "scale" => {
-                        let vals = parse_array_of_3(&values[1..])?;
-                        transformation =
-                            transformations::scaling(vals[0], vals[1], vals[2]) * transformation;
-                    }
-                    "translate" => {
-                        let vals = parse_array_of_3(&values[1..])?;
-                        transformation = transformations::translation(vals[0], vals[1], vals[2])
-                            * transformation;
-                    }
-                    "rotate-x" => {
-                        let value = parse_f64(&values[1])?;
-                        transformation = transformations::rotation_x(value) * transformation;
-                    }
-                    "rotate-y" => {
-                        let value = parse_f64(&values[1])?;
-                        transformation = transformations::rotation_y(value) * transformation;
-                    }
-                    "rotate-z" => {
-                        let value = parse_f64(&values[1])?;
-                        transformation = transformations::rotation_z(value) * transformation;
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
-        }
-        return Ok(transformation);
-    }
-
-    fn parse_material_and_transformation(
-        &self,
-        yaml: &Yaml,
-    ) -> Result<(Material, Transformation), Box<dyn Error>> {
-        let material = self.parse_material(&yaml[Keyword::MATERIAL])?;
-        let transformation = self.parse_transformation(&yaml[Keyword::TRANSFORMATION])?;
-        return Ok((material, transformation));
-    }
-
-    fn parse_scene(&self, yaml: &Yaml) -> Result<(World, Camera), Box<dyn Error>> {
-        let mut world = World::new(Vec::new(), Vec::new());
-        let mut camera = Camera::new(0, 0, 0);
-        for entry in yaml.clone().into_iter() {
-            if let Yaml::String(name) = &entry[Keyword::ADD] {
-                match name.as_str() {
-                    "camera" => {
-                        let horizontal_size = parse_f64(&entry["width"])? as u32;
-                        let vertical_size = parse_f64(&entry["height"])? as u32;
-                        let fov = parse_f64(&entry["field-of-view"])?;
-                        let from = parse_array_of_3(entry["from"].as_vec().unwrap())?;
-                        let from = Point::from(from);
-                        let to = parse_array_of_3(entry["to"].as_vec().unwrap())?;
-                        let to = Point::from(to);
-                        let up = parse_array_of_3(entry["up"].as_vec().unwrap())?;
-                        let up = Vector::from(up);
-                        camera = Camera::new(horizontal_size, vertical_size, fov);
-                        camera.set_transformation(transformations::view_transform(from, to, up));
-                    }
-                    "light" => {
-                        let position = parse_array_of_3(entry["at"].as_vec().unwrap())?;
-                        let position = Point::new(position[0], position[1], position[2]);
-                        let intensity = parse_array_of_3(entry["intensity"].as_vec().unwrap())?;
-                        let intensity = Color::new(intensity[0], intensity[1], intensity[2]);
-                        world.lights.push(Light::new(position, intensity));
-                    }
-                    "plane" => {
-                        let (material, transformation) =
-                            self.parse_material_and_transformation(&entry)?;
-                        world
-                            .shapes
-                            .push(Box::new(Plane::new(material, transformation)));
-                    }
-                    "sphere" => {
-                        let (material, transformation) =
-                            self.parse_material_and_transformation(&entry)?;
-                        world
-                            .shapes
-                            .push(Box::new(Sphere::new(material, transformation)));
-                    }
-                    "cube" => {
-                        let (material, transformation) =
-                            self.parse_material_and_transformation(&entry)?;
-                        world
-                            .shapes
-                            .push(Box::new(Cube::new(material, transformation)));
-                    }
-                    "cone" => {
-                        let (material, transformation) =
-                            self.parse_material_and_transformation(&entry)?;
-                        let mut cone = Cone::default();
-                        cone.material = material;
-                        cone.set_transformation(transformation);
-                        if let Yaml::Boolean(value) = entry["closed"] {
-                            cone.closed = value;
-                        }
-                        if entry["max"] != BadValue {
-                            cone.max = parse_f64(&entry["max"])?;
-                        }
-                        if entry["min"] != BadValue {
-                            cone.min = parse_f64(&entry["min"])?;
-                        }
-                        world.shapes.push(Box::new(cone));
-                    }
-                    "cylinder" => {
-                        let (material, transformation) =
-                            self.parse_material_and_transformation(&entry)?;
-                        let mut cylinder = Cylinder::default();
-                        cylinder.material = material;
-                        cylinder.set_transformation(transformation);
-                        if let Yaml::Boolean(value) = entry["closed"] {
-                            cylinder.closed = value;
-                        }
-                        if entry["max"] != BadValue {
-                            cylinder.max = parse_f64(&entry["max"])?;
-                        }
-                        if entry["min"] != BadValue {
-                            cylinder.min = parse_f64(&entry["min"])?;
-                        }
-                        world.shapes.push(Box::new(cylinder));
-                    }
-                    _ => (),
-                }
-            }
-        }
-        return Ok((world, camera));
     }
 }
 
-fn parse_f64(yaml: &Yaml) -> Result<f64, ParseFloatError> {
-    match yaml {
-        Yaml::Integer(value) => Ok(*value as f64),
-        Yaml::Real(value) => value.parse(),
-        _ => "".parse(),
+// `main` reports errors with `Debug`, so make it as readable as `Display`.
+impl Debug for SceneError {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        return Display::fmt(self, formatter);
     }
 }
 
-fn parse_array_of_3(slice: &[Yaml]) -> Result<[f64; 3], ParseFloatError> {
-    let values = {
-        let values: Result<Vec<_>, _> = slice.iter().take(3).map(parse_f64).collect();
-        values?
-    };
-    return Ok([values[0], values[1], values[2]]);
-}
-
-fn load_file_to_yaml<P: AsRef<Path>>(path: P) -> Result<Yaml, Box<dyn Error>> {
-    let file = fs::read_to_string(path)?;
-    let mut docs = YamlLoader::load_from_str(&file)?;
-    assert_eq!(docs.len(), 1, "Incorrect yaml format");
-    return Ok(docs.remove(0));
-}
-
-pub fn load_scene_description<P: AsRef<Path>>(path: P) -> Result<(World, Camera), Box<dyn Error>> {
-    let yaml = load_file_to_yaml(path)?;
-    let mut scene_parser = SceneParser::new();
-
-    scene_parser.process_definitions(&yaml)?;
-    return scene_parser.parse_scene(&yaml);
+impl Error for SceneError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        return match self {
+            Self::Io { source, .. } => Some(source),
+            Self::Yaml(error) => Some(error),
+            _ => None,
+        };
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::rstest;
-    use yaml_rust2::{Yaml, YamlLoader};
+    use ray_tracer::primitives::{Color, Point};
+    use ray_tracer::shapes::Shape;
 
-    fn parse_yaml(value: &str) -> Yaml {
-        return YamlLoader::load_from_str(value).unwrap().remove(0);
+    const CAMERA: &str = "
+- add: camera
+  width: 10
+  height: 10
+  field-of-view: 1
+  from: [0, 0, -5]
+  to: [0, 0, 0]
+  up: [0, 1, 0]
+";
+
+    fn parse(entries: &str) -> Result<(World, Camera), SceneError> {
+        return parse_scene(&format!("{CAMERA}{entries}"));
     }
 
-    #[rstest]
-    #[case("1", 1)]
-    #[case("1.0", 1)]
-    #[case(".0", 0)]
-    #[case("0.", 0)]
-    #[case("0", 0)]
-    fn parse_f64_from_yaml(#[case] string: &str, #[case] expected: impl Into<f64>) {
-        let yaml = parse_yaml(string);
-        let value = parse_f64(&yaml).unwrap();
-        assert_eq!(value, expected.into());
+    fn error(entries: &str) -> String {
+        return parse(entries)
+            .expect_err("scene should be rejected")
+            .to_string();
     }
 
-    #[rstest]
-    #[case("[0.0, .0, 1.0]", [0.0, 0.0, 1.0])]
-    #[case("[.0, 1.0, 1]", [0.0, 1.0, 1.0])]
-    #[case("[10, 0, 1]", [10.0, 0.0, 1.0])]
-    fn parse_array_of_3_from_yaml(#[case] string: &str, #[case] expected: [f64; 3]) {
-        let yaml = parse_yaml(string);
-        let value = parse_array_of_3(yaml.as_vec().unwrap()).unwrap();
-        assert_eq!(value, expected);
+    fn only_shape(world: &World) -> &dyn Shape {
+        assert_eq!(world.shapes.len(), 1);
+        return world.shapes[0].as_ref();
+    }
+
+    #[test]
+    fn every_example_scene_loads() {
+        let scenes = Path::new(env!("CARGO_MANIFEST_DIR")).join("../scenes");
+        let mut count = 0;
+        for entry in fs::read_dir(scenes).unwrap() {
+            let path = entry.unwrap().path();
+            let (world, _) = load_scene_description(&path)
+                .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+            assert!(!world.shapes.is_empty(), "{}", path.display());
+            count += 1;
+        }
+        assert!(count >= 8);
+    }
+
+    #[test]
+    fn numbers_may_be_written_as_integers_or_floats() {
+        let (world, _) =
+            parse("- add: light\n  at: [1, .5, 2.]\n  intensity: [1, 1.0, 0]").unwrap();
+        assert_eq!(world.lights[0].position, Point::new(1, 0.5, 2));
+        assert_eq!(world.lights[0].intensity, Color::new(1, 1, 0));
+    }
+
+    #[test]
+    fn materials_extend_their_base_and_resolve_named_colors() {
+        let (world, _) = parse(
+            "
+- define: red-color
+  value: [1, 0, 0]
+- define: base-material
+  value: { color: red-color, diffuse: 0.2, specular: 0.3 }
+- define: shiny-material
+  extend: base-material
+  value: { specular: 0.9 }
+- add: sphere
+  material: shiny-material
+",
+        )
+        .unwrap();
+        let material = only_shape(&world).material();
+        assert_eq!(material.color, Color::new(1, 0, 0));
+        assert_eq!(material.diffuse, 0.2);
+        assert_eq!(material.specular, 0.9);
+    }
+
+    #[test]
+    fn shape_shadow_flag_overrides_material() {
+        let (world, _) = parse("- add: cube\n  shadow: false").unwrap();
+        assert!(!only_shape(&world).material().casts_shadow);
+    }
+
+    #[test]
+    fn transform_steps_apply_in_order_wherever_names_appear() {
+        let named = parse(
+            "
+- define: move-x
+  value: [[translate, 1, 0, 0]]
+- add: sphere
+  transform: [[scale, 2, 2, 2], move-x]
+",
+        )
+        .unwrap();
+        let inline = parse("- add: sphere\n  transform: [[scale, 2, 2, 2], [translate, 1, 0, 0]]");
+        assert_eq!(only_shape(&named.0), only_shape(&inline.unwrap().0));
+    }
+
+    #[test]
+    fn misspelled_key_is_rejected() {
+        assert!(error("- add: sphere\n  materail: {}").contains("materail"));
+        assert!(error("- add: sphere\n  material: { colr: [1, 0, 0] }").contains("colr"));
+    }
+
+    #[test]
+    fn undefined_names_are_reported() {
+        assert_eq!(
+            error("- add: sphere\n  material: glass-material"),
+            "undefined material `glass-material`"
+        );
+        assert_eq!(
+            error("- add: sphere\n  transform: [big-object]"),
+            "undefined transform `big-object`"
+        );
+    }
+
+    #[test]
+    fn malformed_transform_steps_are_rejected() {
+        assert!(error("- add: sphere\n  transform: [[rotate-y, 1, 2]]").contains("length"));
+        assert!(error("- add: sphere\n  transform: [[scale, 2]]").contains("length"));
+        assert!(error("- add: sphere\n  transform: [[shrink, 2]]").contains("shrink"));
+    }
+
+    #[test]
+    fn unknown_entries_and_misplaced_options_are_rejected() {
+        assert!(error("- add: torus").contains("torus"));
+        assert!(error("- remove: sphere").contains("remove"));
+        assert!(error("- add: sphere\n  closed: true").contains("only apply to cylinders"));
+    }
+
+    #[test]
+    fn scene_without_camera_is_rejected() {
+        let result = parse_scene("- add: sphere");
+        assert_eq!(result.err().unwrap().to_string(), "the scene has no camera");
     }
 }
