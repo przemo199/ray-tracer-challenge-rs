@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 clap.workspace = true
 yaml-rust2.workspace = true

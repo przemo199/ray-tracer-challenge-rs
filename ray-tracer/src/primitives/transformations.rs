@@ -73,7 +73,7 @@ pub fn shearing(
 }
 
 pub fn view_transform(from: Point, to: Point, up: Vector) -> Transformation {
-    let forward = (to - from).normalized();
+    let forward = (&to - &from).normalized();
     let up_normalized = up.normalized();
     let left_vector = forward.cross(&up_normalized);
     let true_up = left_vector.cross(&forward);

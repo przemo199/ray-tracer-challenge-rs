@@ -20,8 +20,8 @@ pub struct Triangle {
 
 impl Triangle {
     pub fn new(vertex_1: Point, vertex_2: Point, vertex_3: Point) -> Self {
-        let edge_1 = vertex_2 - vertex_1;
-        let edge_2 = vertex_3 - vertex_1;
+        let edge_1 = &vertex_2 - &vertex_1;
+        let edge_2 = &vertex_3 - &vertex_1;
         let normal = edge_2.cross(&edge_1).normalized();
         return Self {
             material: Material::default(),
@@ -43,7 +43,7 @@ impl Intersect for Triangle {
         if determinant.abs() < EPSILON {
             return;
         }
-        let vertex1_to_origin = ray.origin - self.vertex_1;
+        let vertex1_to_origin = &ray.origin - &self.vertex_1;
         let u = vertex1_to_origin.dot(&direction_cross_edge2) / determinant;
         if !(0.0..=1.0).contains(&u) {
             return;
@@ -95,9 +95,9 @@ impl CoarseEq for Triangle {
                 && self.vertex_1.coarse_eq(&other.vertex_1)
                 && self.vertex_2.coarse_eq(&other.vertex_2)
                 && self.vertex_3.coarse_eq(&other.vertex_3)
-                && self.edge_1.coarse_eq(&self.edge_1)
-                && self.edge_2.coarse_eq(&self.edge_2)
-                && self.normal.coarse_eq(&self.normal);
+                && self.edge_1.coarse_eq(&other.edge_1)
+                && self.edge_2.coarse_eq(&other.edge_2)
+                && self.normal.coarse_eq(&other.normal);
     }
 }
 

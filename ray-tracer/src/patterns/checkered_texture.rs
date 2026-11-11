@@ -35,8 +35,8 @@ impl CheckeredTexture {
 
     pub fn color_at(&self, coordinates: &Coordinates) -> Color {
         let u2 = (coordinates.u * self.width as f64) as i32;
-        let v2 = (coordinates.v * self.width as f64) as i32;
-        if u2 + v2 % 1 == 0 {
+        let v2 = (coordinates.v * self.height as f64) as i32;
+        if (u2 + v2) % 2 == 0 {
             return self.color_a;
         }
         return self.color_b;
@@ -79,5 +79,41 @@ impl PartialEq for CheckeredTexture {
                 && self.height == other.height
                 && self.mapping.as_ref() == other.mapping.as_ref()
                 && self.transformation_inverse == other.transformation_inverse;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    struct IdentityMapping;
+
+    impl Mapping for IdentityMapping {
+        fn map(&self, point: &Point) -> Coordinates {
+            return Coordinates::new(point.x, point.y);
+        }
+    }
+
+    #[rstest]
+    #[case(0.0, 0.0, Color::BLACK)]
+    #[case(0.5, 0.0, Color::WHITE)]
+    #[case(0.0, 0.5, Color::WHITE)]
+    #[case(0.5, 0.5, Color::BLACK)]
+    #[case(1.0, 1.0, Color::BLACK)]
+    fn checker_pattern_in_2d(#[case] u: f64, #[case] v: f64, #[case] expected: Color) {
+        let texture =
+            CheckeredTexture::new(Color::BLACK, Color::WHITE, 2, 2, Arc::new(IdentityMapping));
+        assert_eq!(texture.color_at(&Coordinates::new(u, v)), expected);
+    }
+
+    #[test]
+    fn checker_pattern_uses_separate_width_and_height() {
+        let texture =
+            CheckeredTexture::new(Color::BLACK, Color::WHITE, 4, 2, Arc::new(IdentityMapping));
+        assert_eq!(texture.color_at(&Coordinates::new(0.0, 0.4)), Color::BLACK);
+        assert_eq!(texture.color_at(&Coordinates::new(0.0, 0.6)), Color::WHITE);
+        assert_eq!(texture.color_at(&Coordinates::new(0.3, 0.0)), Color::WHITE);
     }
 }

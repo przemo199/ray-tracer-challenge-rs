@@ -9,7 +9,7 @@ pub struct Light {
 }
 
 impl Light {
-    /// Creates new instance of struct [Light]
+    /// Creates new instance of [Light]
     /// # Examples
     /// ```
     /// use ray_tracer::primitives::{Color, Light, Point};

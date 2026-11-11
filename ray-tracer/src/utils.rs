@@ -1,7 +1,7 @@
 use crate::consts::EPSILON;
 use crate::primitives::Color;
 use crate::primitives::transformations;
-use crate::shapes::{Sphere, Transform};
+use crate::shapes::{Sphere, Transform as _};
 use core::ops::Mul;
 
 /// Trait for comparison using epsilon value
@@ -16,22 +16,19 @@ pub trait CoarseEq<Rhs = Self> {
 impl CoarseEq for f64 {
     #[inline]
     fn coarse_eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-        return (self - other).abs() < EPSILON;
+        return self == other || (self - other).abs() < EPSILON;
     }
 }
 
 /// Trait for squaring values
-pub trait Squared: Copy + Mul<Self, Output = Self> {
+pub trait Squared: Copy + Mul<Output = Self> {
     #[inline]
     fn squared(self) -> Self {
         return self * self;
     }
 }
 
-impl<T> Squared for T where T: Copy + Mul<Self, Output = Self> {}
+impl<T> Squared for T where T: Copy + Mul<Output = Self> {}
 
 /// Trait for cubing values
 pub trait Cubed: Squared {

@@ -1,14 +1,22 @@
 [workspace]
 members = ["ray-tracer", "ray-tracer-cli"]
 resolver = "2"
+publish = false
 
 [workspace.dependencies]
-clap = { version = "4.5.48", features = ["derive"] }
-image = { version = "0.25.8", features = ["rayon", "png"] }
-indicatif = { version = "0.18.0", features = ["rayon"] }
-rayon = "1.11.0"
-yaml-rust2 = "0.10.4"
-rstest = "0.26.1"
+clap = { version = "4.6.7", features = ["derive"] }
+image = { version = "0.25.10", features = ["rayon", "png"] }
+indicatif = { version = "0.18.6", features = ["rayon"] }
+rayon = "1.12.0"
+yaml-rust2 = "0.13.0"
+rstest = "0.28.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# Project style: every function ends with an explicit `return` (see AGENTS.md).
+needless_return = "allow"
 
 [profile.release]
 codegen-units = 1

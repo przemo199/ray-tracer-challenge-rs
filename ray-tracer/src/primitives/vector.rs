@@ -55,7 +55,7 @@ impl Vector {
         z: -1.0,
     };
 
-    /// Creates new instance of struct [Vector]
+    /// Creates new instance of [Vector]
     /// # Examples
     /// ```
     /// use ray_tracer::primitives::Vector;
@@ -103,7 +103,7 @@ impl Vector {
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
-        return *self - (*normal * 2.0_f64 * self.dot(normal));
+        return self - &(&(normal * 2.0_f64) * self.dot(normal));
     }
 
     #[inline]
@@ -143,26 +143,26 @@ impl CoarseEq for Vector {
     }
 }
 
-impl Add for Vector {
-    type Output = Self;
+impl Add for &Vector {
+    type Output = Vector;
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        return Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
+        return Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
 }
 
-impl Sub for Vector {
-    type Output = Self;
+impl Sub for &Vector {
+    type Output = Vector;
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        return Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
+        return Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 
-impl Mul<f64> for Vector {
-    type Output = Self;
+impl Mul<f64> for &Vector {
+    type Output = Vector;
 
     #[inline]
     fn mul(self, rhs: f64) -> Self::Output {
@@ -170,8 +170,8 @@ impl Mul<f64> for Vector {
     }
 }
 
-impl Div<f64> for Vector {
-    type Output = Self;
+impl Div<f64> for &Vector {
+    type Output = Vector;
 
     #[inline]
     fn div(self, rhs: f64) -> Self::Output {
@@ -294,14 +294,14 @@ mod tests {
     fn add_vector() {
         let vector_1 = Vector::new(3, -2, 5);
         let vector_2 = Vector::new(-2, 3, 1);
-        assert_eq!(vector_1 + vector_2, Vector::new(1, 1, 6));
+        assert_eq!(&vector_1 + &vector_2, Vector::new(1, 1, 6));
     }
 
     #[test]
     fn sub_vector() {
         let vector_1 = Vector::new(4, -4, 3);
         let vector_2 = vector_1;
-        assert_eq!(vector_1 - vector_2, Vector::ZERO);
+        assert_eq!(&vector_1 - &vector_2, Vector::ZERO);
     }
 
     #[test]
@@ -317,14 +317,14 @@ mod tests {
     #[test]
     fn mul_vector() {
         let vector_1 = Vector::new(1, -2, 3);
-        assert_eq!(vector_1 * 3.5, Vector::new(3.5, -7, 10.5));
-        assert_eq!(vector_1 * 0.5, Vector::new(0.5, -1, 1.5));
+        assert_eq!(&vector_1 * 3.5, Vector::new(3.5, -7, 10.5));
+        assert_eq!(&vector_1 * 0.5, Vector::new(0.5, -1, 1.5));
     }
 
     #[test]
     fn div_vector() {
         let vector = Vector::new(1, -2, 3);
-        assert_eq!(vector / 2.0, Vector::new(0.5, -1, 1.5));
+        assert_eq!(&vector / 2.0, Vector::new(0.5, -1, 1.5));
     }
 
     #[rstest]

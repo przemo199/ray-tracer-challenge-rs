@@ -52,14 +52,8 @@ impl Intersect for Cube {
         let (y_distance_min, y_distance_max) = Self::check_axis(ray.origin.y, ray.direction.y);
         let (z_distance_min, z_distance_max) = Self::check_axis(ray.origin.z, ray.direction.z);
 
-        let distance_min = [x_distance_min, y_distance_min, z_distance_min]
-            .iter()
-            .copied()
-            .fold(MIN, f64::max);
-        let distance_max = [x_distance_max, y_distance_max, z_distance_max]
-            .iter()
-            .copied()
-            .fold(MAX, f64::min);
+        let distance_min = x_distance_min.max(y_distance_min).max(z_distance_min);
+        let distance_max = x_distance_max.min(y_distance_max).min(z_distance_max);
 
         if distance_min < distance_max && distance_max > 0.0 {
             intersections.extend([

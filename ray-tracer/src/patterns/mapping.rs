@@ -30,7 +30,7 @@ struct PlanarMapping;
 
 impl Mapping for PlanarMapping {
     fn map(&self, point: &Point) -> Coordinates {
-        return Coordinates::new(point.x % 1.0, point.z % 1.0);
+        return Coordinates::new(point.x.fract(), point.z.fract());
     }
 }
 

@@ -280,7 +280,9 @@ impl<const SIDE_LENGTH: usize> DerefMut for Matrix<SIDE_LENGTH> {
 
 impl<const SIDE_LENGTH: usize> Display for Matrix<SIDE_LENGTH> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        return f.debug_struct("Matrix").field("elements", &self).finish();
+        return f.debug_struct("Matrix")
+            .field("elements", &self)
+            .finish();
     }
 }
 

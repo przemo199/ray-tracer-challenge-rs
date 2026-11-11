@@ -26,12 +26,12 @@ impl_color_provider_for_pattern!(GradientPattern);
 
 impl Pattern for GradientPattern {
     fn color_at(&self, point: &Point) -> Color {
-        let distance = self.color_b - self.color_a;
+        let distance = &self.color_b - &self.color_a;
         let mut fraction = point.x.fract().abs();
         if point.x as i64 % 2 != 0 {
             fraction = 1.0 - fraction;
         }
-        return self.color_a + (distance * fraction);
+        return &self.color_a + &(&distance * fraction);
     }
 }
 

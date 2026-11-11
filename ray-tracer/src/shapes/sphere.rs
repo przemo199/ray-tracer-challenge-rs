@@ -67,10 +67,10 @@ impl Display for Sphere {
 impl CoarseEq for Sphere {
     fn coarse_eq(&self, other: &Self) -> bool {
         return std::ptr::eq(self, other)
-            || self.material == other.material
-            || self
-                .transformation_inverse
-                .coarse_eq(&other.transformation_inverse);
+            || (self.material == other.material
+                && self
+                    .transformation_inverse
+                    .coarse_eq(&other.transformation_inverse));
     }
 }
 

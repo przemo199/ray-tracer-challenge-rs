@@ -11,7 +11,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    /// Creates new instance of struct [Ray]
+    /// Creates new instance of [Ray]
     /// # Examples
     /// ```
     /// use ray_tracer::composites::Ray;
@@ -28,7 +28,7 @@ impl Ray {
 
     #[inline]
     pub fn position(&self, distance: impl Into<f64>) -> Point {
-        return self.origin + self.direction * distance.into();
+        return &self.origin + &(&self.direction * distance.into());
     }
 
     #[inline]

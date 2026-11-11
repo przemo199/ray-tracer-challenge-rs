@@ -6,7 +6,7 @@ use image::ImageEncoder;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use std::fs::File;
 use std::io;
-use std::io::{BufWriter, Write};
+use std::io::Write;
 use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -23,7 +23,7 @@ impl Canvas {
 
     pub const MAX_COLOR_VALUE: f64 = 255.0;
 
-    /// Creates new instance of struct Canvas
+    /// Creates new instance of [Canvas]
     pub fn new(width: u32, height: u32) -> Self {
         let pixel_count = (width * height) as usize;
         let pixels = vec![Self::DEFAULT_COLOR; pixel_count];
@@ -122,7 +122,7 @@ impl Canvas {
             .map(|channel| (channel * Self::MAX_COLOR_VALUE).round() as u8)
             .collect();
 
-        let buf_file_writer = BufWriter::new(File::create(file_name.as_ref())?);
+        let buf_file_writer = File::create(file_name.as_ref())?;
         let encoder = PngEncoder::new_with_quality(
             buf_file_writer,
             CompressionType::Best,
