@@ -7,6 +7,10 @@ edition = "2024"
 [lints]
 workspace = true
 
+# the lib's libtest harness would reject Criterion arguments such as --save-baseline
+[lib]
+bench = false
+
 [dependencies]
 image.workspace = true
 indicatif.workspace = true
@@ -14,3 +18,12 @@ rayon.workspace = true
 
 [dev-dependencies]
 rstest.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "primitives"
+harness = false
+
+[[bench]]
+name = "shapes"
+harness = false

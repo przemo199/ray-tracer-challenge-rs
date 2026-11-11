@@ -52,6 +52,9 @@ cargo doc --workspace --no-deps
 
 # End-to-end render (ALWAYS --release; debug builds are extremely slow)
 cargo run --release -p ray-tracer-cli -- scenes/three_sphere_scene.yaml target/renders/out.png
+
+# Benchmarks (~45 s; see Performance)
+cmd //c "scripts\bench.cmd"
 ```
 
 Scenes in `scenes/` are mostly 4K and can take a long time. For a quick end-to-end check, copy a scene
@@ -64,7 +67,9 @@ Before declaring a change complete:
 2. `cargo test --workspace` passes.
 3. `cargo clippy --workspace --all-targets` reports nothing new in the code you touched.
 4. `cargo fmt --all` has been run on files you changed (do not reformat unrelated files).
-5. For changes that affect rendered output, render a small scene and look at the image.
+5. For changes that affect rendered output, render a small scene copy (see Commands) and look at the image.
+6. For changes in the hot path (see Performance), compare the relevant benchmarks against a baseline
+   recorded before the change.
 
 ## Code conventions
 
@@ -105,14 +110,27 @@ recursion. Any change there is a performance change and must be measured — int
   `fold(MIN, f64::max)`) is ~8% faster on cube-heavy scenes than `a.max(b).max(c)` — likely because the
   known non-NaN seed lets LLVM drop NaN handling. Applies to every multi-way `min`/`max` (`Cube`, AABBs).
 
-How to benchmark (renders print their own timing):
-1. Build both variants with the **same toolchain** (`cargo +stable build --release -p ray-tracer-cli`) and
-   separate target dirs **inside `target/`** (`CARGO_TARGET_DIR=target/bench-<name>`, worktrees in
-   `target/worktrees/`) — never in `%TEMP%` (see Gotchas: antivirus). A worktree without the committed `rust-toolchain.toml` silently uses the
-   machine's rustup default (here the `esp` fork), which once produced a fake 30% "speedup".
-2. Use a scene copy at ~960×640 and `-r serial` (less noise than parallel).
-3. Alternate the variants, ≥7 runs each, compare medians. Differences under ~3% are noise/code layout.
-4. Confirm output PNGs are byte-identical (`cmp`) unless the change is meant to alter the image.
+### Benchmarks (Criterion, `ray-tracer/benches/`)
+
+`primitives.rs` (vector/color/matrix ops) and `shapes.rs` (`intersect/<shape>/{hit,miss}`, `normal_at`,
+`intersections/hit`); fixed-seed inputs in batches of 1024. Full run ~45 s. Always use the script — it
+pins the run to one core; unpinned, identical code varied by up to 50%, pinned by ≤6%:
+
+```sh
+cmd //c "scripts\bench.cmd -- --save-baseline before"   # before the change
+cmd //c "scripts\bench.cmd -- --baseline before"        # after; add a filter, e.g. intersect/cube
+```
+
+"Regressed"/"improved" means beyond the 5% noise threshold; re-run before trusting smaller changes.
+Close IDE indexing/games first, and only compare baselines from the same machine.
+
+### Whole-render comparisons
+
+1. Build both variants with `cargo +stable build --release -p ray-tracer-cli` into separate
+   `CARGO_TARGET_DIR=target/bench-<name>` dirs (never `%TEMP%`; without `rust-toolchain.toml` the `esp`
+   default toolchain is used and results are meaningless).
+2. Alternate `-r serial` renders of a ~960×640 scene copy, ≥7 each; compare medians (<3% is noise).
+3. Check the PNGs are byte-identical (`cmp`) unless the image is meant to change.
 
 ## Tests
 

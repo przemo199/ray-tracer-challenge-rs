@@ -1,8 +1,8 @@
 use crate::composites::{Canvas, Intersections, Ray, World};
-use crate::primitives::{Color, Point, Transformation};
+use crate::primitives::{Point, Transformation};
 use crate::shapes::Transform;
 use core::fmt::{Display, Formatter, Result};
-use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -66,24 +66,23 @@ impl Camera {
         return Ray::new(self.origin, direction);
     }
 
-    #[inline]
-    fn render_pixel(&self, index: usize, pixel: &mut Color, world: &World) {
-        let x: u32 = index as u32 % self.horizontal_size;
-        let y: u32 = index as u32 / self.horizontal_size;
-        let ray = self.ray_for_pixel(x, y);
-        let mut intersections = Intersections::new();
-        *pixel = world.color_at(&ray, &mut intersections);
-    }
-
-    pub fn render(&self, world: &World) -> Canvas {
-        let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
+    fn progress_bar(&self, show: bool) -> ProgressBar {
+        if !show {
+            return ProgressBar::hidden();
+        }
         let style = ProgressStyle::with_template(Self::PROGRESS_TEMPLATE)
             .expect("Failed to create ProgressStyle");
+        let pixel_count = u64::from(self.horizontal_size) * u64::from(self.vertical_size);
+        return ProgressBar::new(pixel_count).with_style(style);
+    }
+
+    pub fn render(&self, world: &World, show_progress: bool) -> Canvas {
+        let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
         let mut intersections = Intersections::new();
         canvas
             .pixels
             .iter_mut()
-            .progress_with_style(style)
+            .progress_with(self.progress_bar(show_progress))
             .enumerate()
             .for_each(|(index, pixel)| {
                 let (x, y) = Canvas::index_to_coords(canvas.width, index);
@@ -93,14 +92,12 @@ impl Camera {
         return canvas;
     }
 
-    pub fn render_parallel(&self, world: &World) -> Canvas {
+    pub fn render_parallel(&self, world: &World, show_progress: bool) -> Canvas {
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
-        let style = ProgressStyle::with_template(Self::PROGRESS_TEMPLATE)
-            .expect("Failed to parse ProgressStyle");
         canvas
             .pixels
             .par_iter_mut()
-            .progress_with_style(style)
+            .progress_with(self.progress_bar(show_progress))
             .enumerate()
             .for_each_with(Intersections::new(), |intersections, (index, pixel)| {
                 let (x, y) = Canvas::index_to_coords(canvas.width, index);
@@ -215,7 +212,7 @@ mod tests {
         let to = Point::ORIGIN;
         let up = Vector::UP;
         camera.set_transformation(transformations::view_transform(from, to, up));
-        let canvas = camera.render(&world);
+        let canvas = camera.render(&world, false);
         let pixel = canvas.get_pixel(5, 5);
         let expected = Color::new(
             0.38066119308103435,
@@ -233,7 +230,7 @@ mod tests {
         let to = Point::ORIGIN;
         let up = Vector::UP;
         camera.set_transformation(transformations::view_transform(from, to, up));
-        let canvas = camera.render_parallel(&world);
+        let canvas = camera.render_parallel(&world, false);
         let pixel = canvas.get_pixel(5, 5);
         let expected = Color::new(
             0.38066119308103435,

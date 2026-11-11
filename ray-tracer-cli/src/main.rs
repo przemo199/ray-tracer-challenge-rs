@@ -16,8 +16,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let now = Instant::now();
     let canvas = match args.rendering_mode {
-        RenderingMode::Serial => camera.render(&world),
-        RenderingMode::Parallel => camera.render_parallel(&world),
+        RenderingMode::Serial => camera.render(&world, !args.quiet),
+        RenderingMode::Parallel => camera.render_parallel(&world, !args.quiet),
     };
     let seconds_elapsed = now.elapsed().as_secs_f64();
     if !args.quiet {
