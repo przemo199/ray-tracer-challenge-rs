@@ -84,6 +84,24 @@ Scenes use the YAML format from the book: a list of entries that either `add` so
 - **Materials:** `color`, `pattern`, `ambient`, `diffuse`, `specular`, `shininess`, `reflective`,
   `transparency`, `refractive-index`, `casts-shadow`. A defined material can `extend` another one.
 - **Patterns:** `stripes`, `gradient`, `rings`, `checkers`, each with two `colors` and an optional `transform`.
+- **Texture maps:** `type: map` with a `mapping` (`planar`, `spherical`, `cylindrical`), an optional
+  `transform` and a `uv_pattern`:
+  - `checkers` with `width`, `height` and two `colors`;
+  - `align_check` with `colors` `main`, `ul`, `ur`, `bl`, `br` (corners, for checking orientation);
+  - `image` with a PNG or JPEG `file`, relative to the scene file.
+
+  `mapping: cube` instead takes one UV pattern per face: `left`, `front` (+z), `right`, `back`, `up`
+  and `down`. As in the book, faces are upright when seen from inside the cube (a skybox), so from
+  outside they appear mirrored.
+
+  ```yaml
+  pattern:
+    type: map
+    mapping: spherical
+    uv_pattern:
+      type: image
+      file: textures/earth.png
+  ```
 
 More examples are in [`scenes/`](scenes).
 

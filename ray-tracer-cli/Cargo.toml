@@ -14,4 +14,5 @@ serde-saphyr.workspace = true
 ray-tracer = { path = "../ray-tracer"}
 
 [dev-dependencies]
+image.workspace = true
 rstest.workspace = true

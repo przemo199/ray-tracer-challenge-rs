@@ -1,20 +1,31 @@
 pub use checker_pattern::CheckerPattern;
 pub use color_provider::ColorProvider;
 pub use complex_pattern::ComplexPattern;
+pub use cube_map::{CubeFace, CubeMap};
 pub use gradient_pattern::GradientPattern;
+pub use mapping::{CylindricalMapping, Mapping, PlanarMapping, SphericalMapping};
 pub use pattern::Pattern;
+#[cfg(test)]
 pub(crate) use pattern::TestPattern;
 pub use ring_pattern::RingPattern;
 pub use stripe_pattern::StripePattern;
+pub use texture_map::TextureMap;
+pub use uv_align_check::UvAlignCheck;
+pub use uv_checkers::UvCheckers;
+pub use uv_image::UvImage;
+pub use uv_pattern::UvPattern;
 
 mod checker_pattern;
-mod checkered_texture;
 mod color_provider;
 mod complex_pattern;
-mod custom_texture;
+mod cube_map;
 mod gradient_pattern;
 mod mapping;
 mod pattern;
 mod ring_pattern;
 mod stripe_pattern;
-mod texture;
+mod texture_map;
+mod uv_align_check;
+mod uv_checkers;
+mod uv_image;
+mod uv_pattern;

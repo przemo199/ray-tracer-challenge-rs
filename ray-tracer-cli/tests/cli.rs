@@ -113,3 +113,65 @@ fn missing_scene_file_reports_its_path() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("does-not-exist.yaml"), "{stderr}");
 }
+
+#[test]
+fn image_textures_load_relative_to_the_scene_file() {
+    let directory = directory("image_texture");
+    fs::create_dir_all(directory.join("textures")).unwrap();
+    image::RgbImage::from_pixel(1, 1, image::Rgb([255, 0, 0]))
+        .save(directory.join("textures/red.png"))
+        .unwrap();
+    // a sphere filling the view, lit only by its ambient color: pixels show the texture as is
+    let scene = write_scene(
+        &directory,
+        "
+- add: camera
+  width: 9
+  height: 9
+  field-of-view: 0.5
+  from: [0, 0, -5]
+  to: [0, 0, 0]
+  up: [0, 1, 0]
+- add: light
+  at: [-10, 10, -10]
+  intensity: [1, 1, 1]
+- add: sphere
+  material:
+    ambient: 1
+    diffuse: 0
+    specular: 0
+    pattern:
+      type: map
+      mapping: spherical
+      uv_pattern:
+        type: image
+        file: textures/red.png
+",
+    );
+    let image = directory.join("out.png");
+    // run from another working directory: the path must be resolved from the scene file
+    let output = Command::new(env!("CARGO_BIN_EXE_ray-tracer-cli"))
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .args([scene.as_os_str(), image.as_os_str()])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let rendered = image::open(&image).unwrap().to_rgb8();
+    assert_eq!(rendered.get_pixel(4, 4).0, [255, 0, 0]);
+}
+
+#[test]
+fn missing_texture_image_reports_its_path() {
+    let directory = directory("missing_texture");
+    let scene = write_scene(
+        &directory,
+        &format!(
+            "{SCENE}  material:\n    pattern:\n      type: map\n      mapping: spherical\n      uv_pattern:\n        type: image\n        file: missing.png\n"
+        ),
+    );
+    let output = run(&[scene.as_os_str(), directory.join("out.png").as_os_str()]);
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("cannot load texture"), "{stderr}");
+    assert!(stderr.contains("missing.png"), "{stderr}");
+}

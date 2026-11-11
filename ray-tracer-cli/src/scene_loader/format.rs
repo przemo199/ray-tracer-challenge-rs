@@ -10,6 +10,7 @@ use ray_tracer::primitives::{Transformation, transformations};
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{Error, IgnoredAny, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer};
+use std::path::PathBuf;
 
 pub type Rgb = [f64; 3];
 
@@ -82,22 +83,79 @@ pub struct MaterialDef {
     pub casts_shadow: Option<bool>,
 }
 
+/// A material's pattern, selected by its `type:` key.
+#[derive(Clone, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum PatternDef {
+    Stripes(ColorPatternDef),
+    Gradient(ColorPatternDef),
+    Rings(ColorPatternDef),
+    Checkers(ColorPatternDef),
+    /// A texture map: a UV pattern painted on through a mapping. Boxed: it is far larger than the
+    /// other variants, and materials (which hold patterns) are cloned for `extend`.
+    Map(Box<TextureMapDef>),
+}
+
+/// The 3D patterns, which alternate or blend two colors.
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct PatternDef {
-    #[serde(rename = "type")]
-    pub kind: PatternKind,
+pub struct ColorPatternDef {
     pub colors: [Ref<Rgb>; 2],
+    pub transform: Option<Vec<Step>>,
+}
+
+/// `uv_pattern` for the planar/spherical/cylindrical mappings; one pattern per face (`left`, `front`,
+/// `right`, `back`, `up`, `down`) for `mapping: cube`. `resolve.rs` checks the combination.
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TextureMapDef {
+    pub mapping: MappingKind,
+    pub uv_pattern: Option<UvPatternDef>,
+    pub left: Option<UvPatternDef>,
+    pub front: Option<UvPatternDef>,
+    pub right: Option<UvPatternDef>,
+    pub back: Option<UvPatternDef>,
+    pub up: Option<UvPatternDef>,
+    pub down: Option<UvPatternDef>,
     pub transform: Option<Vec<Step>>,
 }
 
 #[derive(Clone, Copy, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum PatternKind {
-    Stripes,
-    Gradient,
-    Rings,
-    Checkers,
+pub enum MappingKind {
+    Planar,
+    Spherical,
+    Cylindrical,
+    Cube,
+}
+
+/// A 2D pattern for a texture map, selected by its `type:` key.
+#[derive(Clone, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum UvPatternDef {
+    Checkers {
+        width: u32,
+        height: u32,
+        colors: [Ref<Rgb>; 2],
+    },
+    AlignCheck {
+        colors: AlignCheckColors,
+    },
+    /// A PNG or JPEG file; a relative path is relative to the scene file.
+    Image {
+        file: PathBuf,
+    },
+}
+
+/// The main color and the four corner colors (upper/bottom, left/right) of an align check.
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AlignCheckColors {
+    pub main: Ref<Rgb>,
+    pub ul: Ref<Rgb>,
+    pub ur: Ref<Rgb>,
+    pub bl: Ref<Rgb>,
+    pub br: Ref<Rgb>,
 }
 
 #[derive(Deserialize)]

@@ -71,3 +71,9 @@ fn showcase() {
     let (world, camera) = support::showcase(750, 500);
     check("showcase", &camera.render_parallel(&world, false));
 }
+
+#[test]
+fn textures() {
+    let (world, camera) = support::textures(750, 500);
+    check("textures", &camera.render_parallel(&world, false));
+}

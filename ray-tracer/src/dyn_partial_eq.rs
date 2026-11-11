@@ -14,8 +14,12 @@ impl<T: PartialEq + 'static> DynPartialEq for T {
     }
 
     fn dyn_eq(&self, other: &dyn Any) -> bool {
-        return core::ptr::addr_eq(self, other)
-            || other.downcast_ref().is_some_and(|other: &T| self == other);
+        // The same object is equal without comparing every field: the common case when
+        // intersections are matched against their own shapes. Same address alone doesn't prove it
+        // (all zero-sized values share one; a value can sit at the start of another), but same
+        // address *and* same type does. The type is only checked when the addresses match.
+        let is_same_object = core::ptr::addr_eq(self, other) && other.is::<T>();
+        return is_same_object || other.downcast_ref().is_some_and(|other: &T| self == other);
     }
 }
 
@@ -55,5 +59,19 @@ mod tests {
     fn values_of_different_types_are_never_equal() {
         assert!(!Sphere::default().dyn_eq(Cube::default().as_any()));
         assert!(!1_i32.dyn_eq(&1_i64));
+    }
+
+    #[test]
+    fn zero_sized_values_of_different_types_are_not_equal() {
+        #[derive(PartialEq)]
+        struct First;
+        #[derive(PartialEq)]
+        struct Second;
+        // every boxed zero-sized value gets the same dangling address
+        let (first, second): (Box<dyn DynPartialEq>, Box<dyn DynPartialEq>) =
+            (Box::new(First), Box::new(Second));
+        assert!(core::ptr::addr_eq(first.as_ref(), second.as_ref()));
+        assert!(!first.dyn_eq(second.as_any()));
+        assert!(first.dyn_eq(First.as_any()));
     }
 }

@@ -15,12 +15,15 @@ pub fn load_scene_description<P: AsRef<Path>>(path: P) -> Result<(World, Camera)
         path: path.to_owned(),
         source,
     })?;
-    return parse_scene(&text);
+    // texture images are looked up relative to the scene file
+    let base_dir = path.parent().unwrap_or(Path::new(""));
+    return parse_scene(&text, base_dir);
 }
 
-pub fn parse_scene(text: &str) -> Result<(World, Camera), SceneError> {
+/// Parses a scene, resolving relative paths in it (texture images) from `base_dir`.
+pub fn parse_scene(text: &str, base_dir: &Path) -> Result<(World, Camera), SceneError> {
     let entries: Vec<format::Entry> = serde_saphyr::from_str(text).map_err(SceneError::Yaml)?;
-    return resolve::build(entries);
+    return resolve::build(entries, base_dir);
 }
 
 pub enum SceneError {
@@ -36,6 +39,11 @@ pub enum SceneError {
     },
     MissingCamera,
     Invalid(String),
+    /// A texture image that is missing or can't be decoded (only PNG and JPEG are supported).
+    Image {
+        path: PathBuf,
+        source: Box<dyn Error + Send + Sync>,
+    },
 }
 
 impl Display for SceneError {
@@ -48,6 +56,13 @@ impl Display for SceneError {
             Self::Undefined { kind, name } => write!(formatter, "undefined {kind} `{name}`"),
             Self::MissingCamera => formatter.write_str("the scene has no camera"),
             Self::Invalid(message) => formatter.write_str(message),
+            Self::Image { path, source } => {
+                write!(
+                    formatter,
+                    "cannot load texture {}: {source}",
+                    path.display()
+                )
+            }
         };
     }
 }
@@ -64,6 +79,7 @@ impl Error for SceneError {
         return match self {
             Self::Io { source, .. } => Some(source),
             Self::Yaml(error) => Some(error),
+            Self::Image { source, .. } => Some(source.as_ref()),
             _ => None,
         };
     }
@@ -72,8 +88,12 @@ impl Error for SceneError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ray_tracer::primitives::{Color, Point};
-    use ray_tracer::shapes::Shape;
+    use ray_tracer::patterns::{
+        ColorProvider, CubeMap, CylindricalMapping, Mapping, PlanarMapping, SphericalMapping,
+        TextureMap, UvAlignCheck, UvCheckers, UvPattern,
+    };
+    use ray_tracer::primitives::{Color, Point, transformations};
+    use ray_tracer::shapes::{Shape, Transform};
 
     const CAMERA: &str = "
 - add: camera
@@ -86,7 +106,7 @@ mod tests {
 ";
 
     fn parse(entries: &str) -> Result<(World, Camera), SceneError> {
-        return parse_scene(&format!("{CAMERA}{entries}"));
+        return parse_scene(&format!("{CAMERA}{entries}"), Path::new(""));
     }
 
     fn error(entries: &str) -> String {
@@ -199,7 +219,7 @@ mod tests {
 
     #[test]
     fn scene_without_camera_is_rejected() {
-        let result = parse_scene("- add: sphere");
+        let result = parse_scene("- add: sphere", Path::new(""));
         assert_eq!(result.err().unwrap().to_string(), "the scene has no camera");
     }
 
@@ -258,7 +278,7 @@ mod tests {
     #[test]
     fn camera_looking_at_its_own_position_is_rejected() {
         let scene = CAMERA.replace("to: [0, 0, 0]", "to: [0, 0, -5]");
-        let message = parse_scene(&scene)
+        let message = parse_scene(&scene, Path::new(""))
             .expect_err("should be rejected")
             .to_string();
         assert!(message.starts_with("camera:"), "{message}");
@@ -269,5 +289,180 @@ mod tests {
         let message =
             error("- define: big-transform\n  extend: other\n  value: [[scale, 2, 2, 2]]");
         assert_eq!(message, "`big-transform`: only materials can use `extend`");
+    }
+
+    fn only_pattern(world: &World) -> &dyn ColorProvider {
+        let pattern = only_shape(world).material().pattern.as_ref();
+        return pattern.expect("the shape should have a pattern").as_ref();
+    }
+
+    #[rstest::rstest]
+    #[case("planar", Box::new(PlanarMapping))]
+    #[case("spherical", Box::new(SphericalMapping))]
+    #[case("cylindrical", Box::new(CylindricalMapping))]
+    fn texture_maps_load_with_each_mapping(#[case] name: &str, #[case] mapping: Box<dyn Mapping>) {
+        let (world, _) = parse(&format!(
+            "
+- add: sphere
+  material:
+    pattern:
+      type: map
+      mapping: {name}
+      uv_pattern:
+        type: checkers
+        width: 16
+        height: 8
+        colors: [[0, 0.5, 0], [1, 1, 1]]
+"
+        ))
+        .unwrap();
+        let checkers = UvCheckers::new(16, 8, Color::new(0, 0.5, 0), Color::WHITE);
+        let expected = TextureMap::new(Box::new(checkers), mapping);
+        assert!(only_pattern(&world) == &expected as &dyn ColorProvider);
+    }
+
+    #[test]
+    fn align_check_loads_with_named_colors_and_transform() {
+        let (world, _) = parse(
+            "
+- define: red-color
+  value: [1, 0, 0]
+- add: cylinder
+  material:
+    pattern:
+      type: map
+      mapping: cylindrical
+      transform: [[rotate-y, 1]]
+      uv_pattern:
+        type: align_check
+        colors:
+          main: [1, 1, 1]
+          ul: red-color
+          ur: [1, 1, 0]
+          bl: [0, 1, 0]
+          br: [0, 1, 1]
+",
+        )
+        .unwrap();
+        let align_check = UvAlignCheck::new(
+            Color::WHITE,
+            Color::RED,
+            Color::new(1, 1, 0),
+            Color::GREEN,
+            Color::new(0, 1, 1),
+        );
+        let mut expected = TextureMap::new(Box::new(align_check), Box::new(CylindricalMapping));
+        expected.set_transformation(transformations::rotation_y(1));
+        assert!(only_pattern(&world) == &expected as &dyn ColorProvider);
+    }
+
+    #[test]
+    fn invalid_texture_maps_are_rejected() {
+        let map = |body: &str| {
+            return error(&format!(
+                "- add: sphere\n  material:\n    pattern:\n      type: map\n{body}"
+            ));
+        };
+        let checkers = "        type: checkers\n        width: 2\n        height: 2\n        colors: [[0, 0, 0], [1, 1, 1]]\n";
+        let message = map(&format!(
+            "      mapping: cubic\n      uv_pattern:\n{checkers}"
+        ));
+        assert!(message.contains("cubic"), "{message}");
+        let message = map("      mapping: planar\n      uv_pattern:\n        type: noise\n");
+        assert!(message.contains("noise"), "{message}");
+        let message = map(&format!(
+            "      mapping: planar\n      uv_pattern:\n{}",
+            checkers.replace("width", "widht")
+        ));
+        assert!(message.contains("widht"), "{message}");
+        let message = map(&format!(
+            "      mapping: planar\n      colors: [[0, 0, 0], [1, 1, 1]]\n      uv_pattern:\n{checkers}"
+        ));
+        assert!(message.contains("colors"), "{message}");
+    }
+
+    /// A texture-map pattern on a cube, with `body` as its keys after `type: map`.
+    fn cube_with_map(body: &str) -> Result<(World, Camera), SceneError> {
+        return parse(&format!(
+            "- add: cube\n  material:\n    pattern:\n      type: map\n{body}"
+        ));
+    }
+
+    fn face(main: &str) -> String {
+        return format!(
+            "        type: align_check\n        colors: {{ main: {main}, ul: [1, 0, 0], ur: [1, 1, 0], bl: [0, 1, 0], br: [0, 1, 1] }}\n"
+        );
+    }
+
+    #[test]
+    fn cube_maps_load_one_pattern_per_face() {
+        let faces = ["left", "front", "right", "back", "up", "down"];
+        let mut body = "      mapping: cube\n".to_owned();
+        for (index, name) in faces.iter().enumerate() {
+            body += &format!("      {name}:\n{}", face(&format!("[0.{index}, 0, 0]")));
+        }
+        let (world, _) = cube_with_map(&body).unwrap();
+        let face = |index: u8| -> Box<dyn UvPattern> {
+            return Box::new(UvAlignCheck::new(
+                Color::new(f64::from(index) / 10.0, 0, 0),
+                Color::RED,
+                Color::new(1, 1, 0),
+                Color::GREEN,
+                Color::new(0, 1, 1),
+            ));
+        };
+        let expected = CubeMap::new(face(0), face(1), face(2), face(3), face(4), face(5));
+        assert!(only_pattern(&world) == &expected as &dyn ColorProvider);
+    }
+
+    #[test]
+    fn invalid_cube_maps_are_rejected() {
+        let five_faces: String = ["left", "front", "right", "back", "up"]
+            .iter()
+            .map(|name| format!("      {name}:\n{}", face("[1, 1, 1]")))
+            .collect();
+        let message = error_of(cube_with_map(&format!("      mapping: cube\n{five_faces}")));
+        assert_eq!(message, "cube map: missing the `down` face");
+        let message = error_of(cube_with_map(&format!(
+            "      mapping: cube\n      uv_pattern:\n{}",
+            face("[1, 1, 1]")
+        )));
+        assert!(message.contains("instead of `uv_pattern`"), "{message}");
+        let message = error_of(cube_with_map(&format!(
+            "      mapping: spherical\n      front:\n{}",
+            face("[1, 1, 1]")
+        )));
+        assert!(
+            message.contains("only apply to `mapping: cube`"),
+            "{message}"
+        );
+        let message = error_of(cube_with_map("      mapping: planar\n"));
+        assert_eq!(message, "a texture map needs a `uv_pattern`");
+    }
+
+    fn error_of(result: Result<(World, Camera), SceneError>) -> String {
+        return result.expect_err("scene should be rejected").to_string();
+    }
+
+    #[test]
+    fn texture_images_are_resolved_relative_to_the_scene_file() {
+        let scene = format!(
+            "{CAMERA}
+- add: sphere
+  material:
+    pattern:
+      type: map
+      mapping: spherical
+      uv_pattern:
+        type: image
+        file: textures/earth.png
+"
+        );
+        let message = parse_scene(&scene, Path::new("scenes"))
+            .expect_err("the image doesn't exist")
+            .to_string();
+        let expected_path = Path::new("scenes").join("textures/earth.png");
+        let expected = format!("cannot load texture {}", expected_path.display());
+        assert!(message.starts_with(&expected), "{message}");
     }
 }

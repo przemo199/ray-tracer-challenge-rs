@@ -1,7 +1,6 @@
-use crate::impl_transform_for;
 use crate::patterns::ColorProvider;
-use crate::primitives::{Color, Point, Transformation};
-use core::fmt::{Debug, Display, Formatter};
+use crate::primitives::{Color, Point};
+use crate::shapes::Transform;
 
 pub trait Pattern: Transform + ColorProvider + ClonePattern {
     fn color_at(&self, point: &Point) -> Color;
@@ -45,41 +44,54 @@ macro_rules! impl_color_provider_for_pattern {
     };
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct TestPattern {
-    transformation_inverse: Transformation,
-}
+/// Returns its pattern-space point as a color, so tests can check which transformations applied.
+#[cfg(test)]
+pub(crate) use test_pattern::TestPattern;
 
-impl TestPattern {
-    pub const fn new() -> TestPattern {
-        return Self {
-            transformation_inverse: Transformation::IDENTITY,
-        };
+#[cfg(test)]
+mod test_pattern {
+    use super::Pattern;
+    use crate::impl_transform_for;
+    use crate::primitives::{Color, Point, Transformation};
+    use core::fmt::{Display, Formatter};
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TestPattern {
+        pub(crate) transformation_inverse: Transformation,
     }
-}
 
-impl_transform_for!(TestPattern);
-
-impl_color_provider_for_pattern!(TestPattern);
-
-impl Pattern for TestPattern {
-    fn color_at(&self, point: &Point) -> Color {
-        return Color::new(point.x, point.y, point.z);
+    impl TestPattern {
+        pub const fn new() -> TestPattern {
+            return Self {
+                transformation_inverse: Transformation::IDENTITY,
+            };
+        }
     }
-}
 
-impl Display for TestPattern {
-    fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-        return f
-            .debug_struct("TestPattern")
-            .field("transformation", &self.transformation())
-            .finish();
+    impl_transform_for!(TestPattern);
+
+    impl_color_provider_for_pattern!(TestPattern);
+
+    impl Pattern for TestPattern {
+        fn color_at(&self, point: &Point) -> Color {
+            return Color::new(point.x, point.y, point.z);
+        }
+    }
+
+    impl Display for TestPattern {
+        fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
+            return f
+                .debug_struct("TestPattern")
+                .field("transformation", &self.transformation())
+                .finish();
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Transformation;
     use crate::primitives::{Color, Point, transformations};
     use crate::shapes::{Sphere, Transform};
 

@@ -25,9 +25,15 @@ Each module is a `foo.rs` file that re-exports from a `foo/` directory (no `mod.
 - `primitives/` – `Point`, `Vector`, `Color`, `Matrix<N>` (const generic), `Transformation` (= `Matrix<4>`),
   `transformations::{translation, scaling, rotation_x/y/z, shearing, view_transform}`, `Light`, `Coordinates`.
 - `shapes/` – traits `Transform`, `Intersect`, `Shape`; impls `Sphere`, `Plane`, `Cube`, `Cylinder`, `Cone`, `Triangle`.
-- `patterns/` – trait `ColorProvider` (what a `Material` holds), traits `Pattern` (3D, point-based) and
-  `Texture` (UV-mapped via `mapping::Mapping`); impls stripe/gradient/ring/checker/complex patterns.
-  Textures (`checkered_texture`, `custom_texture`, `mapping`) are **work in progress** and not yet exported.
+- `patterns/` – trait `ColorProvider` (what a `Material` holds), implemented by:
+  - `Pattern` (3D, point-based): stripe/gradient/ring/checker/complex (nested) patterns;
+  - `TextureMap` = `Box<dyn UvPattern>` (color per `(u, v)`: `UvCheckers`, `UvImage`, and
+    `UvAlignCheck` for checking orientation) + `Box<dyn Mapping>` (point → `(u, v)`: `PlanarMapping`,
+    `SphericalMapping`, `CylindricalMapping`). Any UV pattern works with any mapping;
+  - `CubeMap`: one `UvPattern` per `CubeFace`, which also maps points to each face's `(u, v)`. Faces
+    follow the book's convention: upright from *inside* the cube (skyboxes), mirrored from outside.
+
+  Image interpolation is missing (`UvImage` is nearest-pixel).
 - `composites/` – `Ray`, `Intersection(s)`, `ComputedHit`, `Material`, `World`, `Camera`, `Canvas`.
 - `consts.rs` – `EPSILON`, `PI`, etc. `utils.rs` – `CoarseEq`, `Squared`, `Cubed`, `solve_quadratic`, test fixtures.
 - `dyn_partial_eq.rs` – sealed `DynPartialEq` enabling `==` on `dyn Shape` / `dyn ColorProvider`.
@@ -102,7 +108,7 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   extend with their own types: shapes, patterns, textures, mappings, and future lights or cameras. A
   trait lets a user add a `Torus` or a custom pattern in their own crate; an enum would force them to
   edit this library. Use an enum only for small, closed sets this crate fully owns and no user would
-  extend (e.g. `RenderingMode`, or the YAML loader's `ShapeKind`/`PatternKind`, which name what the
+  extend (e.g. `RenderingMode`, or the YAML loader's `ShapeKind`/`PatternDef`, which name what the
   file format supports). Don't convert a trait into an enum for speed without measuring it first.
 - **Comparing shapes**: always use `==`; there is no separate identity method. `==` on `dyn Shape` /
   `dyn ColorProvider` (via `DynPartialEq::dyn_eq`) is true for the same object (an address check, so
@@ -198,13 +204,24 @@ Put a test where its subject lives:
 
 **Add a pattern** (model on `patterns/stripe_pattern.rs`): struct + `impl_transform_for!` +
 `impl_color_provider_for_pattern!` + `impl Pattern` + `Display`; export in `patterns.rs`;
-for YAML, add a `PatternKind` variant (`format.rs`) and handle it in `Definitions::pattern` (`resolve.rs`).
+for YAML, add a `PatternDef` variant (`format.rs`, selected by `type:`) and handle it in
+`Definitions::pattern` (`resolve.rs`; two-color patterns just pass their constructor to `color_pattern`).
+
+**Add a mapping or UV pattern** (model on `patterns/mapping.rs` / `patterns/uv_checkers.rs`): a `Clone +
+PartialEq` type implementing `Mapping` (`map(point) -> Coordinates`, `u`/`v` in `0..=1` for points on the
+target shape at unit size; wrap with `rem_euclid`, not `fract`) or `UvPattern` (`color_at(coordinates)`,
+`v = 0` is the bottom); export it in `patterns.rs`; test it with a table of points/coordinates and their
+expected results. It then works in any `TextureMap`. For YAML, add a `MappingKind` or `UvPatternDef`
+variant (`format.rs`) and build it in `Definitions::texture_map` / `Definitions::uv_pattern` (`resolve.rs`).
 
 **Scene files** (`ray-tracer-cli/src/scene_loader/`): `format.rs` is the serde model of the YAML (one type
 per mapping, `deny_unknown_fields`, so new keys must be added there), `resolve.rs` turns it into a `World`.
 Entries start with `add:` (camera, light, shapes) or `define:` (a material, transform list or `[r, g, b]`
 color, recognised by the value's shape); materials may `extend` another. Transform steps apply in list
-order. Errors carry line/column; `every_example_scene_loads` keeps `scenes/*.yaml` valid.
+order. Errors carry line/column; `every_example_scene_loads` keeps `scenes/*.yaml` valid. Relative paths
+(texture images) resolve from the scene file's directory (`parse_scene(text, base_dir)`). Errors inside a
+`pattern:` or `uv_pattern:` (serde internally tagged enums) point at the start of that block, not the
+exact line.
 
 ## Gotchas
 

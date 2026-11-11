@@ -2,21 +2,28 @@
 
 use super::SceneError;
 use super::format::{
-    CameraDef, Define, DefineValue, Entry, LightDef, MaterialDef, PatternDef, PatternKind, Ref,
-    Rgb, ShapeDef, ShapeKind, Step,
+    CameraDef, ColorPatternDef, Define, DefineValue, Entry, LightDef, MappingKind, MaterialDef,
+    PatternDef, Ref, Rgb, ShapeDef, ShapeKind, Step, TextureMapDef, UvPatternDef,
 };
 use ray_tracer::composites::{Camera, Material, World};
 use ray_tracer::consts::{MAX, MIN};
 use ray_tracer::patterns::{
-    CheckerPattern, ColorProvider, GradientPattern, RingPattern, StripePattern,
+    CheckerPattern, ColorProvider, CubeMap, CylindricalMapping, GradientPattern, Mapping,
+    PlanarMapping, RingPattern, SphericalMapping, StripePattern, TextureMap, UvAlignCheck,
+    UvCheckers, UvImage, UvPattern,
 };
 use ray_tracer::primitives::{Color, Light, Point, Transformation, Vector, transformations};
 use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Shape, Sphere, Transform};
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
-pub fn build(entries: Vec<Entry>) -> Result<(World, Camera), SceneError> {
+/// `base_dir` is where relative paths in the scene (texture images) are resolved from.
+pub fn build(entries: Vec<Entry>, base_dir: &Path) -> Result<(World, Camera), SceneError> {
     // Definitions first, so `add` entries may refer to names defined further down the file.
-    let mut definitions = Definitions::default();
+    let mut definitions = Definitions {
+        base_dir: base_dir.to_owned(),
+        ..Definitions::default()
+    };
     for entry in &entries {
         if let Entry::Define(name, define) = entry {
             definitions.add(name, define)?;
@@ -66,6 +73,7 @@ fn build_camera(definition: &CameraDef) -> Result<Camera, SceneError> {
 
 #[derive(Default)]
 struct Definitions {
+    base_dir: PathBuf,
     colors: HashMap<String, Color>,
     /// Stored with `extend` already applied.
     materials: HashMap<String, MaterialDef>,
@@ -150,26 +158,121 @@ impl Definitions {
     }
 
     fn pattern(&self, definition: &PatternDef) -> Result<Box<dyn ColorProvider>, SceneError> {
-        let [color_a, color_b] = &definition.colors;
-        let (a, b) = (self.color(color_a)?, self.color(color_b)?);
-        let transformation = match &definition.transform {
-            Some(steps) => Some(self.transformation(steps)?),
-            None => None,
+        return match definition {
+            PatternDef::Stripes(def) => self.color_pattern(def, StripePattern::new),
+            PatternDef::Gradient(def) => self.color_pattern(def, GradientPattern::new),
+            PatternDef::Rings(def) => self.color_pattern(def, RingPattern::new),
+            PatternDef::Checkers(def) => self.color_pattern(def, CheckerPattern::new),
+            PatternDef::Map(def) => self.texture_map(def),
         };
-        fn with<P: Transform + ColorProvider>(
-            mut pattern: P,
-            transformation: Option<Transformation>,
-        ) -> Box<dyn ColorProvider> {
-            if let Some(transformation) = transformation {
-                pattern.set_transformation(transformation);
-            }
-            return Box::new(pattern);
+    }
+
+    /// Builds a two-color pattern with its constructor, `new(color_a, color_b)`.
+    fn color_pattern<P: Transform + ColorProvider>(
+        &self,
+        definition: &ColorPatternDef,
+        new: fn(Color, Color) -> P,
+    ) -> Result<Box<dyn ColorProvider>, SceneError> {
+        let [color_a, color_b] = &definition.colors;
+        let pattern = new(self.color(color_a)?, self.color(color_b)?);
+        return self.transformed(pattern, definition.transform.as_deref());
+    }
+
+    fn texture_map(
+        &self,
+        definition: &TextureMapDef,
+    ) -> Result<Box<dyn ColorProvider>, SceneError> {
+        let mapping: Box<dyn Mapping> = match definition.mapping {
+            MappingKind::Planar => Box::new(PlanarMapping),
+            MappingKind::Spherical => Box::new(SphericalMapping),
+            MappingKind::Cylindrical => Box::new(CylindricalMapping),
+            MappingKind::Cube => return self.cube_map(definition),
+        };
+        let faces = [
+            &definition.left,
+            &definition.front,
+            &definition.right,
+            &definition.back,
+            &definition.up,
+            &definition.down,
+        ];
+        if faces.iter().any(|face| face.is_some()) {
+            return Err(SceneError::Invalid(
+                "`left`, `front`, `right`, `back`, `up` and `down` only apply to `mapping: cube`"
+                    .to_owned(),
+            ));
         }
-        return Ok(match definition.kind {
-            PatternKind::Stripes => with(StripePattern::new(a, b), transformation),
-            PatternKind::Gradient => with(GradientPattern::new(a, b), transformation),
-            PatternKind::Rings => with(RingPattern::new(a, b), transformation),
-            PatternKind::Checkers => with(CheckerPattern::new(a, b), transformation),
+        let uv_pattern = definition.uv_pattern.as_ref().ok_or_else(|| {
+            return SceneError::Invalid("a texture map needs a `uv_pattern`".to_owned());
+        })?;
+        let texture = TextureMap::new(self.uv_pattern(uv_pattern)?, mapping);
+        return self.transformed(texture, definition.transform.as_deref());
+    }
+
+    fn cube_map(&self, definition: &TextureMapDef) -> Result<Box<dyn ColorProvider>, SceneError> {
+        if definition.uv_pattern.is_some() {
+            return Err(SceneError::Invalid(
+                "a cube map takes one pattern per face (`left`, `front`, `right`, `back`, `up`, \
+                 `down`) instead of `uv_pattern`"
+                    .to_owned(),
+            ));
+        }
+        let face = |name: &str, face: &Option<UvPatternDef>| {
+            let face = face.as_ref().ok_or_else(|| {
+                return SceneError::Invalid(format!("cube map: missing the `{name}` face"));
+            })?;
+            return self.uv_pattern(face);
+        };
+        let cube_map = CubeMap::new(
+            face("left", &definition.left)?,
+            face("front", &definition.front)?,
+            face("right", &definition.right)?,
+            face("back", &definition.back)?,
+            face("up", &definition.up)?,
+            face("down", &definition.down)?,
+        );
+        return self.transformed(cube_map, definition.transform.as_deref());
+    }
+
+    /// Applies a pattern's optional `transform` and boxes it.
+    fn transformed<P: Transform + ColorProvider>(
+        &self,
+        mut pattern: P,
+        steps: Option<&[Step]>,
+    ) -> Result<Box<dyn ColorProvider>, SceneError> {
+        if let Some(steps) = steps {
+            pattern.set_transformation(self.transformation(steps)?);
+        }
+        return Ok(Box::new(pattern));
+    }
+
+    fn uv_pattern(&self, definition: &UvPatternDef) -> Result<Box<dyn UvPattern>, SceneError> {
+        return Ok(match definition {
+            UvPatternDef::Checkers {
+                width,
+                height,
+                colors: [a, b],
+            } => Box::new(UvCheckers::new(
+                *width,
+                *height,
+                self.color(a)?,
+                self.color(b)?,
+            )),
+            UvPatternDef::AlignCheck { colors } => Box::new(UvAlignCheck::new(
+                self.color(&colors.main)?,
+                self.color(&colors.ul)?,
+                self.color(&colors.ur)?,
+                self.color(&colors.bl)?,
+                self.color(&colors.br)?,
+            )),
+            UvPatternDef::Image { file } => {
+                let path = self.base_dir.join(file);
+                let image = UvImage::from_path(&path).map_err(|source| SceneError::Image {
+                    path,
+                    source: Box::new(source),
+                })?;
+                Box::new(image)
+            }
         });
     }
 
