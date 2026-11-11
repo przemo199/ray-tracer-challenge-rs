@@ -5,7 +5,8 @@ publish = false
 
 [workspace.dependencies]
 clap = { version = "4.6.7", features = ["derive"] }
-image = { version = "0.25.10", features = ["rayon", "png"] }
+# PNG output and JPEG/PNG texture input only; the default formats (AVIF, EXR, TIFF, WebP, ...) double the dependency tree
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg"] }
 indicatif = { version = "0.18.6", features = ["rayon"] }
 rayon = "1.12.0"
 serde = { version = "1.0.229", features = ["derive"] }

@@ -9,10 +9,10 @@ pub struct ComputedHit<'shape> {
     pub shape: &'shape dyn Shape,
     pub point: Point,
     pub over_point: Point,
-    pub under_point: Point,
     pub camera_direction: Vector,
     pub normal: Vector,
-    pub reflect_direction: Vector,
+    /// Only computed for surfaces that aren't opaque (the only ones refraction and the Fresnel
+    /// term look at); 1.0 otherwise.
     pub refractive_index_1: f64,
     pub refractive_index_2: f64,
     pub is_inside: bool,
@@ -25,26 +25,34 @@ impl ComputedHit<'_> {
         point: Point,
         camera_direction: Vector,
         normal: Vector,
-        reflect_direction: Vector,
         refractive_index_1: f64,
         refractive_index_2: f64,
         is_inside: bool,
     ) -> ComputedHit<'_> {
-        let over_point = point + normal * EPSILON;
-        let under_point = point - normal * EPSILON;
         return ComputedHit {
             distance,
             shape,
             point,
-            over_point,
-            under_point,
+            over_point: point + normal * EPSILON,
             camera_direction,
             normal,
-            reflect_direction,
             refractive_index_1,
             refractive_index_2,
             is_inside,
         };
+    }
+
+    /// Direction of the reflected ray. Computed on demand: only reflective surfaces need it.
+    #[inline]
+    pub fn reflect_direction(&self) -> Vector {
+        return (-self.camera_direction).reflect(&self.normal);
+    }
+
+    /// Point just below the surface, where refracted rays start. Computed on demand: only
+    /// transparent surfaces need it.
+    #[inline]
+    pub fn under_point(&self) -> Point {
+        return self.point - self.normal * EPSILON;
     }
 
     pub fn schlicks_approximation(&self) -> f64 {

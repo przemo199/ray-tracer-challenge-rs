@@ -1,14 +1,12 @@
-use crate::composites::World;
 use crate::primitives::Color;
-use core::error::Error;
-use core::ops::Deref;
-use image::ImageEncoder;
+use core::fmt::Write as _;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
-use std::fs::File;
+use image::{ExtendedColorType, ImageEncoder, ImageResult};
+use std::fs::{self, File};
 use std::io;
-use std::io::Write;
 use std::path::Path;
 
+/// A grid of pixels, stored row by row starting at the top-left corner.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Canvas {
     pub width: u32,
@@ -17,20 +15,23 @@ pub struct Canvas {
 }
 
 impl Canvas {
-    pub const DEFAULT_COLOR: Color = World::DEFAULT_COLOR;
+    pub const DEFAULT_COLOR: Color = Color::BLACK;
 
     pub const MIN_COLOR_VALUE: f64 = Color::MIN_COLOR_VALUE;
 
+    /// Largest 8-bit channel value, used by the PPM and PNG output.
     pub const MAX_COLOR_VALUE: f64 = 255.0;
 
-    /// Creates new instance of [Canvas]
+    /// PPM lines must stay within 70 characters: 5 pixels × 3 channels × "255 " is 59.
+    const PPM_PIXELS_PER_LINE: usize = 5;
+
+    /// Creates a canvas with every pixel set to [`Canvas::DEFAULT_COLOR`].
     pub fn new(width: u32, height: u32) -> Self {
-        let pixel_count = (width * height) as usize;
-        let pixels = vec![Self::DEFAULT_COLOR; pixel_count];
+        let pixel_count = width as usize * height as usize;
         return Self {
             width,
             height,
-            pixels,
+            pixels: vec![Self::DEFAULT_COLOR; pixel_count],
         };
     }
 
@@ -41,7 +42,7 @@ impl Canvas {
 
     #[inline]
     pub const fn coords_to_index(canvas_width: u32, (x, y): (u32, u32)) -> usize {
-        return (x + (y * canvas_width)) as usize;
+        return x as usize + y as usize * canvas_width as usize;
     }
 
     #[inline]
@@ -51,7 +52,8 @@ impl Canvas {
 
     #[inline]
     pub const fn index_to_coords(canvas_width: u32, index: usize) -> (u32, u32) {
-        return (index as u32 % canvas_width, index as u32 / canvas_width);
+        let width = canvas_width as usize;
+        return ((index % width) as u32, (index / width) as u32);
     }
 
     #[inline]
@@ -65,84 +67,62 @@ impl Canvas {
         self.pixels[index] = color;
     }
 
-    fn get_header(&self) -> Vec<String> {
-        let identifier = "P3".to_owned();
-        let color_range = (Self::MAX_COLOR_VALUE as i64).to_string();
-        let image_size = [self.width.to_string(), self.height.to_string()].join(" ");
-        return vec![identifier, image_size, color_range];
+    /// All pixels, row by row.
+    pub fn pixels(&self) -> &[Color] {
+        return &self.pixels;
     }
 
-    fn to_ppm(&self) -> String {
-        let pixels_per_line: usize = (70.0_f64 / (3.0 * 4.0)).floor() as usize;
-        let ppm_image = self.pixels.chunks(pixels_per_line).into_iter().map(|line| {
-            return line
-                .iter()
-                .flat_map(|color| color.clamped().channels().into_iter())
-                .map(|channel| ((channel * Self::MAX_COLOR_VALUE).round() as i64).to_string())
-                .map(|number| {
-                    if number.len() == 2 {
-                        return format!(" {number}");
-                    }
-                    if number.len() == 1 {
-                        return format!("  {number}");
-                    }
-                    return number;
-                })
-                .collect::<Vec<String>>()
-                .join(" ");
-        });
-        let mut content = self.get_header();
-        content.extend(ppm_image);
-        content.push(String::new()); // PPM files end with a newline
-        return content.join("\n");
-    }
-
-    fn prepare_file<P: AsRef<Path>>(file_name: &P) -> io::Result<()> {
-        let path = Path::new(file_name.as_ref());
-        let prefix = path
-            .parent()
-            .ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))?;
-        return std::fs::create_dir_all(prefix);
-    }
-
-    pub fn to_ppm_file<P: AsRef<Path>>(&self, file_name: P) -> io::Result<()> {
-        Self::prepare_file(&file_name)?;
-        let content = self.to_ppm();
-        let mut file = File::create(file_name.as_ref())?;
-        return file.write_all(content.as_bytes());
-    }
-
-    pub fn to_png_file<P: AsRef<Path>>(&self, file_name: P) -> Result<(), Box<dyn Error>> {
-        Self::prepare_file(&file_name)?;
-
-        let buffer: Vec<u8> = self
+    /// The pixels as 8-bit RGB triples (row by row), with channels clamped to `0..=1` and rounded.
+    /// This is exactly what [`Canvas::to_png_file`] writes.
+    pub fn to_rgb8(&self) -> Vec<u8> {
+        return self
             .pixels
             .iter()
-            .map(Color::clamped)
-            .flat_map(|color| color.channels().into_iter())
+            .flat_map(|color| color.clamped().channels())
             .map(|channel| (channel * Self::MAX_COLOR_VALUE).round() as u8)
             .collect();
+    }
 
-        let buf_file_writer = File::create(file_name.as_ref())?;
-        let encoder = PngEncoder::new_with_quality(
-            buf_file_writer,
-            CompressionType::Best,
-            FilterType::NoFilter,
-        );
-        return Ok(encoder.write_image(
-            buffer.as_slice(),
+    /// The canvas as a plain-text PPM (P3) image.
+    fn to_ppm(&self) -> String {
+        let max = Self::MAX_COLOR_VALUE as u8;
+        let mut ppm = format!("P3\n{} {}\n{max}\n", self.width, self.height);
+        for line in self.to_rgb8().chunks(Self::PPM_PIXELS_PER_LINE * 3) {
+            let numbers: Vec<String> = line.iter().map(|value| format!("{value:>3}")).collect();
+            // writing to a String cannot fail
+            let _ = writeln!(ppm, "{}", numbers.join(" "));
+        }
+        return ppm;
+    }
+
+    /// Creates the parent directories of `path` if needed.
+    fn create_parent_dir(path: &Path) -> io::Result<()> {
+        return match path.parent() {
+            Some(parent) if !parent.as_os_str().is_empty() => fs::create_dir_all(parent),
+            _ => Ok(()),
+        };
+    }
+
+    /// Writes the canvas as a plain-text PPM file, creating parent directories if needed.
+    pub fn to_ppm_file<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
+        let path = path.as_ref();
+        Self::create_parent_dir(path)?;
+        return fs::write(path, self.to_ppm());
+    }
+
+    /// Writes the canvas as an 8-bit RGB PNG file, creating parent directories if needed.
+    pub fn to_png_file<P: AsRef<Path>>(&self, path: P) -> ImageResult<()> {
+        let path = path.as_ref();
+        Self::create_parent_dir(path)?;
+        let writer = File::create(path)?;
+        let encoder =
+            PngEncoder::new_with_quality(writer, CompressionType::Best, FilterType::NoFilter);
+        return encoder.write_image(
+            &self.to_rgb8(),
             self.width,
             self.height,
-            image::ExtendedColorType::Rgb8,
-        )?);
-    }
-}
-
-impl Deref for Canvas {
-    type Target = Vec<Color>;
-
-    fn deref(&self) -> &Self::Target {
-        return &self.pixels;
+            ExtendedColorType::Rgb8,
+        );
     }
 }
 
@@ -170,12 +150,26 @@ mod tests {
     }
 
     #[test]
-    fn get_header() {
-        let canvas = Canvas::new(5, 3);
-        let header = canvas.get_header();
-        assert_eq!(header[0], "P3");
-        assert_eq!(header[1], "5 3");
-        assert_eq!(header[2], "255");
+    fn ppm_header() {
+        let ppm = Canvas::new(5, 3).to_ppm();
+        let header: Vec<&str> = ppm.lines().take(3).collect();
+        assert_eq!(header, ["P3", "5 3", "255"]);
+    }
+
+    #[test]
+    fn rgb8_clamps_and_rounds_channels() {
+        let mut canvas = Canvas::new(3, 1);
+        canvas.set_pixel(0, 0, Color::new(1.5, 0.5, -0.5));
+        canvas.set_pixel(1, 0, Color::new(0.2, 0.4, 0.6));
+        assert_eq!(canvas.to_rgb8(), [255, 128, 0, 51, 102, 153, 0, 0, 0]);
+    }
+
+    #[test]
+    fn index_math_does_not_overflow_u32() {
+        let width = 100_000;
+        let index = Canvas::coords_to_index(width, (1, 50_000));
+        assert_eq!(index, 5_000_000_001);
+        assert_eq!(Canvas::index_to_coords(width, index), (1, 50_000));
     }
 
     #[test]

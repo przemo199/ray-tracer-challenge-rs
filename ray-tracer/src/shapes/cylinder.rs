@@ -1,15 +1,17 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::{EPSILON, MAX, MIN};
-use crate::impl_transform_for;
+use crate::impl_shape_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, Squared, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cylinder {
-    pub material: Material,
     transformation_inverse: Transformation,
+    /// Transposed inverse, cached for `normal_at`.
+    normal_transformation: Transformation,
+    pub material: Material,
     pub min: f64,
     pub max: f64,
     pub closed: bool,
@@ -23,9 +25,11 @@ impl Cylinder {
         max: impl Into<f64>,
         closed: bool,
     ) -> Self {
+        let transformation_inverse = transformation.inverse();
         return Self {
             material,
-            transformation_inverse: transformation.inverse(),
+            transformation_inverse,
+            normal_transformation: transformation_inverse.transpose(),
             min: min.into(),
             max: max.into(),
             closed,
@@ -60,7 +64,7 @@ impl Cylinder {
     }
 }
 
-impl_transform_for!(Cylinder);
+impl_shape_transform_for!(Cylinder);
 
 impl Intersect for Cylinder {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {

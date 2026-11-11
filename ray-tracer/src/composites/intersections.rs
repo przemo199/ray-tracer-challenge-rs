@@ -1,20 +1,47 @@
 use crate::composites::Intersection;
+use crate::shapes::Shape;
+use core::cell::{RefCell, RefMut};
 use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
 
+/// The intersections of a ray with the scene, plus a reusable scratch buffer for shading.
 #[derive(Clone, Debug)]
-pub struct Intersections<'intersections>(Vec<Intersection<'intersections>>);
+pub struct Intersections<'intersections> {
+    hits: Vec<Intersection<'intersections>>,
+    /// Shapes a ray is inside; see [`Intersections::containers`].
+    containers: RefCell<Vec<&'intersections dyn Shape>>,
+}
 
 impl<'intersections> Intersections<'intersections> {
     pub const fn new() -> Intersections<'intersections> {
-        return Intersections(Vec::new());
+        return Self::from_hits(Vec::new());
     }
 
+    const fn from_hits(hits: Vec<Intersection<'intersections>>) -> Self {
+        return Self {
+            hits,
+            containers: RefCell::new(Vec::new()),
+        };
+    }
+
+    /// Scratch list used by [`Intersection::prepare_computations`] to track which shapes a ray is
+    /// inside. Kept here so one allocation is reused for every hit instead of one per hit.
+    pub(crate) fn containers(&self) -> RefMut<'_, Vec<&'intersections dyn Shape>> {
+        return self.containers.borrow_mut();
+    }
+
+    /// The closest intersection in front of the ray origin (non-negative distance).
     pub fn hit(&self) -> Option<&Intersection<'_>> {
         return self
             .iter()
             .filter(|intersection| intersection.distance >= 0.0)
-            .min();
+            .min_by(|a, b| a.distance.total_cmp(&b.distance));
+    }
+
+    /// Sorts by distance, nearest first. Stable, so intersections at equal distances keep their
+    /// order (which matters for tracking the refractive indices of overlapping shapes).
+    pub fn sort_by_distance(&mut self) {
+        self.hits.sort_by(|a, b| a.distance.total_cmp(&b.distance));
     }
 }
 
@@ -28,13 +55,13 @@ impl<'intersections> Deref for Intersections<'intersections> {
     type Target = Vec<Intersection<'intersections>>;
 
     fn deref(&self) -> &Self::Target {
-        return &(self.0);
+        return &self.hits;
     }
 }
 
 impl DerefMut for Intersections<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        return &mut self.0;
+        return &mut self.hits;
     }
 }
 
@@ -50,22 +77,22 @@ impl PartialEq for Intersections<'_> {
 
 impl<'intersections> From<Intersections<'intersections>> for Vec<Intersection<'intersections>> {
     fn from(value: Intersections<'intersections>) -> Self {
-        return value.0;
+        return value.hits;
     }
 }
 
-impl<'intersections> IntoIterator for &'intersections Intersections<'intersections> {
-    type Item = &'intersections Intersection<'intersections>;
-    type IntoIter = Iter<'intersections, Intersection<'intersections>>;
+impl<'list, 'intersections> IntoIterator for &'list Intersections<'intersections> {
+    type Item = &'list Intersection<'intersections>;
+    type IntoIter = Iter<'list, Intersection<'intersections>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        return self.0.iter();
+        return self.hits.iter();
     }
 }
 
 impl<'intersection> From<Vec<Intersection<'intersection>>> for Intersections<'intersection> {
     fn from(value: Vec<Intersection<'intersection>>) -> Self {
-        return Self(value);
+        return Self::from_hits(value);
     }
 }
 
@@ -73,7 +100,7 @@ impl<'intersection, const SIZE: usize> From<[Intersection<'intersection>; SIZE]>
     for Intersections<'intersection>
 {
     fn from(value: [Intersection<'intersection>; SIZE]) -> Self {
-        return Self(value.to_vec());
+        return Self::from_hits(value.to_vec());
     }
 }
 

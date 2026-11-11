@@ -89,10 +89,18 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   `PartialEq` on `Point`/`Vector`/`Color`/`Matrix` is derived, i.e. **exact**; `assert_eq!` on computed
   values only works when the arithmetic is exact, otherwise assert `a.coarse_eq(&b)`.
 - **Shapes and patterns store `transformation_inverse`**, not the transformation. Implement `Transform`
-  with the `impl_transform_for!(Type)` macro rather than by hand.
+  with a macro rather than by hand: `impl_shape_transform_for!` for shapes (which also store the
+  transposed inverse as `normal_transformation`), `impl_transform_for!` for patterns.
 - **Trait objects**: shapes live in `World` as `Box<dyn Shape>`; patterns in `Material` as
   `Option<Arc<dyn ColorProvider>>`. New implementors must derive `PartialEq` (blanket `DynPartialEq`),
   and implement `Debug`, `Display`, `Send + Sync`.
+- **Comparing shapes**: always use `==`; there is no separate identity method. `==` on `dyn Shape` /
+  `dyn ColorProvider` (via `DynPartialEq::dyn_eq`) is true for the same object (an address check, so
+  cheap) or for the same type with equal contents (every field compared, so slow for distinct shapes of
+  one type). Two separate but identical shapes are therefore equal. Sort hits with
+  `Intersections::sort_by_distance()`.
+- **Matrix inverse**: `inverse()` panics on a non-invertible matrix (e.g. a zero scale). For values that
+  come from users, check `is_invertible()` or use `try_inverse()` first — the scene loader does.
 - **No `unsafe`** (advertised in README). Avoid `unwrap()` in non-test library code; the CLI propagates
   errors with `Result<_, Box<dyn Error>>`.
 - Doc comments with runnable examples (`/// # Examples`) for public constructors are encouraged; they run
@@ -109,6 +117,13 @@ recursion. Any change there is a performance change and must be measured — int
 - **Measured: seed `f64` min/max chains with a non-NaN constant.** `MIN.max(a).max(b).max(c)` (or
   `fold(MIN, f64::max)`) is ~8% faster on cube-heavy scenes than `a.max(b).max(c)` — likely because the
   known non-NaN seed lets LLVM drop NaN handling. Applies to every multi-way `min`/`max` (`Cube`, AABBs).
+- **Measured: `prepare_computations` optimisations** gave −3% (`cover`) to −16% (`reflect_refract`) per
+  whole render: the refractive-index walk runs only for non-opaque hits, reusing a buffer inside
+  `Intersections`; shape fields start with the transformation so `==` between different shapes fails
+  fast; `reflect_direction()`/`under_point()` are computed on demand.
+- **Measured: storing the transposed inverse** (`normal_transformation`) saves 5% on `reflect_refract`
+  although the `normal_at` microbenchmark showed no change — for hot-path changes, trust whole-render
+  comparisons over microbenchmarks.
 
 ### Benchmarks (Criterion, `ray-tracer/benches/`)
 
@@ -161,9 +176,12 @@ Put a test where its subject lives:
 ## Recipes
 
 **Add a shape** (model on `shapes/plane.rs`):
-1. `shapes/<name>.rs`: struct with `pub material: Material` and private `transformation_inverse: Transformation`;
-   `impl_transform_for!`; `impl Intersect` (object-space ray, push into `intersections`);
-   `impl Shape` (`local_normal_at`, `material`); `Default`, `Display`, `CoarseEq`.
+1. `shapes/<name>.rs`: struct whose **first** fields are the private `transformation_inverse` and
+   `normal_transformation: Transformation` (derived `PartialEq` compares in field order, and the
+   transformation tells shapes apart fastest), then `pub material: Material`; constructors set both
+   (`transformation.inverse()` and its `.transpose()`); `impl_shape_transform_for!`; `impl Intersect`
+   (object-space ray, push into `intersections`); `impl Shape` (`local_normal_at`, `material`);
+   `Default`, `Display`, `CoarseEq`.
 2. Register `mod`/`pub use` in `shapes.rs`.
 3. Optionally make it loadable from YAML: add a `ShapeKind` variant and its `add:` name in
    `scene_loader/format.rs` (`Entry` deserializer), build it in `scene_loader/resolve.rs` (`Definitions::shape`).

@@ -1,15 +1,17 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::EPSILON;
-use crate::impl_transform_for;
+use crate::impl_shape_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Debug, Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Triangle {
-    pub material: Material,
     transformation_inverse: Transformation,
+    /// Transposed inverse, cached for `normal_at`.
+    normal_transformation: Transformation,
+    pub material: Material,
     pub vertex_1: Point,
     pub vertex_2: Point,
     pub vertex_3: Point,
@@ -26,6 +28,7 @@ impl Triangle {
         return Self {
             material: Material::default(),
             transformation_inverse: Transformation::IDENTITY,
+            normal_transformation: Transformation::IDENTITY,
             vertex_1,
             vertex_2,
             vertex_3,
@@ -57,7 +60,7 @@ impl Intersect for Triangle {
     }
 }
 
-impl_transform_for!(Triangle);
+impl_shape_transform_for!(Triangle);
 
 impl Shape for Triangle {
     fn local_normal_at(&self, _: Point) -> Vector {

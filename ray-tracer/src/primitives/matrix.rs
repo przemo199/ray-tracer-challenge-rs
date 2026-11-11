@@ -97,24 +97,36 @@ impl Matrix<2> {
         };
     }
 
-    pub fn revertible(&self) -> bool {
-        return self.determinant() != 0.0;
+    /// Whether the matrix has an inverse. Zero, subnormal, infinite and NaN determinants count as
+    /// not invertible: dividing by them would fill the inverse with infinities or NaN.
+    pub fn is_invertible(&self) -> bool {
+        return self.determinant().is_normal();
     }
 
-    #[inline]
-    pub fn inverse(&self) -> Self {
+    /// The inverse matrix, or `None` if the matrix is not invertible.
+    pub fn try_inverse(&self) -> Option<Self> {
         if self.is_identity() {
-            return Self::IDENTITY;
+            return Some(Self::IDENTITY);
         }
-
-        let mut result = Self::NULL;
         let determinant = self.determinant();
-
+        if !determinant.is_normal() {
+            return None;
+        }
+        let mut result = Self::NULL;
         result.for_each_mut(|row_index, column_index, value| {
             *value = self.cofactor(column_index, row_index) / determinant;
         });
+        return Some(result);
+    }
 
-        return result;
+    /// The inverse matrix.
+    ///
+    /// # Panics
+    /// If the matrix is not invertible (see [`Self::is_invertible`]). Use [`Self::try_inverse`]
+    /// for matrices that may be singular, such as user-provided transformations.
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        return self.try_inverse().expect("matrix is not invertible");
     }
 }
 
@@ -167,32 +179,42 @@ impl Matrix<3> {
         };
     }
 
-    pub fn revertible(&self) -> bool {
-        return self.determinant() != 0.0;
+    /// Whether the matrix has an inverse. Zero, subnormal, infinite and NaN determinants count as
+    /// not invertible: dividing by them would fill the inverse with infinities or NaN.
+    pub fn is_invertible(&self) -> bool {
+        return self.determinant().is_normal();
     }
 
-    #[inline]
-    pub fn inverse(&self) -> Self {
+    /// The inverse matrix, or `None` if the matrix is not invertible.
+    pub fn try_inverse(&self) -> Option<Self> {
         if self.is_identity() {
-            return Self::IDENTITY;
+            return Some(Self::IDENTITY);
         }
-
-        let mut result = Self::NULL;
         let determinant = self.determinant();
+        if !determinant.is_normal() {
+            return None;
+        }
+        let mut result = Self::NULL;
         result.for_each_mut(|row_index, column_index, value| {
             *value = self.cofactor(column_index, row_index) / determinant;
         });
-        return result;
+        return Some(result);
+    }
+
+    /// The inverse matrix.
+    ///
+    /// # Panics
+    /// If the matrix is not invertible (see [`Self::is_invertible`]). Use [`Self::try_inverse`]
+    /// for matrices that may be singular, such as user-provided transformations.
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        return self.try_inverse().expect("matrix is not invertible");
     }
 }
 
 impl Matrix<4> {
     #[inline]
     fn submatrix(&self, excluded_row: usize, excluded_column: usize) -> Matrix<3> {
-        if self.is_identity() {
-            return Matrix::<3>::IDENTITY;
-        }
-
         let mut result = Matrix::<3>::NULL;
 
         for row_index in Self::SIDE_LENGTH_RANGE {
@@ -239,22 +261,36 @@ impl Matrix<4> {
         };
     }
 
-    pub fn revertible(&self) -> bool {
-        return self.determinant() != 0.0;
+    /// Whether the matrix has an inverse. Zero, subnormal, infinite and NaN determinants count as
+    /// not invertible: dividing by them would fill the inverse with infinities or NaN.
+    pub fn is_invertible(&self) -> bool {
+        return self.determinant().is_normal();
     }
 
-    #[inline]
-    pub fn inverse(&self) -> Self {
+    /// The inverse matrix, or `None` if the matrix is not invertible.
+    pub fn try_inverse(&self) -> Option<Self> {
         if self.is_identity() {
-            return Self::IDENTITY;
+            return Some(Self::IDENTITY);
         }
-
-        let mut result = Self::NULL;
         let determinant = self.determinant();
+        if !determinant.is_normal() {
+            return None;
+        }
+        let mut result = Self::NULL;
         result.for_each_mut(|row_index, column_index, value| {
             *value = self.cofactor(column_index, row_index) / determinant;
         });
-        return result;
+        return Some(result);
+    }
+
+    /// The inverse matrix.
+    ///
+    /// # Panics
+    /// If the matrix is not invertible (see [`Self::is_invertible`]). Use [`Self::try_inverse`]
+    /// for matrices that may be singular, such as user-provided transformations.
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        return self.try_inverse().expect("matrix is not invertible");
     }
 }
 
@@ -642,5 +678,54 @@ mod tests {
         ]);
         let matrix_3 = matrix_1 * matrix_2;
         assert!((matrix_3 * matrix_2.inverse()).coarse_eq(&matrix_1));
+    }
+
+    #[test]
+    fn invertible_and_noninvertible_matrices() {
+        let invertible = Matrix::new([
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [9.0, 1.0, 7.0, -6.0],
+        ]);
+        let singular = Matrix::new([
+            [-4.0, 2.0, -2.0, -3.0],
+            [9.0, 6.0, 2.0, 6.0],
+            [0.0, -5.0, 1.0, -5.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ]);
+        assert!(invertible.is_invertible());
+        assert!(invertible.try_inverse().is_some());
+        assert!(!singular.is_invertible());
+        assert_eq!(singular.try_inverse(), None);
+    }
+
+    #[test]
+    fn matrices_with_nan_are_not_invertible() {
+        let matrix = crate::primitives::transformations::scaling(f64::NAN, 1, 1);
+        assert_eq!(matrix.try_inverse(), None);
+    }
+
+    #[test]
+    fn smaller_singular_matrices_have_no_inverse() {
+        assert_eq!(Matrix::new([[1.0, 2.0], [2.0, 4.0]]).try_inverse(), None);
+        let singular_3 = Matrix::new([[1.0, 2.0, 3.0], [2.0, 4.0, 6.0], [0.0, 1.0, 1.0]]);
+        assert_eq!(singular_3.try_inverse(), None);
+    }
+
+    #[test]
+    #[should_panic(expected = "matrix is not invertible")]
+    fn inverting_singular_matrix_panics() {
+        let _ = crate::primitives::transformations::scaling(0, 1, 1).inverse();
+    }
+
+    #[test]
+    fn cofactors_of_identity() {
+        let identity = Matrix::<4>::IDENTITY;
+        assert_eq!(identity.cofactor(0, 0), 1.0);
+        assert_eq!(identity.cofactor(1, 1), 1.0);
+        // used to return 1: the identity shortcut in `submatrix` ignored which row/column was removed
+        assert_eq!(identity.cofactor(0, 1), 0.0);
+        assert_eq!(identity.cofactor(2, 3), 0.0);
     }
 }

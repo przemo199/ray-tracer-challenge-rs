@@ -28,13 +28,16 @@ fn check(name: &str, canvas: &Canvas) {
         "{name}: size differs from the reference"
     );
 
-    let actual = support::to_rgb8(canvas);
-    let differences: Vec<u8> = actual
-        .iter()
-        .zip(reference.pixels())
+    // largest channel difference of each pixel
+    let differences: Vec<u8> = canvas
+        .to_rgb8()
+        .chunks(3)
+        .zip(reference.as_raw().chunks(3))
         .map(|(actual, expected)| {
-            return (0..3)
-                .map(|channel| actual[channel].abs_diff(expected[channel]))
+            return actual
+                .iter()
+                .zip(expected)
+                .map(|(actual, expected)| actual.abs_diff(*expected))
                 .max()
                 .unwrap_or(0);
         })

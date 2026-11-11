@@ -29,7 +29,7 @@ pub fn build(entries: Vec<Entry>) -> Result<(World, Camera), SceneError> {
     for entry in entries {
         match entry {
             Entry::Define(..) => {}
-            Entry::Camera(definition) => camera = Some(build_camera(&definition)),
+            Entry::Camera(definition) => camera = Some(build_camera(&definition)?),
             Entry::Light(LightDef { at, intensity }) => {
                 world
                     .lights
@@ -44,18 +44,25 @@ pub fn build(entries: Vec<Entry>) -> Result<(World, Camera), SceneError> {
     return Ok((world, camera));
 }
 
-fn build_camera(definition: &CameraDef) -> Camera {
+fn build_camera(definition: &CameraDef) -> Result<Camera, SceneError> {
     let mut camera = Camera::new(
         definition.width,
         definition.height,
         definition.field_of_view,
     );
-    camera.set_transformation(transformations::view_transform(
+    let view = transformations::view_transform(
         Point::from(definition.from),
         Point::from(definition.to),
         Vector::from(definition.up),
-    ));
-    return camera;
+    );
+    if !view.is_invertible() {
+        return Err(SceneError::Invalid(
+            "camera: `from` must differ from `to`, and `up` must not point along the view direction"
+                .to_owned(),
+        ));
+    }
+    camera.set_transformation(view);
+    return Ok(camera);
 }
 
 #[derive(Default)]
@@ -176,6 +183,12 @@ impl Definitions {
                 Ref::Inline(op) => op.0,
             };
             transformation = matrix * transformation;
+        }
+        // shapes and patterns store the inverse, which would otherwise panic
+        if !transformation.is_invertible() {
+            return Err(SceneError::Invalid(
+                "transform is not invertible (is something scaled by 0?)".to_owned(),
+            ));
         }
         return Ok(transformation);
     }

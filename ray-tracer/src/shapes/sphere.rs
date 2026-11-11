@@ -1,26 +1,30 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
-use crate::impl_transform_for;
+use crate::impl_shape_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Sphere {
-    pub material: Material,
     transformation_inverse: Transformation,
+    /// Transposed inverse, cached for `normal_at`.
+    normal_transformation: Transformation,
+    pub material: Material,
 }
 
 impl Sphere {
     pub fn new(material: Material, transformation: Transformation) -> Self {
+        let transformation_inverse = transformation.inverse();
         return Self {
             material,
-            transformation_inverse: transformation.inverse(),
+            transformation_inverse,
+            normal_transformation: transformation_inverse.transpose(),
         };
     }
 }
 
-impl_transform_for!(Sphere);
+impl_shape_transform_for!(Sphere);
 
 impl Intersect for Sphere {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
@@ -93,8 +97,19 @@ mod tests {
     fn changing_transformation() {
         let mut sphere = Sphere::default();
         let transformation = transformations::translation(2, 3, 4);
-        sphere.transformation_inverse = transformation;
-        assert_eq!(sphere.transformation_inverse, transformation);
+        sphere.set_transformation(transformation);
+        assert_eq!(sphere.transformation(), transformation);
+        assert_eq!(sphere.transformation_inverse, transformation.inverse());
+        // the cached normal matrix follows every change
+        assert_eq!(
+            sphere.normal_transformation,
+            transformation.inverse().transpose()
+        );
+        let constructed = Sphere::new(Material::default(), transformation);
+        assert_eq!(
+            constructed.normal_transformation,
+            sphere.normal_transformation
+        );
     }
 
     #[test]

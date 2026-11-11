@@ -31,7 +31,7 @@ impl World {
         for shape in &self.shapes {
             ray.intersect(shape.as_ref(), intersections);
         }
-        intersections.sort();
+        intersections.sort_by_distance();
     }
 
     #[inline]
@@ -121,7 +121,7 @@ impl World {
             return Self::DEFAULT_COLOR;
         }
 
-        let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflect_direction);
+        let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflect_direction());
         let reflected_color =
             self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
         return reflected_color * computed_hit.shape.material().reflectiveness;
@@ -149,7 +149,7 @@ impl World {
         let cos_t = (1.0 - sin2_t).sqrt();
         let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
             - computed_hit.camera_direction * n_ratio;
-        let refracted_ray = Ray::new(computed_hit.under_point, direction);
+        let refracted_ray = Ray::new(computed_hit.under_point(), direction);
         let refracted_color =
             self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
 
@@ -251,7 +251,7 @@ mod tests {
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let mut intersections = Intersections::new();
         world.collect_intersections(&ray, &mut intersections);
-        intersections.sort();
+        intersections.sort_by_distance();
         assert_eq!(intersections.len(), 4);
         assert_eq!(intersections[0].distance, 4.0);
         assert_eq!(intersections[1].distance, 4.5);

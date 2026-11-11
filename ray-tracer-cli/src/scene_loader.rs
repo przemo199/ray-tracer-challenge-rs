@@ -248,6 +248,23 @@ mod tests {
     }
 
     #[test]
+    fn non_invertible_transforms_are_rejected() {
+        assert!(error("- add: sphere\n  transform: [[scale, 0, 1, 1]]").contains("not invertible"));
+        let define =
+            "- define: flat\n  value: [[scale, 1, 0, 1]]\n- add: cube\n  transform: [flat]";
+        assert!(error(define).contains("not invertible"));
+    }
+
+    #[test]
+    fn camera_looking_at_its_own_position_is_rejected() {
+        let scene = CAMERA.replace("to: [0, 0, 0]", "to: [0, 0, -5]");
+        let message = parse_scene(&scene)
+            .expect_err("should be rejected")
+            .to_string();
+        assert!(message.starts_with("camera:"), "{message}");
+    }
+
+    #[test]
     fn only_materials_can_extend() {
         let message =
             error("- define: big-transform\n  extend: other\n  value: [[scale, 2, 2, 2]]");

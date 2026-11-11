@@ -1,6 +1,6 @@
 //! Shared scenes and helpers for the integration tests.
 
-use ray_tracer::composites::{Camera, Canvas, Material, World};
+use ray_tracer::composites::{Camera, Material, World};
 use ray_tracer::consts::PI;
 use ray_tracer::patterns::{CheckerPattern, GradientPattern, RingPattern, StripePattern};
 use ray_tracer::primitives::{Color, Light, Point, Vector, transformations};
@@ -123,18 +123,6 @@ pub fn showcase(width: u32, height: u32) -> (World, Camera) {
         Vector::UP,
     ));
     return (World::new(lights, shapes), camera);
-}
-
-/// The 8-bit RGB values `Canvas::to_png_file` writes for each pixel, row by row.
-pub fn to_rgb8(canvas: &Canvas) -> Vec<[u8; 3]> {
-    let mut pixels = Vec::new();
-    for y in 0..canvas.height {
-        for x in 0..canvas.width {
-            let channels = canvas.get_pixel(x, y).clamped().channels();
-            pixels.push(channels.map(|channel| (channel * 255.0).round() as u8));
-        }
-    }
-    return pixels;
 }
 
 /// Path for a file written by a test, inside `target/` (see AGENTS.md).

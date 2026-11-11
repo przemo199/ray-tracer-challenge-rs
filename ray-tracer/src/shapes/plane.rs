@@ -1,27 +1,31 @@
 use super::{Intersect, Shape, Transform};
 use crate::composites::{Intersection, Intersections, Material, Ray};
 use crate::consts::EPSILON;
-use crate::impl_transform_for;
+use crate::impl_shape_transform_for;
 use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
-    pub material: Material,
     transformation_inverse: Transformation,
+    /// Transposed inverse, cached for `normal_at`.
+    normal_transformation: Transformation,
+    pub material: Material,
 }
 
 impl Plane {
     pub fn new(material: Material, transformation: Transformation) -> Self {
+        let transformation_inverse = transformation.inverse();
         return Self {
             material,
-            transformation_inverse: transformation.inverse(),
+            transformation_inverse,
+            normal_transformation: transformation_inverse.transpose(),
         };
     }
 }
 
-impl_transform_for!(Plane);
+impl_shape_transform_for!(Plane);
 
 impl Intersect for Plane {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {

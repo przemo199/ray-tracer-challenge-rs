@@ -1,9 +1,9 @@
 use crate::composites::{ComputedHit, Intersections, Material, Ray};
 use crate::shapes::Shape;
 use crate::utils::CoarseEq;
-use core::cmp::Ordering;
 use core::fmt::Debug;
 
+/// A ray hitting `shape` at `distance` along the ray.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Intersection<'shape> {
     pub distance: f64,
@@ -32,38 +32,16 @@ impl Intersection<'_> {
             normal = -normal;
         }
 
-        let reflect_direction = ray.direction.reflect(&normal);
-
-        let mut shapes: Vec<&dyn Shape> = Vec::new();
-        let mut refractive_index_1: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
-        let mut refractive_index_2: f64 = Material::DEFAULT_REFRACTIVE_INDEX;
-
-        for intersection in intersections {
-            let is_self = self == intersection;
-            if is_self {
-                refractive_index_1 = shapes
-                    .last()
-                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |shape| {
-                        shape.material().refractive_index
-                    });
-            }
-
-            let position = shapes.iter().position(|shape| *shape == intersection.shape);
-            if let Some(index) = position {
-                shapes.remove(index);
-            } else {
-                shapes.push(intersection.shape);
-            }
-
-            if is_self {
-                refractive_index_2 = shapes
-                    .last()
-                    .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |shape| {
-                        shape.material().refractive_index
-                    });
-                break;
-            }
-        }
+        // Only refraction and the Fresnel term use the refractive indices, and both skip opaque
+        // surfaces, so most hits don't need the (comparatively expensive) containers walk.
+        let (refractive_index_1, refractive_index_2) = if self.shape.material().is_opaque() {
+            (
+                Material::DEFAULT_REFRACTIVE_INDEX,
+                Material::DEFAULT_REFRACTIVE_INDEX,
+            )
+        } else {
+            self.refractive_indices(intersections)
+        };
 
         return ComputedHit::new(
             self.distance,
@@ -71,10 +49,43 @@ impl Intersection<'_> {
             point,
             camera_direction,
             normal,
-            reflect_direction,
             refractive_index_1,
             refractive_index_2,
             is_inside,
+        );
+    }
+
+    /// Refractive indices on both sides of this hit (the book's "containers" algorithm): walks
+    /// `intersections` in order, tracking which shapes the ray is inside.
+    fn refractive_indices(&self, intersections: &Intersections) -> (f64, f64) {
+        let innermost = |containers: &[&dyn Shape]| {
+            return containers
+                .last()
+                .map_or(Material::DEFAULT_REFRACTIVE_INDEX, |shape| {
+                    shape.material().refractive_index
+                });
+        };
+        let mut containers = intersections.containers();
+        containers.clear();
+        for intersection in intersections {
+            // for this hit: the medium the ray comes from, before entering/leaving the shape
+            let refractive_index_1 = (self == intersection).then(|| innermost(&containers));
+            match containers
+                .iter()
+                .position(|shape| *shape == intersection.shape)
+            {
+                Some(index) => {
+                    containers.remove(index);
+                }
+                None => containers.push(intersection.shape),
+            }
+            if let Some(refractive_index_1) = refractive_index_1 {
+                return (refractive_index_1, innermost(&containers));
+            }
+        }
+        return (
+            Material::DEFAULT_REFRACTIVE_INDEX,
+            Material::DEFAULT_REFRACTIVE_INDEX,
         );
     }
 
@@ -90,20 +101,6 @@ impl CoarseEq<Intersection<'_>> for Intersection<'_> {
     }
 }
 
-impl Eq for Intersection<'_> {}
-
-impl PartialOrd for Intersection<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        return self.distance.partial_cmp(&other.distance);
-    }
-}
-
-impl Ord for Intersection<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        return self.partial_cmp(other).unwrap_or(Ordering::Equal);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,7 +108,7 @@ mod tests {
     use crate::consts::EPSILON;
     use crate::primitives::transformations;
     use crate::primitives::{Point, Vector};
-    use crate::shapes::{Plane, Shape, Sphere, Transform};
+    use crate::shapes::{Cube, Plane, Shape, Sphere, Transform};
 
     #[test]
     fn new_intersection() {
@@ -186,7 +183,7 @@ mod tests {
         let intersections = Intersections::new();
         let prepared_computations = intersection.prepare_computations(&ray, &intersections);
         assert_eq!(
-            prepared_computations.reflect_direction,
+            prepared_computations.reflect_direction(),
             Vector::new(0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0)
         );
     }
@@ -253,7 +250,45 @@ mod tests {
         intersections.push(intersection.clone());
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
-        assert!(computed_hit.under_point.z > EPSILON / 2.0);
-        assert!(computed_hit.point.z < computed_hit.under_point.z);
+        assert!(computed_hit.under_point().z > EPSILON / 2.0);
+        assert!(computed_hit.point.z < computed_hit.under_point().z);
+    }
+
+    #[test]
+    fn intersections_compare_distance_and_shape() {
+        let sphere: Box<dyn Shape> = Box::new(Sphere::default());
+        let equal_copy: Box<dyn Shape> = Box::new(Sphere::default());
+        let cube: Box<dyn Shape> = Box::new(Cube::default());
+        let intersection = Intersection::new(1, sphere.as_ref());
+        assert_eq!(intersection, Intersection::new(1, sphere.as_ref()));
+        assert_eq!(intersection, Intersection::new(1, equal_copy.as_ref()));
+        assert_ne!(intersection, Intersection::new(1, cube.as_ref()));
+        assert_ne!(intersection, Intersection::new(2, sphere.as_ref()));
+    }
+
+    #[test]
+    fn refractive_indices_are_only_computed_for_non_opaque_surfaces() {
+        let mut glass = Sphere::default();
+        glass.material = Material::glass();
+        glass.set_transformation(transformations::scaling(2, 2, 2));
+        let glass: Box<dyn Shape> = Box::new(glass);
+        let mut opaque = Sphere::default();
+        opaque.material.refractive_index = 2.0;
+        let opaque: Box<dyn Shape> = Box::new(opaque);
+        let mut intersections = Intersections::new();
+        intersections.push(Intersection::new(3, glass.as_ref()));
+        intersections.push(Intersection::new(4, opaque.as_ref()));
+        intersections.push(Intersection::new(6, opaque.as_ref()));
+        intersections.push(Intersection::new(7, glass.as_ref()));
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
+
+        // the glass surface sees the real media on both sides
+        let glass_hit = intersections[0].prepare_computations(&ray, &intersections);
+        let indices = (glass_hit.refractive_index_1, glass_hit.refractive_index_2);
+        assert_eq!(indices, (1.0, 1.5));
+        // nothing reads them for an opaque surface, so they are left at the default
+        let opaque_hit = intersections[1].prepare_computations(&ray, &intersections);
+        let indices = (opaque_hit.refractive_index_1, opaque_hit.refractive_index_2);
+        assert_eq!(indices, (1.0, 1.0));
     }
 }

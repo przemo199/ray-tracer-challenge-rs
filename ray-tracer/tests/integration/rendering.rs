@@ -30,5 +30,5 @@ fn serial_and_parallel_renders_are_identical() {
     let (world, camera) = support::showcase(32, 24);
     let serial = camera.render(&world, false);
     let parallel = camera.render_parallel(&world, false);
-    assert_eq!(support::to_rgb8(&serial), support::to_rgb8(&parallel));
+    assert_eq!(serial.to_rgb8(), parallel.to_rgb8());
 }

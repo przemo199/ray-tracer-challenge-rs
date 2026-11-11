@@ -26,13 +26,15 @@ impl_transform_for!(ComplexPattern);
 impl_color_provider_for_pattern!(ComplexPattern);
 
 impl Pattern for ComplexPattern {
+    /// Alternates between the two patterns along x, evaluating each in its own pattern space
+    /// so that sub-patterns can be transformed independently (the book's "nested patterns").
     fn color_at(&self, point: &Point) -> Color {
-        let distance = point.x.floor() as i64;
-        return if distance % 2 == 0 {
-            self.pattern_a.color_at(point)
+        let pattern = if (point.x.floor() as i64) % 2 == 0 {
+            &self.pattern_a
         } else {
-            self.pattern_b.color_at(point)
+            &self.pattern_b
         };
+        return pattern.color_at(&(pattern.transformation_inverse() * *point));
     }
 }
 
@@ -94,6 +96,16 @@ mod tests {
         let pattern = red_or_blue();
         assert_eq!(pattern.color_at(&Point::new(0.5, 7, -3)), A);
         assert_eq!(pattern.color_at(&Point::new(1.5, -7, 3)), B);
+    }
+
+    #[test]
+    fn sub_pattern_transformations_apply() {
+        let mut stripes = StripePattern::new(Color::WHITE, Color::BLACK);
+        stripes.set_transformation(transformations::scaling(0.5, 1, 1));
+        let pattern = ComplexPattern::new(Arc::new(stripes), Arc::new(StripePattern::new(B, B)));
+        // x = 0.75 is in the first pattern; its half-width stripes put it in the second stripe
+        assert_eq!(pattern.color_at(&Point::new(0.75, 0, 0)), Color::BLACK);
+        assert_eq!(pattern.color_at(&Point::new(0.25, 0, 0)), Color::WHITE);
     }
 
     #[test]
