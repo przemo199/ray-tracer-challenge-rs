@@ -86,7 +86,8 @@ These are deliberate project style. Follow them even where clippy defaults or "i
 - **Group scalars before scaling a tuple**: `vector * (2.0 * d)` rather than `vector * 2.0 * d`
   (one tuple multiply instead of two).
 - **Float comparison**: use `CoarseEq::coarse_eq` / `EPSILON` from `consts`, never raw `==` on computed `f64`.
-  `PartialEq` on primitives is already epsilon-based.
+  `PartialEq` on `Point`/`Vector`/`Color`/`Matrix` is derived, i.e. **exact**; `assert_eq!` on computed
+  values only works when the arithmetic is exact, otherwise assert `a.coarse_eq(&b)`.
 - **Shapes and patterns store `transformation_inverse`**, not the transformation. Implement `Transform`
   with the `impl_transform_for!(Type)` macro rather than by hand.
 - **Trait objects**: shapes live in `World` as `Box<dyn Shape>`; patterns in `Material` as
@@ -133,11 +134,29 @@ Close IDE indexing/games first, and only compare baselines from the same machine
 
 ## Tests
 
-- Unit tests live inline in each file under `#[cfg(test)] mod tests { use super::*; … }`.
+Put a test where its subject lives:
+
+| Kind | Where | Use for |
+|---|---|---|
+| Unit | `#[cfg(test)] mod tests { use super::*; … }` at the end of the file | One type or function: primitives, a single shape's intersections/normals, a pattern, private helpers (`World::shade_hit`, `Matrix::submatrix`, …). May use private items. |
+| Integration | `ray-tracer/tests/integration/` (one binary: `main.rs` + a module per topic) | Public-API behaviour spanning modules: rendering a `World` through a `Camera`, whole-pipeline/golden-image checks, trait-object behaviour, file output. |
+| CLI end-to-end | `ray-tracer-cli/tests/` | Running the binary (`env!("CARGO_BIN_EXE_ray-tracer-cli")`) on small scene files: exit codes, error messages, output images. |
+| Doctest | `/// # Examples` on public items | Showing how to call a public constructor or function. |
+
+- If a test needs private items it is a unit test — never make something `pub` only to test it from `tests/`.
+- Keep integration tests in the single `integration` binary rather than adding files directly under
+  `tests/`: every top-level file is a separate crate to compile and link (with LTO under `--release`).
+- The CLI is a binary-only crate, so the scene loader's own tests stay inline in `scene_loader.rs`.
+- Files written by tests go under `env!("CARGO_TARGET_TMPDIR")` (inside `target/`), never the repo or `%TEMP%`.
 - Many tests mirror the book's Cucumber scenarios; name them after the scenario (`ray_misses_cube`, …).
 - Use `rstest` (`#[rstest] #[case(…)]`) for table-driven tests — see `shapes/cube.rs`, `shapes/cone.rs`.
-- Shared fixtures (e.g. default-world spheres) live in `utils.rs`; `World::default()` is the book's default world.
+- Shared fixtures (e.g. default-world spheres) live in `utils.rs`; `World::default()` is the book's default
+  world. Integration-only helpers go in `tests/integration/support.rs`.
 - Every bug fix should come with a test that fails without the fix.
+- **Golden images** (`tests/integration/golden.rs`) compare small renders with the PNGs in
+  `tests/integration/golden/` (±2 per channel, up to 0.1% outlier pixels). A failure saves the new
+  render under `target/tmp/integration/`. If the change in output is intended, regenerate with
+  `UPDATE_GOLDEN=1 cargo test -p ray-tracer --test integration golden`, look at the images, and commit them.
 
 ## Recipes
 
@@ -170,7 +189,10 @@ order. Errors carry line/column; `every_example_scene_loads` keeps `scenes/*.yam
 - Keep all build output, benchmark builds, scratch renders and
   temporary worktrees under the repo's `target/` (excluded from scanning); never build or run binaries
   from `%TEMP%` or other new directories. Reuse target dirs instead of creating fresh ones, and prefer
-  `cargo check` when you only need type-checking.
+  `cargo check` when you only need type-checking. `.cargo/config.toml` points `TMP`/`TEMP` at `target/`
+  for everything cargo runs, so rustdoc's doctest binaries (`rust_out.exe`) and linker temp files stay
+  there too; don't remove that `[env]` block. Leave a temporary worktree (`cd` out) before deleting it,
+  or Windows keeps the folder locked.
 - The machine's rustup default toolchain is `esp`; only `rust-toolchain.toml` pins `stable`. Use
   `cargo +stable …` anywhere that file is absent (temp dirs, old worktrees).
 - The default branch is `master`.

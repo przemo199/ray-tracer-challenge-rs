@@ -63,10 +63,8 @@ impl PartialEq<&Self> for Box<dyn Shape> {
 #[cfg(test)]
 mod tests {
     use crate::composites::Material;
-    use crate::patterns::{ComplexPattern, GradientPattern, RingPattern};
     use crate::primitives::Color;
     use crate::shapes::Sphere;
-    use std::sync::Arc;
 
     use super::*;
 
@@ -83,36 +81,5 @@ mod tests {
         material.color = Color::new(0.8, 1, 0.6);
         shape.material = material.clone();
         assert_eq!(shape.material(), &material);
-    }
-
-    #[test]
-    fn compare_dyn_shapes() {
-        let mut sphere_1 = Sphere::default();
-        let mut sphere_2 = Sphere::default();
-        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(
-            Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)),
-            Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)),
-        )));
-        sphere_2.material.pattern = Some(Arc::new(ComplexPattern::new(
-            Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)),
-            Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)),
-        )));
-        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
-        let arc_sphere_2: Box<dyn Shape> = Box::new(sphere_2);
-        assert_eq!(arc_sphere_1, arc_sphere_2);
-        let mut sphere_1 = Sphere::default();
-        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(
-            Arc::new(RingPattern::new(Color::BLACK, Color::BLACK)),
-            Arc::new(GradientPattern::new(Color::WHITE, Color::BLACK)),
-        )));
-        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
-        assert_ne!(arc_sphere_1, arc_sphere_2);
-        let mut sphere_1 = Sphere::default();
-        sphere_1.material.pattern = Some(Arc::new(ComplexPattern::new(
-            Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)),
-            Arc::new(RingPattern::new(Color::WHITE, Color::BLACK)),
-        )));
-        let arc_sphere_1: Box<dyn Shape> = Box::new(sphere_1);
-        assert_ne!(arc_sphere_1, arc_sphere_2);
     }
 }

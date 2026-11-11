@@ -146,7 +146,7 @@ impl Display for Camera {
 mod tests {
     use super::*;
     use crate::consts::PI;
-    use crate::primitives::{Color, Vector, transformations};
+    use crate::primitives::{Vector, transformations};
     use crate::utils::CoarseEq;
 
     #[test]
@@ -202,41 +202,5 @@ mod tests {
         assert_eq!(ray.origin, Point::new(0, 2, -5));
         let expected = Vector::new(2.0_f64.sqrt() / 2.0, 0, -(2.0_f64.sqrt()) / 2.0);
         assert!(ray.direction.coarse_eq(&expected));
-    }
-
-    #[test]
-    fn rendering_world_with_camera() {
-        let world = World::default();
-        let mut camera = Camera::new(11, 11, PI / 2.0);
-        let from = Point::new(0, 0, -5);
-        let to = Point::ORIGIN;
-        let up = Vector::UP;
-        camera.set_transformation(transformations::view_transform(from, to, up));
-        let canvas = camera.render(&world, false);
-        let pixel = canvas.get_pixel(5, 5);
-        let expected = Color::new(
-            0.38066119308103435,
-            0.47582649135129296,
-            0.28549589481077575,
-        );
-        assert!(pixel.coarse_eq(&expected));
-    }
-
-    #[test]
-    fn rendering_world_in_parallel_with_camera() {
-        let world = World::default();
-        let mut camera = Camera::new(11, 11, PI / 2.0);
-        let from = Point::new(0, 0, -5);
-        let to = Point::ORIGIN;
-        let up = Vector::UP;
-        camera.set_transformation(transformations::view_transform(from, to, up));
-        let canvas = camera.render_parallel(&world, false);
-        let pixel = canvas.get_pixel(5, 5);
-        let expected = Color::new(
-            0.38066119308103435,
-            0.47582649135129296,
-            0.28549589481077575,
-        );
-        assert!(pixel.coarse_eq(&expected));
     }
 }

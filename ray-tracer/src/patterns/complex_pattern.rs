@@ -57,3 +57,50 @@ impl Display for ComplexPattern {
             .finish();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::patterns::StripePattern;
+    use crate::primitives::transformations;
+    use crate::shapes::{Sphere, Transform};
+    use rstest::rstest;
+
+    const A: Color = Color::RED;
+    const B: Color = Color::BLUE;
+
+    fn red_or_blue() -> ComplexPattern {
+        return ComplexPattern::new(
+            Arc::new(StripePattern::new(A, A)),
+            Arc::new(StripePattern::new(B, B)),
+        );
+    }
+
+    #[rstest]
+    #[case(0.0, A)]
+    #[case(0.9, A)]
+    #[case(1.0, B)]
+    #[case(1.9, B)]
+    #[case(2.0, A)]
+    #[case(-0.1, B)]
+    #[case(-1.0, B)]
+    #[case(-1.1, A)]
+    fn alternates_between_patterns_along_x(#[case] x: f64, #[case] expected: Color) {
+        assert_eq!(red_or_blue().color_at(&Point::new(x, 0, 0)), expected);
+    }
+
+    #[test]
+    fn is_constant_along_y_and_z() {
+        let pattern = red_or_blue();
+        assert_eq!(pattern.color_at(&Point::new(0.5, 7, -3)), A);
+        assert_eq!(pattern.color_at(&Point::new(1.5, -7, 3)), B);
+    }
+
+    #[test]
+    fn own_transformation_applies() {
+        let mut pattern = red_or_blue();
+        pattern.set_transformation(transformations::scaling(2, 1, 1));
+        let color = pattern.color_at_shape(&Sphere::default(), &Point::new(1.5, 0, 0));
+        assert_eq!(color, A);
+    }
+}

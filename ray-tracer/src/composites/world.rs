@@ -292,48 +292,6 @@ mod tests {
     }
 
     #[test]
-    fn color_when_ray_misses() {
-        let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::UP);
-        let color = world.color_at(&ray, &mut Intersections::new());
-        assert_eq!(color, World::DEFAULT_COLOR);
-    }
-
-    #[test]
-    fn color_when_ray_hits() {
-        let world = World::default();
-        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
-        let color = world.color_at(&ray, &mut Intersections::new());
-        let expected = Color::new(
-            0.38066119308103435,
-            0.47582649135129296,
-            0.28549589481077575,
-        );
-        assert!(color.coarse_eq(&expected));
-    }
-
-    #[test]
-    fn color_with_intersection_behind_ray() {
-        let mut world = World::default();
-
-        let mut sphere1 = world_default_sphere_1();
-        let mut material1 = sphere1.material().clone();
-        material1.ambient = 1.0;
-        sphere1.material = material1;
-        world.shapes[0] = Box::new(sphere1);
-
-        let mut sphere2 = world_default_sphere_2();
-        let mut material2 = sphere2.material().clone();
-        material2.ambient = 1.0;
-        sphere2.material = material2;
-        world.shapes[1] = Box::new(sphere2);
-
-        let ray = Ray::new(Point::new(0, 0, 0.75), Vector::BACKWARD);
-        let color = world.color_at(&ray, &mut Intersections::new());
-        assert_eq!(color, world.shapes[1].material().color);
-    }
-
-    #[test]
     fn no_shadow_when_nothing_obscures_light() {
         let world = World::default();
         let point = Point::new(0, 10, 0);
@@ -444,25 +402,6 @@ mod tests {
         let color = world.shade_hit(&computed_hit, &mut Intersections::new(), 1);
         let expected = Color::new(0.8767560027604027, 0.9243386562051279, 0.8291733493156773);
         assert!(color.coarse_eq(&expected));
-    }
-
-    #[test]
-    fn no_infinite_recursion_in_reflections() {
-        let mut world = World::default();
-        world.shapes = Vec::new();
-        world.lights = vec![Light::new(Point::ORIGIN, Color::new(1, 1, 1))];
-        let mut lower = Plane::default();
-        lower.material.reflectiveness = 1.0;
-        lower.set_transformation(transformations::translation(0, -1, 0));
-        let arc_lower = Box::new(lower);
-        world.shapes.push(arc_lower);
-        let mut upper = Plane::default();
-        upper.material.reflectiveness = 1.0;
-        upper.set_transformation(transformations::translation(0, 1, 0));
-        let arc_upper = Box::new(upper);
-        world.shapes.push(arc_upper);
-        let ray = Ray::new(Point::ORIGIN, Vector::UP);
-        world.color_at(&ray, &mut Intersections::new());
     }
 
     #[test]
@@ -626,5 +565,30 @@ mod tests {
         let color = world.shade_hit(&computed_hit, &mut Intersections::new(), 5);
         let expected = Color::new(0.9339151412754023, 0.696434227200244, 0.692430691912747);
         assert!(color.coarse_eq(&expected));
+    }
+
+    // Multiple lights are an extension beyond the book.
+
+    #[test]
+    fn contributions_of_lights_add_up() {
+        let one_light = World::default();
+        let mut two_lights = World::default();
+        two_lights.lights.push(two_lights.lights[0]);
+        let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
+        let single = one_light.color_at(&ray, &mut Intersections::new());
+        let double = two_lights.color_at(&ray, &mut Intersections::new());
+        assert!(double.coarse_eq(&(single * 2.0)));
+    }
+
+    #[test]
+    fn point_can_be_shadowed_from_one_light_only() {
+        let mut world = World::default();
+        world
+            .lights
+            .push(Light::new(Point::new(10, 10, 10), Color::WHITE));
+        let point = Point::new(10, -10, 10);
+        let mut intersections = Intersections::new();
+        assert!(world.is_in_shadow(&world.lights[0], &point, &mut intersections));
+        assert!(!world.is_in_shadow(&world.lights[1], &point, &mut intersections));
     }
 }

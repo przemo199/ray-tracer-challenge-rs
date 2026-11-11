@@ -50,6 +50,7 @@ impl Display for GradientPattern {
 mod tests {
     use super::*;
     use crate::primitives::Point;
+    use rstest::rstest;
 
     #[test]
     fn gradient_interpolates_between_colors() {
@@ -68,5 +69,21 @@ mod tests {
             Color::new(0.25, 0.25, 0.25)
         );
         assert_eq!(pattern.color_at(&Point::new(1, 0, 0)), Color::BLACK);
+    }
+    /// Unlike the book (which jumps back to the first color at every integer x), this gradient runs
+    /// back and forth, so it stays continuous along x.
+    #[rstest]
+    #[case(1.25, 0.25)]
+    #[case(1.75, 0.75)]
+    #[case(2.25, 0.75)]
+    #[case(-0.25, 0.75)]
+    #[case(-1.25, 0.25)]
+    #[case(-2.0, 1.0)]
+    fn gradient_runs_back_and_forth_outside_unit_interval(#[case] x: f64, #[case] gray: f64) {
+        let pattern = GradientPattern::new(Color::WHITE, Color::BLACK);
+        assert_eq!(
+            pattern.color_at(&Point::new(x, 0, 0)),
+            Color::new(gray, gray, gray)
+        );
     }
 }

@@ -66,3 +66,36 @@ pub fn world_default_sphere_2() -> Sphere {
     sphere.set_transformation(transformations::scaling(0.5, 0.5, 0.5));
     return sphere;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quadratic_without_real_roots() {
+        assert_eq!(solve_quadratic(1.0, 0.0, 1.0), None);
+    }
+
+    #[test]
+    fn quadratic_with_one_root_returns_it_twice() {
+        assert_eq!(solve_quadratic(1.0, -2.0, 1.0), Some((1.0, 1.0)));
+    }
+
+    #[test]
+    fn quadratic_roots_are_ascending_for_positive_a() {
+        // x² - x - 6 = (x + 2)(x - 3)
+        assert_eq!(solve_quadratic(1.0, -1.0, -6.0), Some((-2.0, 3.0)));
+    }
+
+    #[test]
+    fn coarse_eq_uses_epsilon() {
+        assert!(1.0.coarse_eq(&(1.0 + EPSILON / 2.0)));
+        assert!(1.0.coarse_ne(&(1.0 + EPSILON * 2.0)));
+    }
+
+    #[test]
+    fn squared_and_cubed() {
+        assert_eq!(3.0.squared(), 9.0);
+        assert_eq!((-2.0_f64).cubed(), -8.0);
+    }
+}

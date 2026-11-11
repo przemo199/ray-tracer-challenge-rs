@@ -1,2 +1,10 @@
 [target.'cfg(any())']
 rustflags = ["-C target-cpu=native"]
+
+# rustc, the MSVC linker and rustdoc (doctests compile to rust_out.exe) put temporary files in
+# TMP/TEMP; point them into target/ instead of %TEMP%, which antivirus scans aggressively.
+# `force` overrides the values Windows always sets. target/ must exist when they run, which it does
+# unless CARGO_TARGET_DIR points elsewhere (target/tmp is only created for integration tests).
+[env]
+TMP = { value = "target", relative = true, force = true }
+TEMP = { value = "target", relative = true, force = true }

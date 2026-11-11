@@ -202,4 +202,55 @@ mod tests {
         let result = parse_scene("- add: sphere");
         assert_eq!(result.err().unwrap().to_string(), "the scene has no camera");
     }
+
+    #[test]
+    fn extend_chains_over_several_levels() {
+        let (world, _) = parse(
+            "
+- define: base-material
+  value: { ambient: 0.3, diffuse: 0.4, specular: 0.5 }
+- define: middle-material
+  extend: base-material
+  value: { diffuse: 0.6 }
+- define: top-material
+  extend: middle-material
+  value: { specular: 0.7 }
+- add: sphere
+  material: top-material
+",
+        )
+        .unwrap();
+        let material = only_shape(&world).material();
+        assert_eq!(
+            (material.ambient, material.diffuse, material.specular),
+            (0.3, 0.6, 0.7)
+        );
+    }
+
+    #[test]
+    fn pattern_transform_is_applied() {
+        let (world, _) = parse(
+            "
+- add: sphere
+  material:
+    pattern:
+      type: stripes
+      colors: [[1, 0, 0], [0, 0, 1]]
+      transform: [[scale, 0.5, 1, 1]]
+",
+        )
+        .unwrap();
+        let shape = only_shape(&world);
+        let pattern = shape.material().pattern.as_ref().unwrap();
+        // x = 0.75 lands in the second stripe once the stripes are scaled to half width
+        let color = pattern.color_at_shape(shape, &Point::new(0.75, 0, 0));
+        assert_eq!(color, Color::new(0, 0, 1));
+    }
+
+    #[test]
+    fn only_materials_can_extend() {
+        let message =
+            error("- define: big-transform\n  extend: other\n  value: [[scale, 2, 2, 2]]");
+        assert_eq!(message, "`big-transform`: only materials can use `extend`");
+    }
 }

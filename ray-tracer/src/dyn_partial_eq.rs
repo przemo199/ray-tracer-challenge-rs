@@ -23,3 +23,20 @@ mod private {
 
     impl<T> Sealed for T where T: PartialEq {}
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::shapes::{Cube, Sphere};
+
+    #[test]
+    fn equal_values_of_the_same_type_are_equal() {
+        assert!(Sphere::default().dyn_eq(Sphere::default().as_any()));
+    }
+
+    #[test]
+    fn values_of_different_types_are_never_equal() {
+        assert!(!Sphere::default().dyn_eq(Cube::default().as_any()));
+        assert!(!1_i32.dyn_eq(&1_i64));
+    }
+}

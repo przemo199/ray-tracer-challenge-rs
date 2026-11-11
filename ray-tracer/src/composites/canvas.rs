@@ -93,6 +93,7 @@ impl Canvas {
         });
         let mut content = self.get_header();
         content.extend(ppm_image);
+        content.push(String::new()); // PPM files end with a newline
         return content.join("\n");
     }
 
@@ -199,5 +200,29 @@ mod tests {
             ppm[5],
             "  0   0   0   0   0   0   0   0   0   0   0   0   0   0 255"
         );
+    }
+
+    #[test]
+    fn splitting_long_lines_in_ppm() {
+        let mut canvas = Canvas::new(10, 2);
+        canvas.pixels.fill(Color::new(1, 0.8, 0.6));
+        let ppm = canvas.to_ppm();
+        assert!(ppm.lines().all(|line| line.len() <= 70), "{ppm}");
+        let numbers: Vec<&str> = ppm
+            .lines()
+            .skip(3)
+            .flat_map(str::split_whitespace)
+            .collect();
+        assert_eq!(numbers.len(), 10 * 2 * 3);
+        assert!(
+            numbers
+                .chunks(3)
+                .all(|pixel| pixel == ["255", "204", "153"])
+        );
+    }
+
+    #[test]
+    fn ppm_ends_with_newline() {
+        assert!(Canvas::new(5, 3).to_ppm().ends_with('\n'));
     }
 }
