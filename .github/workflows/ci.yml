@@ -18,16 +18,17 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
-# The toolchain itself is pinned by rust-toolchain.toml
+# setup-rust-toolchain installs the toolchain and components from rust-toolchain.toml,
+# caches builds and annotates warnings/errors on pull requests.
 jobs:
   fmt:
     name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          components: rustfmt
+          cache: false
       - run: cargo fmt --all --check
 
   clippy:
@@ -35,12 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      # --all-targets also type-checks tests and benchmarks.
-      # TODO: append `-- -D warnings` once the existing warnings are fixed.
+          build-warnings: warn # TODO: remove (default: deny) once existing warnings are fixed
+      # --all-targets also type-checks tests and benchmarks
       - run: cargo clippy --workspace --all-targets
 
   test:
@@ -52,7 +51,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          build-warnings: warn # TODO: remove (default: deny) once existing warnings are fixed
       - run: cargo test --workspace
       - run: cargo test --workspace --release

@@ -160,7 +160,9 @@ add to `SceneParser::parse_pattern` if it should be usable from YAML.
 
 - Windows dev machine with `core.autocrlf=true`; files are LF in the repo. Don't mass-convert line endings.
 - CI is `.github/workflows/ci.yml` (hand-written YAML): `cargo fmt --check`, `cargo clippy` and debug +
-  release tests on Linux, Windows and macOS. Keep it in sync when the commands above change.
+  release tests on Linux, Windows and macOS. Keep it in sync when the commands above change. The
+  toolchain comes from `rust-toolchain.toml` (via `actions-rust-lang/setup-rust-toolchain`); warnings
+  don't fail CI yet (`build-warnings: warn`) — remove that once the existing warnings are fixed.
 - `.cargo/config.toml`'s `target-cpu=native` is intentionally disabled (`cfg(any())`).
 - Keep all build output, benchmark builds, scratch renders and
   temporary worktrees under the repo's `target/` (excluded from scanning); never build or run binaries
