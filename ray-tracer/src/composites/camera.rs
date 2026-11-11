@@ -62,7 +62,7 @@ impl Camera {
         // and then compute the ray's direction vector
         // (remember that the canvas is at z = -1)
         let pixel = self.transformation_inverse * Point::new(world_x, world_y, -1);
-        let direction = (&pixel - &self.origin).normalized();
+        let direction = (pixel - self.origin).normalized();
         return Ray::new(self.origin, direction);
     }
 

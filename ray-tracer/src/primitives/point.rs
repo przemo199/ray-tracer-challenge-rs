@@ -83,16 +83,16 @@ impl CoarseEq for Point {
     }
 }
 
-impl Add<&Vector> for &Point {
-    type Output = Point;
+impl Add<Vector> for Point {
+    type Output = Self;
 
     #[inline]
-    fn add(self, rhs: &Vector) -> Self::Output {
+    fn add(self, rhs: Vector) -> Self::Output {
         return Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
     }
 }
 
-impl Sub for &Point {
+impl Sub for Point {
     type Output = Vector;
 
     #[inline]
@@ -101,17 +101,17 @@ impl Sub for &Point {
     }
 }
 
-impl Sub<&Vector> for &Point {
+impl Sub<Vector> for Point {
     type Output = Point;
 
     #[inline]
-    fn sub(self, rhs: &Vector) -> Self::Output {
+    fn sub(self, rhs: Vector) -> Self::Output {
         return Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
     }
 }
 
-impl Mul<f64> for &Point {
-    type Output = Point;
+impl Mul<f64> for Point {
+    type Output = Self;
 
     #[inline]
     fn mul(self, rhs: f64) -> Self::Output {
@@ -119,7 +119,7 @@ impl Mul<f64> for &Point {
     }
 }
 
-impl Div<f64> for &Point {
+impl Div<f64> for Point {
     type Output = Point;
 
     #[inline]
@@ -128,8 +128,8 @@ impl Div<f64> for &Point {
     }
 }
 
-impl Neg for &Point {
-    type Output = Point;
+impl Neg for Point {
+    type Output = Self;
 
     #[inline]
     fn neg(self) -> Self::Output {
@@ -207,8 +207,8 @@ impl From<Point> for [f64; 3] {
     }
 }
 
-impl From<&Vector> for Point {
-    fn from(value: &Vector) -> Self {
+impl From<Vector> for Point {
+    fn from(value: Vector) -> Self {
         return Point::new(value.x, value.y, value.z);
     }
 }
@@ -241,21 +241,21 @@ mod tests {
     fn add_point_and_vector() {
         let point = Point::new(3, -2, 5);
         let vector = Vector::new(-2, 3, 1);
-        assert_eq!(&point + &vector, Point::new(1, 1, 6));
+        assert_eq!(point + vector, Point::new(1, 1, 6));
     }
 
     #[test]
     fn subtract_vector_from_point() {
         let point = Point::new(3, 2, 1);
         let vector = Vector::new(5, 6, 7);
-        assert_eq!(&point - &vector, Point::new(-2, -4, -6));
+        assert_eq!(point - vector, Point::new(-2, -4, -6));
     }
 
     #[test]
     fn sub_point() {
         let point_1 = Point::new(3, 2, 1);
         let point_2 = Point::new(5, 6, 7);
-        assert_eq!(&point_1 - &point_2, Vector::new(-2, -4, -6));
+        assert_eq!(point_1 - point_2, Vector::new(-2, -4, -6));
     }
 
     #[test]
@@ -263,22 +263,22 @@ mod tests {
         let point_1 = Point::new(1, -2, 3);
         let point_2 = Point::new(4, -4, 3);
         let point_3 = Point::new(4, -4, 3);
-        assert_eq!(-&point_1, Point::new(-1, 2, -3));
-        assert_eq!(-&point_2, Point::new(-4, 4, -3));
-        assert_eq!(-&point_3, Point::new(-4, 4, -3));
+        assert_eq!(-point_1, Point::new(-1, 2, -3));
+        assert_eq!(-point_2, Point::new(-4, 4, -3));
+        assert_eq!(-point_3, Point::new(-4, 4, -3));
     }
 
     #[test]
     fn mul_point() {
-        let point_1 = &Point::new(1, -2, 3) * 3.5;
-        let point_2 = &Point::new(1, -2, 3) * 0.5;
+        let point_1 = Point::new(1, -2, 3) * 3.5;
+        let point_2 = Point::new(1, -2, 3) * 0.5;
         assert_eq!(point_1, Point::new(3.5, -7, 10.5));
         assert_eq!(point_2, Point::new(0.5, -1, 1.5));
     }
 
     #[test]
     fn div_point() {
-        let point = &Point::new(1, -2, 3) / 2.0;
+        let point = Point::new(1, -2, 3) / 2.0;
         assert_eq!(point, Point::new(0.5, -1, 1.5));
     }
 }

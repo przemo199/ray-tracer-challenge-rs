@@ -49,7 +49,7 @@ impl World {
                 let in_shadow = self.is_in_shadow(light, &computed_hit.over_point, intersections);
                 return material.lighting_from_computed_hit(computed_hit, light, in_shadow);
             })
-            .fold(Self::DEFAULT_COLOR, |acc, color| &acc + &color);
+            .fold(Self::DEFAULT_COLOR, Color::add);
 
         let reflected_color =
             self.reflected_color(computed_hit, intersections, remaining_iterations);
@@ -58,11 +58,11 @@ impl World {
 
         if material.is_reflective() && material.is_transparent() {
             let reflectance = computed_hit.schlicks_approximation();
-            return &(&surface_color
-                + &(&reflected_color * reflectance))
-                + &(&refracted_color * (1.0 - reflectance));
+            return surface_color
+                + reflected_color * reflectance
+                + refracted_color * (1.0 - reflectance);
         } else {
-            return &surface_color + &(&reflected_color + &refracted_color);
+            return surface_color + reflected_color + refracted_color;
         }
     }
 
@@ -101,7 +101,7 @@ impl World {
         point: &Point,
         intersections: &mut Intersections<'shapes>,
     ) -> bool {
-        let light_direction = &light.position - point;
+        let light_direction = light.position - *point;
         let light_distance = light_direction.magnitude();
         let shadow_ray = Ray::new(*point, light_direction.normalized());
         self.collect_intersections(&shadow_ray, intersections);
@@ -124,7 +124,7 @@ impl World {
         let reflected_ray = Ray::new(computed_hit.over_point, computed_hit.reflect_direction);
         let reflected_color =
             self.internal_color_at(&reflected_ray, intersections, remaining_iterations - 1);
-        return &reflected_color * computed_hit.shape.material().reflectiveness;
+        return reflected_color * computed_hit.shape.material().reflectiveness;
     }
 
     fn refracted_color<'shapes>(
@@ -147,13 +147,13 @@ impl World {
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = &(&computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t))
-            - &(&computed_hit.camera_direction * n_ratio);
+        let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
+            - computed_hit.camera_direction * n_ratio;
         let refracted_ray = Ray::new(computed_hit.under_point, direction);
         let refracted_color =
             self.internal_color_at(&refracted_ray, intersections, remaining_iterations - 1);
 
-        return &refracted_color * computed_hit.shape.material().transparency;
+        return refracted_color * computed_hit.shape.material().transparency;
     }
 }
 

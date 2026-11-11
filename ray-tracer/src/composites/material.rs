@@ -59,7 +59,7 @@ impl Material {
         normal: &Vector,
         in_shadow: bool,
     ) -> Color {
-        let effective_color = &self.resolve_color(shape, point) * &light.intensity;
+        let effective_color = self.resolve_color(shape, point) * light.intensity;
 
         return self.calculate_lighting(
             &effective_color,
@@ -89,28 +89,28 @@ impl Material {
         normal: &Vector,
         in_shadow: bool,
     ) -> Color {
-        let ambient = effective_color * self.ambient;
+        let ambient = *effective_color * self.ambient;
 
         if in_shadow {
             return ambient;
         }
 
-        let light_direction = (&light.position - point).normalized();
+        let light_direction = (light.position - *point).normalized();
         let light_dot_normal = light_direction.dot(normal);
         if light_dot_normal < 0.0 {
             return ambient;
         }
-        let diffuse = effective_color * (self.diffuse * light_dot_normal);
+        let diffuse = *effective_color * (self.diffuse * light_dot_normal);
         let reflect_direction = (-light_direction).reflect(normal);
         let reflect_dot_camera = reflect_direction.dot(camera_direction);
 
         if reflect_dot_camera <= 0.0 {
-            return &ambient + &diffuse;
+            return ambient + diffuse;
         }
         let factor = reflect_dot_camera.powf(self.shininess);
-        let specular = &light.intensity * (self.specular * factor);
+        let specular = light.intensity * (self.specular * factor);
 
-        return &(&ambient + &diffuse) + &specular;
+        return ambient + diffuse + specular;
     }
 
     pub fn lighting_from_computed_hit(

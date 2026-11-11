@@ -78,7 +78,11 @@ impl Color {
     }
 
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Self {
-        return Self { red: f(self.red), green: f(self.green), blue: f(self.blue) };
+        return Self {
+            red: f(self.red),
+            green: f(self.green),
+            blue: f(self.blue),
+        };
     }
 
     pub fn clamped(&self) -> Color {
@@ -116,7 +120,7 @@ impl CoarseEq for Color {
     }
 }
 
-impl Add for &Color {
+impl Add for Color {
     type Output = Color;
 
     #[inline]
@@ -129,7 +133,7 @@ impl Add for &Color {
     }
 }
 
-impl Sub for &Color {
+impl Sub for Color {
     type Output = Color;
 
     #[inline]
@@ -142,7 +146,7 @@ impl Sub for &Color {
     }
 }
 
-impl Mul for &Color {
+impl Mul for Color {
     type Output = Color;
 
     #[inline]
@@ -155,7 +159,7 @@ impl Mul for &Color {
     }
 }
 
-impl Mul<f64> for &Color {
+impl Mul<f64> for Color {
     type Output = Color;
 
     #[inline]
@@ -164,7 +168,7 @@ impl Mul<f64> for &Color {
     }
 }
 
-impl Div<f64> for &Color {
+impl Div<f64> for Color {
     type Output = Color;
 
     #[inline]
@@ -222,26 +226,26 @@ mod tests {
     fn add_color() {
         let color_1 = Color::new(0.9, 0.6, 0.75);
         let color_2 = Color::new(0.7, 0.1, 0.25);
-        assert_eq!(&color_1 + &color_2, Color::new(1.6, 0.7, 1));
+        assert_eq!(color_1 + color_2, Color::new(1.6, 0.7, 1));
     }
 
     #[test]
     fn sub_color() {
         let color_1 = Color::new(0.9, 0.6, 0.75);
         let color_2 = Color::new(0.7, 0.1, 0.25);
-        assert!((&color_1 - &color_2).coarse_eq(&Color::new(0.2, 0.5, 0.5)));
+        assert!((color_1 - color_2).coarse_eq(&Color::new(0.2, 0.5, 0.5)));
     }
 
     #[test]
     fn mul_color_by_scalar() {
         let color = Color::new(0.2, 0.3, 0.4);
-        assert_eq!(&color * 2.0, Color::new(0.4, 0.6, 0.8));
+        assert_eq!(color * 2.0, Color::new(0.4, 0.6, 0.8));
     }
 
     #[test]
     fn mul_colors() {
         let color_1 = Color::new(1, 0.2, 0.4);
         let color_2 = Color::new(0.9, 1, 0.1);
-        assert!((&color_1 * &color_2).coarse_eq(&Color::new(0.9, 0.2, 0.04)));
+        assert!((color_1 * color_2).coarse_eq(&Color::new(0.9, 0.2, 0.04)));
     }
 }

@@ -28,7 +28,7 @@ impl Ray {
 
     #[inline]
     pub fn position(&self, distance: impl Into<f64>) -> Point {
-        return &self.origin + &(&self.direction * distance.into());
+        return self.origin + self.direction * distance.into();
     }
 
     #[inline]
