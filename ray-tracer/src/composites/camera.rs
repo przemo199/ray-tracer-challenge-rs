@@ -85,7 +85,7 @@ impl Camera {
             .progress_with(self.progress_bar(show_progress))
             .enumerate()
             .for_each(|(index, pixel)| {
-                let (x, y) = Canvas::index_to_coords(canvas.width, index);
+                let (x, y) = Canvas::index_to_coords(self.horizontal_size, index);
                 let ray = self.ray_for_pixel(x, y);
                 *pixel = world.color_at(&ray, &mut intersections);
             });
@@ -100,7 +100,7 @@ impl Camera {
             .progress_with(self.progress_bar(show_progress))
             .enumerate()
             .for_each_with(Intersections::new(), |intersections, (index, pixel)| {
-                let (x, y) = Canvas::index_to_coords(canvas.width, index);
+                let (x, y) = Canvas::index_to_coords(self.horizontal_size, index);
                 let ray = self.ray_for_pixel(x, y);
                 *pixel = world.color_at(&ray, intersections);
             });

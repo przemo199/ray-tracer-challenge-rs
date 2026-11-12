@@ -31,7 +31,7 @@ impl<'intersections> Intersections<'intersections> {
     }
 
     /// The closest intersection in front of the ray origin (non-negative distance).
-    pub fn hit(&self) -> Option<&Intersection<'_>> {
+    pub fn hit(&self) -> Option<&Intersection<'intersections>> {
         return self
             .iter()
             .filter(|intersection| intersection.distance >= 0.0)
@@ -116,7 +116,7 @@ mod tests {
         let mut intersections = Intersections::new();
         let intersection_1 = Intersection::new(1, boxed_shape.as_ref());
         let intersection_2 = Intersection::new(2, boxed_shape.as_ref());
-        intersections.push(intersection_1.clone());
+        intersections.push(intersection_1);
         intersections.push(intersection_2);
         assert_eq!(intersections.hit(), Some(&intersection_1));
     }
@@ -129,7 +129,7 @@ mod tests {
         let intersection_1 = Intersection::new(-1, boxed_shape.as_ref());
         let intersection_2 = Intersection::new(1, boxed_shape.as_ref());
         intersections.push(intersection_1);
-        intersections.push(intersection_2.clone());
+        intersections.push(intersection_2);
         assert_eq!(intersections.hit(), Some(&intersection_2));
     }
 
@@ -157,7 +157,7 @@ mod tests {
         intersections.push(intersection_1);
         intersections.push(intersection_2);
         intersections.push(intersection_3);
-        intersections.push(intersection_4.clone());
+        intersections.push(intersection_4);
         assert_eq!(intersections.hit(), Some(&intersection_4));
     }
 }

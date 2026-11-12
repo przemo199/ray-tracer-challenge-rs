@@ -24,7 +24,7 @@ fn check(name: &str, canvas: &Canvas) {
         .to_rgb8();
     assert_eq!(
         (reference.width(), reference.height()),
-        (canvas.width, canvas.height),
+        (canvas.width(), canvas.height()),
         "{name}: size differs from the reference"
     );
 

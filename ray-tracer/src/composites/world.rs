@@ -74,15 +74,11 @@ impl World {
         remaining_iterations: u8,
     ) -> Color {
         self.collect_intersections(ray, intersections);
-
-        let shading_intersections = &mut Intersections::new();
-        return intersections
-            .hit()
-            .map(|hit| {
-                let computed_hit = &hit.prepare_computations(ray, intersections);
-                return self.shade_hit(computed_hit, shading_intersections, remaining_iterations);
-            })
-            .unwrap_or(Self::DEFAULT_COLOR);
+        let Some(hit) = intersections.hit().copied() else {
+            return Self::DEFAULT_COLOR;
+        };
+        let computed_hit = hit.prepare_computations(ray, intersections);
+        return self.shade_hit(&computed_hit, intersections, remaining_iterations);
     }
 
     #[inline]
@@ -94,7 +90,12 @@ impl World {
         return self.internal_color_at(ray, intersections, Self::MAX_REFLECTION_ITERATIONS);
     }
 
-    /// Returns whether between the [Light] and [Point] is shape casting shadow
+    /// Returns whether a shadow-casting shape lies between the [Light] and the [Point].
+    ///
+    /// Any blocker will do, so unlike [`World::collect_intersections`] this doesn't sort and stops
+    /// at the first shape in the way. `casts_shadow` is only checked for actual hits: filtering
+    /// shapes by it up front (a virtual call and a read of every material per shadow ray) measured
+    /// slower on `table`, which has many shapes and few shadow hits.
     fn is_in_shadow<'shapes>(
         &'shapes self,
         light: &Light,
@@ -104,10 +105,13 @@ impl World {
         let light_direction = light.position - *point;
         let light_distance = light_direction.magnitude();
         let shadow_ray = Ray::new(*point, light_direction.normalized());
-        self.collect_intersections(&shadow_ray, intersections);
-        return intersections.into_iter().any(|intersection| {
-            return intersection.shape.material().casts_shadow
-                && intersection.is_within_distance(light_distance);
+        return self.shapes.iter().any(|shape| {
+            intersections.clear();
+            shadow_ray.intersect(shape.as_ref(), intersections);
+            return intersections.iter().any(|intersection| {
+                return intersection.is_within_distance(light_distance)
+                    && intersection.shape.material().casts_shadow;
+            });
         });
     }
 

@@ -9,8 +9,9 @@ use std::path::Path;
 /// A grid of pixels, stored row by row starting at the top-left corner.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Canvas {
-    pub width: u32,
-    pub height: u32,
+    // Private: `pixels` holds exactly `width * height` colors, so the size can't change alone.
+    width: u32,
+    height: u32,
     pub(crate) pixels: Vec<Color>,
 }
 
@@ -33,6 +34,16 @@ impl Canvas {
             height,
             pixels: vec![Self::DEFAULT_COLOR; pixel_count],
         };
+    }
+
+    #[inline]
+    pub const fn width(&self) -> u32 {
+        return self.width;
+    }
+
+    #[inline]
+    pub const fn height(&self) -> u32 {
+        return self.height;
     }
 
     #[inline]
@@ -133,8 +144,8 @@ mod tests {
     #[test]
     fn new_canvas() {
         let canvas = Canvas::new(10, 20);
-        assert_eq!(canvas.width, 10);
-        assert_eq!(canvas.height, 20);
+        assert_eq!(canvas.width(), 10);
+        assert_eq!(canvas.height(), 20);
         assert_eq!(canvas.pixels.len(), 200);
         let black = Color::BLACK;
         for pixel in &canvas.pixels {

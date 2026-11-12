@@ -10,7 +10,7 @@ Cargo workspace, edition 2024, stable toolchain (`rust-toolchain.toml`).
 
 | Crate | Kind | Purpose |
 |---|---|---|
-| `ray-tracer/` | lib (`ray_tracer`) | All rendering math and logic. No I/O except `Canvas::to_png_file`. |
+| `ray-tracer/` | lib (`ray_tracer`) | All rendering math and logic. No I/O except `Canvas::to_{png,ppm}_file` and `UvImage::from_path`. |
 | `ray-tracer-cli/` | bin (`ray-tracer-cli`) | Parses a YAML scene file, renders it, writes a PNG. |
 
 Other top-level directories:
@@ -145,6 +145,8 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   as doctests.
 - Avoid heap allocations and cloning of large or heap-owning data (`Material`, `World`, `Vec`s) in the hot
   render path (`World::color_at` and below) — borrow those. Small `Copy` primitives are fine to copy.
+  Each render thread has one `Intersections` buffer, reused by every ray it traces (shadow, reflection,
+  refraction): `ComputedHit<'shape>` borrows the shape, not the buffer, so keep it that way.
 
 ## Performance
 
@@ -174,6 +176,12 @@ recursion. Any change there is a performance change and must be measured — int
   got faster. Algebraic `Color` operators (only reordering without FMA): no change.
 - **Measured: trait upcasting for `==` on trait objects** (`self.dyn_eq(other)`, `other` coercing
   `&dyn Shape` → `&dyn Any`, replacing a virtual `as_any()` call) saves 5% on `reflect_refract`.
+- **Measured: one intersection buffer per thread.** `World::internal_color_at` used to create a new
+  `Intersections` per hit (its `ComputedHit` kept the buffer borrowed); reusing the caller's buffer
+  gave −16% (`reflect_refract`) and −9% (`table`), byte-identical images.
+- **Measured: shadow rays stop at the first blocker** (`World::is_in_shadow`: no sort, no full
+  collection): −17% on `cover` (two lights), −3.6% on `reflect_refract`. Check `casts_shadow` only on
+  hits: filtering every shape by it first (a virtual `material()` call each) was slower on `table`.
 
 ### Benchmarks (Criterion, `ray-tracer/benches/`)
 

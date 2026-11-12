@@ -4,14 +4,14 @@ use crate::utils::CoarseEq;
 use core::fmt::Debug;
 
 /// A ray hitting `shape` at `distance` along the ray.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Intersection<'shape> {
     pub distance: f64,
     pub shape: &'shape dyn Shape,
 }
 
-impl Intersection<'_> {
-    pub fn new(distance: impl Into<f64>, shape: &dyn Shape) -> Intersection<'_> {
+impl<'shape> Intersection<'shape> {
+    pub fn new(distance: impl Into<f64>, shape: &'shape dyn Shape) -> Self {
         return Intersection {
             distance: distance.into(),
             shape,
@@ -22,7 +22,7 @@ impl Intersection<'_> {
         &self,
         ray: &Ray,
         intersections: &Intersections<'_>,
-    ) -> ComputedHit<'_> {
+    ) -> ComputedHit<'shape> {
         let point = ray.position(self.distance);
         let mut normal = self.shape.normal_at(point);
         let camera_direction = -ray.direction;
@@ -247,7 +247,7 @@ mod tests {
         let boxed_shape: Box<dyn Shape> = Box::new(sphere);
         let intersection = Intersection::new(5, boxed_shape.as_ref());
         let mut intersections = Intersections::new();
-        intersections.push(intersection.clone());
+        intersections.push(intersection);
         let ray = Ray::new(Point::new(0, 0, -5), Vector::FORWARD);
         let computed_hit = intersection.prepare_computations(&ray, &intersections);
         assert!(computed_hit.under_point().z > EPSILON / 2.0);
