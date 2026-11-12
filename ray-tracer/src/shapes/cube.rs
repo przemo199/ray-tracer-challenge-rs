@@ -6,7 +6,7 @@ use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Cube {
     transformation_inverse: Transformation,
     /// Transposed inverse, cached for `normal_at`.
@@ -93,12 +93,6 @@ impl Shape for Cube {
 
     fn material(&self) -> &Material {
         return &self.material;
-    }
-}
-
-impl Default for Cube {
-    fn default() -> Cube {
-        return Cube::new(Material::default(), Transformation::IDENTITY);
     }
 }
 

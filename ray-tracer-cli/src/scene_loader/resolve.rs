@@ -71,7 +71,7 @@ fn build_camera(definition: &CameraDef) -> Result<Camera, SceneError> {
     return Ok(camera);
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 struct Definitions {
     base_dir: PathBuf,
     colors: HashMap<String, Color>,

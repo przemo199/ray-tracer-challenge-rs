@@ -17,6 +17,7 @@ criterion = { version = "0.8.2", default-features = false, features = ["cargo_be
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+missing_debug_implementations = "warn"
 
 [workspace.lints.clippy]
 # Project style: every function ends with an explicit `return` (see AGENTS.md).

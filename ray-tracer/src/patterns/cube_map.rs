@@ -5,7 +5,7 @@ use crate::shapes::{Shape, Transform};
 use core::fmt::{Display, Formatter};
 
 /// A face of the unit cube (`-1..=1` on every axis). `Front` is `+z`, `Back` is `-z`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum CubeFace {
     Left,
     Right,

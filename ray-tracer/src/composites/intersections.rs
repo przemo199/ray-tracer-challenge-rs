@@ -5,7 +5,7 @@ use core::ops::{Deref, DerefMut};
 use core::slice::Iter;
 
 /// The intersections of a ray with the scene, plus a reusable scratch buffer for shading.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Intersections<'intersections> {
     hits: Vec<Intersection<'intersections>>,
     /// Shapes a ray is inside; see [`Intersections::containers`].
@@ -42,12 +42,6 @@ impl<'intersections> Intersections<'intersections> {
     /// order (which matters for tracking the refractive indices of overlapping shapes).
     pub fn sort_by_distance(&mut self) {
         self.hits.sort_by(|a, b| a.distance.total_cmp(&b.distance));
-    }
-}
-
-impl Default for Intersections<'_> {
-    fn default() -> Self {
-        return Intersections::new();
     }
 }
 

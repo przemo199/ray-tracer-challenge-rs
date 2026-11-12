@@ -20,6 +20,8 @@ pub fn fast_config() -> Criterion {
 }
 
 /// SplitMix64 PRNG, so the benchmarks need no `rand` dependency.
+/// `Clone` but deliberately not `Copy`: an implicit copy would silently repeat the sequence.
+#[derive(Clone, Debug)]
 pub struct Rng(u64);
 
 impl Rng {

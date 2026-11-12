@@ -1,7 +1,7 @@
 use crate::cli::RenderingMode;
 use clap::Parser;
 
-#[derive(Clone, Debug, Parser)]
+#[derive(Clone, Debug, PartialEq, Eq, Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct CliArguments {
     /// YAML scene file to render

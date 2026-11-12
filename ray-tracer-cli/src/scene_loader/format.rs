@@ -18,6 +18,7 @@ pub type Rgb = [f64; 3];
     clippy::large_enum_variant,
     reason = "parsed once per scene; boxing adds noise"
 )]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Entry {
     Define(String, Define),
     Camera(CameraDef),
@@ -25,7 +26,7 @@ pub enum Entry {
     Shape(ShapeKind, ShapeDef),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShapeKind {
     Plane,
     Sphere,
@@ -34,7 +35,7 @@ pub enum ShapeKind {
     Cone,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct CameraDef {
     pub width: u32,
@@ -45,14 +46,14 @@ pub struct CameraDef {
     pub up: [f64; 3],
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LightDef {
     pub at: [f64; 3],
     pub intensity: Rgb,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ShapeDef {
     pub material: Option<Ref<MaterialDef>>,
@@ -67,7 +68,7 @@ pub struct ShapeDef {
 }
 
 /// Every field is optional so that `extend` can layer a definition over its base.
-#[derive(Clone, Default, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct MaterialDef {
     pub extend: Option<String>,
@@ -84,7 +85,7 @@ pub struct MaterialDef {
 }
 
 /// A material's pattern, selected by its `type:` key.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum PatternDef {
     Stripes(ColorPatternDef),
@@ -97,7 +98,7 @@ pub enum PatternDef {
 }
 
 /// The 3D patterns, which alternate or blend two colors.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ColorPatternDef {
     pub colors: [Ref<Rgb>; 2],
@@ -106,7 +107,7 @@ pub struct ColorPatternDef {
 
 /// `uv_pattern` for the planar/spherical/cylindrical mappings; one pattern per face (`left`, `front`,
 /// `right`, `back`, `up`, `down`) for `mapping: cube`. `resolve.rs` checks the combination.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TextureMapDef {
     pub mapping: MappingKind,
@@ -120,7 +121,7 @@ pub struct TextureMapDef {
     pub transform: Option<Vec<Step>>,
 }
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MappingKind {
     Planar,
@@ -130,7 +131,7 @@ pub enum MappingKind {
 }
 
 /// A 2D pattern for a texture map, selected by its `type:` key.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum UvPatternDef {
     Checkers {
@@ -148,7 +149,7 @@ pub enum UvPatternDef {
 }
 
 /// The main color and the four corner colors (upper/bottom, left/right) of an align check.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AlignCheckColors {
     pub main: Ref<Rgb>,
@@ -158,7 +159,7 @@ pub struct AlignCheckColors {
     pub br: Ref<Rgb>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Define {
     pub extend: Option<String>,
@@ -169,6 +170,7 @@ pub struct Define {
     clippy::large_enum_variant,
     reason = "parsed once per scene; boxing adds noise"
 )]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DefineValue {
     Material(MaterialDef),
     Transform(Vec<Step>),
@@ -179,11 +181,11 @@ pub enum DefineValue {
 pub type Step = Ref<Op>;
 
 /// A single transformation, already turned into its matrix.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Op(pub Transformation);
 
 /// A value written inline, or the name of a `define`d one.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Ref<T> {
     Named(String),
     Inline(T),
@@ -276,6 +278,7 @@ impl<'de> Deserialize<'de> for DefineValue {
 }
 
 /// Element of a `define`d list, which is either a color (numbers) or a transform (steps).
+#[derive(Clone, Debug, PartialEq)]
 enum NumberOrStep {
     Number(f64),
     Step(Step),

@@ -5,7 +5,7 @@ use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::{CoarseEq, solve_quadratic};
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Sphere {
     transformation_inverse: Transformation,
     /// Transposed inverse, cached for `normal_at`.
@@ -49,12 +49,6 @@ impl Shape for Sphere {
 
     fn material(&self) -> &Material {
         return &self.material;
-    }
-}
-
-impl Default for Sphere {
-    fn default() -> Self {
-        return Self::new(Material::default(), Transformation::IDENTITY);
     }
 }
 

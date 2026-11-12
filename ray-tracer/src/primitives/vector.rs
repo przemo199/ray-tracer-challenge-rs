@@ -3,7 +3,7 @@ use crate::utils::{CoarseEq, Squared};
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -113,12 +113,6 @@ impl Vector {
 
     pub fn abs(&self) -> Self {
         return self.map(|value| value.abs());
-    }
-}
-
-impl Default for Vector {
-    fn default() -> Self {
-        return Self::ZERO;
     }
 }
 

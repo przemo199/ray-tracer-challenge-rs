@@ -98,6 +98,19 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   `String`, `Box<dyn …>`) only when the function stores or consumes the value — e.g. constructors like
   `World::new` or `TextureMap::new` — so callers never clone just to satisfy a signature. Small `Copy`
   primitives (`Point`, `Vector`, `Color`, `f64`) are the exception: pass them by value as above.
+- **Derive the standard traits a type can support.** When adding or changing a struct or enum, go
+  through the derivable std traits and add every one that fits, instead of only what the current code
+  needs: `Debug` always (`missing_debug_implementations` warns for public types); `Clone`; `Copy` for
+  small plain-data types (a few words, no heap data); `PartialEq`, plus `Eq` and `Hash` when no field is
+  a float (field-less enums like `CubeFace`, `ShapeKind`, unit structs); `Default` when an obvious
+  "empty" value exists (all zeros, `None`s, empty collections). Prefer a derive over a hand-written impl
+  whenever they are equivalent (e.g. `Default` that returns all zeros, or `Self::new()` of an empty
+  collection). Hand-write an impl, with a comment saying why, only when the derived one would be wrong
+  or harmful: `Default` for `Matrix` (identity, not zeros) or `Light`; `Debug` for `UvImage` (would
+  print every pixel) or `SceneError` (shown to users); `PartialEq` for types with `Box<dyn …>` fields
+  (rust-lang/rust#31740) or order-insensitive equality (`World`, `Intersections`). Leave out traits that
+  would mislead: no `Copy` on large or stateful types (e.g. the benchmark `Rng`, where a silent copy
+  repeats the sequence). Private single-use scaffolding (serde `Visitor`s, test fixtures) may skip this.
 - **Group scalars before scaling a tuple**: `vector * (2.0 * d)` rather than `vector * 2.0 * d`
   (one tuple multiply instead of two).
 - **Float comparison**: use `CoarseEq::coarse_eq` / `EPSILON` from `consts`, never raw `==` on computed `f64`.

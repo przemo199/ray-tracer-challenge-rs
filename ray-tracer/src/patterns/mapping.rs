@@ -47,7 +47,7 @@ impl PartialEq<&Self> for &dyn Mapping {
 }
 
 /// Tiles the texture across the xz-plane, repeating every unit.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct PlanarMapping;
 
 impl Mapping for PlanarMapping {
@@ -59,7 +59,7 @@ impl Mapping for PlanarMapping {
 
 /// Wraps the texture around a unit sphere like latitude/longitude: `u` goes around the y-axis,
 /// `v` from the south pole (0) to the north pole (1).
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct SphericalMapping;
 
 impl Mapping for SphericalMapping {
@@ -74,7 +74,7 @@ impl Mapping for SphericalMapping {
 
 /// Wraps the texture around a unit cylinder like a label on a can: `u` goes around the y-axis, `v`
 /// up the side, repeating every unit of height (`v = 0` at `y = 0`, `y = 1`, …).
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct CylindricalMapping;
 
 impl Mapping for CylindricalMapping {

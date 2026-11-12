@@ -4,7 +4,7 @@ use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
 /// Struct representing point in three-dimensional space
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -54,12 +54,6 @@ impl Point {
 
     pub fn abs(&self) -> Self {
         return self.map(|value| value.abs());
-    }
-}
-
-impl Default for Point {
-    fn default() -> Self {
-        return Self::ORIGIN;
     }
 }
 

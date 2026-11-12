@@ -6,7 +6,7 @@ use std::path::Path;
 
 /// An image used as a texture: `u` runs left to right, `v` from the bottom row (0) to the top (1).
 /// Pixels are looked up nearest-neighbor.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct UvImage {
     image: RgbImage,
 }

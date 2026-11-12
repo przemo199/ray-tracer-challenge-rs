@@ -6,7 +6,7 @@ use crate::primitives::{Point, Transformation, Vector};
 use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Plane {
     transformation_inverse: Transformation,
     /// Transposed inverse, cached for `normal_at`.
@@ -44,12 +44,6 @@ impl Shape for Plane {
 
     fn material(&self) -> &Material {
         return &self.material;
-    }
-}
-
-impl Default for Plane {
-    fn default() -> Plane {
-        return Plane::new(Material::default(), Transformation::IDENTITY);
     }
 }
 
