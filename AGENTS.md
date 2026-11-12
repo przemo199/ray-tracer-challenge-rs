@@ -89,6 +89,15 @@ These are deliberate project style. Follow them even where clippy defaults or "i
   `*point - *vector` when you hold references. Do **not** add `impl Add for &Point`-style operators: a
   reference-based version was benchmarked 4–7% slower with identical output, and it forces noisy
   `&(&a + &b) * 2.0` call sites. See [Performance](#performance).
+- **Take the least specific argument type that works.** When writing or changing a function, start
+  from the most general borrowed form and only move to a more specific one when the body needs it:
+  `&[T]` instead of `&Vec<T>`/`Vec<T>`, `&str` instead of `&String`/`String`, `&Path` (or
+  `impl AsRef<Path>` for public entry points) instead of `&PathBuf`/`PathBuf`, `&T` instead of
+  `&Box<T>`, `Option<&T>` instead of `&Option<T>` (pass `x.as_ref()`/`x.as_deref()`), `&dyn Trait` or
+  `impl Trait` instead of a concrete type when only the trait is used. Take ownership (`Vec<T>`,
+  `String`, `Box<dyn …>`) only when the function stores or consumes the value — e.g. constructors like
+  `World::new` or `TextureMap::new` — so callers never clone just to satisfy a signature. Small `Copy`
+  primitives (`Point`, `Vector`, `Color`, `f64`) are the exception: pass them by value as above.
 - **Group scalars before scaling a tuple**: `vector * (2.0 * d)` rather than `vector * 2.0 * d`
   (one tuple multiply instead of two).
 - **Float comparison**: use `CoarseEq::coarse_eq` / `EPSILON` from `consts`, never raw `==` on computed `f64`.

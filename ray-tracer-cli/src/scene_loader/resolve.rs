@@ -18,13 +18,13 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// `base_dir` is where relative paths in the scene (texture images) are resolved from.
-pub fn build(entries: Vec<Entry>, base_dir: &Path) -> Result<(World, Camera), SceneError> {
+pub fn build(entries: &[Entry], base_dir: &Path) -> Result<(World, Camera), SceneError> {
     // Definitions first, so `add` entries may refer to names defined further down the file.
     let mut definitions = Definitions {
         base_dir: base_dir.to_owned(),
         ..Definitions::default()
     };
-    for entry in &entries {
+    for entry in entries {
         if let Entry::Define(name, define) = entry {
             definitions.add(name, define)?;
         }
@@ -35,14 +35,14 @@ pub fn build(entries: Vec<Entry>, base_dir: &Path) -> Result<(World, Camera), Sc
     for entry in entries {
         match entry {
             Entry::Define(..) => {}
-            Entry::Camera(definition) => camera = Some(build_camera(&definition)?),
+            Entry::Camera(definition) => camera = Some(build_camera(definition)?),
             Entry::Light(LightDef { at, intensity }) => {
                 world
                     .lights
-                    .push(Light::new(Point::from(at), Color::from(intensity)));
+                    .push(Light::new(Point::from(*at), Color::from(*intensity)));
             }
             Entry::Shape(kind, definition) => {
-                world.shapes.push(definitions.shape(kind, &definition)?);
+                world.shapes.push(definitions.shape(*kind, definition)?);
             }
         }
     }
@@ -217,19 +217,19 @@ impl Definitions {
                     .to_owned(),
             ));
         }
-        let face = |name: &str, face: &Option<UvPatternDef>| {
-            let face = face.as_ref().ok_or_else(|| {
+        let face = |name: &str, face: Option<&UvPatternDef>| {
+            let face = face.ok_or_else(|| {
                 return SceneError::Invalid(format!("cube map: missing the `{name}` face"));
             })?;
             return self.uv_pattern(face);
         };
         let cube_map = CubeMap::new(
-            face("left", &definition.left)?,
-            face("front", &definition.front)?,
-            face("right", &definition.right)?,
-            face("back", &definition.back)?,
-            face("up", &definition.up)?,
-            face("down", &definition.down)?,
+            face("left", definition.left.as_ref())?,
+            face("front", definition.front.as_ref())?,
+            face("right", definition.right.as_ref())?,
+            face("back", definition.back.as_ref())?,
+            face("up", definition.up.as_ref())?,
+            face("down", definition.down.as_ref())?,
         );
         return self.transformed(cube_map, definition.transform.as_deref());
     }

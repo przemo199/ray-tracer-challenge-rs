@@ -23,7 +23,7 @@ pub fn load_scene_description<P: AsRef<Path>>(path: P) -> Result<(World, Camera)
 /// Parses a scene, resolving relative paths in it (texture images) from `base_dir`.
 pub fn parse_scene(text: &str, base_dir: &Path) -> Result<(World, Camera), SceneError> {
     let entries: Vec<format::Entry> = serde_saphyr::from_str(text).map_err(SceneError::Yaml)?;
-    return resolve::build(entries, base_dir);
+    return resolve::build(&entries, base_dir);
 }
 
 pub enum SceneError {
