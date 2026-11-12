@@ -14,10 +14,6 @@ use std::path::PathBuf;
 
 pub type Rgb = [f64; 3];
 
-#[allow(
-    clippy::large_enum_variant,
-    reason = "parsed once per scene; boxing adds noise"
-)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Entry {
     Define(String, Define),
@@ -166,7 +162,7 @@ pub struct Define {
     pub value: DefineValue,
 }
 
-#[allow(
+#[expect(
     clippy::large_enum_variant,
     reason = "parsed once per scene; boxing adds noise"
 )]
@@ -198,7 +194,7 @@ impl<'de> Deserialize<'de> for Entry {
         impl<'de> Visitor<'de> for EntryVisitor {
             type Value = Entry;
 
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
                 return formatter.write_str("a mapping starting with `add` or `define`");
             }
 
@@ -243,7 +239,7 @@ impl<'de> Deserialize<'de> for DefineValue {
         impl<'de> Visitor<'de> for DefineValueVisitor {
             type Value = DefineValue;
 
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
                 return formatter
                     .write_str("a material mapping, a list of transforms, or a color [r, g, b]");
             }
@@ -291,7 +287,7 @@ impl<'de> Deserialize<'de> for NumberOrStep {
         impl<'de> Visitor<'de> for ItemVisitor {
             type Value = NumberOrStep;
 
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
                 return formatter.write_str("a number, a transform name or a transform operation");
             }
 
@@ -328,7 +324,7 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Ref<T> {
         impl<'de, T: Deserialize<'de>> Visitor<'de> for RefVisitor<T> {
             type Value = Ref<T>;
 
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
                 return formatter.write_str("a defined name or an inline value");
             }
 
@@ -356,7 +352,7 @@ impl<'de> Deserialize<'de> for Op {
         impl<'de> Visitor<'de> for OpVisitor {
             type Value = Op;
 
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
                 return formatter.write_str(
                     "[scale|translate, x, y, z] or [rotate-x|rotate-y|rotate-z, radians]",
                 );

@@ -90,7 +90,7 @@ impl Matrix<2> {
 
     pub fn cofactor(&self, row: usize, column: usize) -> f64 {
         let minor = self.minor(row, column);
-        return if (row + column) % 2 == 0 {
+        return if (row + column).is_multiple_of(2) {
             minor
         } else {
             -minor
@@ -172,7 +172,7 @@ impl Matrix<3> {
 
     pub fn cofactor(&self, row: usize, column: usize) -> f64 {
         let minor = self.minor(row, column);
-        return if (row + column) % 2 == 0 {
+        return if (row + column).is_multiple_of(2) {
             minor
         } else {
             -minor
@@ -254,7 +254,7 @@ impl Matrix<4> {
 
     fn cofactor(&self, row: usize, column: usize) -> f64 {
         let minor = self.minor(row, column);
-        return if (row + column) % 2 == 0 {
+        return if (row + column).is_multiple_of(2) {
             minor
         } else {
             -minor
@@ -372,7 +372,7 @@ impl Mul<Point> for Matrix<4> {
                 .into_iter()
                 .enumerate()
                 .fold(0.0, |acc, (col_index, value)| {
-                    acc + (self[row_index][col_index] * value)
+                    acc.algebraic_add(self[row_index][col_index].algebraic_mul(value))
                 });
         });
     }
@@ -388,7 +388,7 @@ impl Mul<Vector> for Matrix<4> {
                 .into_iter()
                 .enumerate()
                 .fold(0.0, |acc, (col_index, value)| {
-                    acc + (self[row_index][col_index] * value)
+                    acc.algebraic_add(self[row_index][col_index].algebraic_mul(value))
                 });
         });
     }

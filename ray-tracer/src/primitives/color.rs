@@ -86,7 +86,7 @@ impl Color {
     }
 
     pub fn clamped(&self) -> Color {
-        return self.map(Self::clamp).into();
+        return self.map(Self::clamp);
     }
 
     fn clamp(color_value: f64) -> f64 {
@@ -101,7 +101,7 @@ impl Default for Color {
 }
 
 impl Display for Color {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Color")
             .field("red", &self.red)
@@ -189,9 +189,9 @@ impl<T: Into<f64>> From<[T; 4]> for Color {
     }
 }
 
-impl Into<[f64; 3]> for Color {
-    fn into(self) -> [f64; 3] {
-        return self.channels();
+impl From<Color> for [f64; 3] {
+    fn from(color: Color) -> Self {
+        return color.channels();
     }
 }
 

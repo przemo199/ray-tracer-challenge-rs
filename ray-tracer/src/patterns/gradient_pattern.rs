@@ -36,7 +36,7 @@ impl Pattern for GradientPattern {
 }
 
 impl Display for GradientPattern {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("GradientPattern")
             .field("color_a", &self.color_a)

@@ -129,7 +129,7 @@ fn bench_hit(criterion: &mut Criterion) {
     let mut rng = Rng::new(12);
     let sphere = Sphere::default();
     // 8 intersections per ray, some behind the origin (negative), as shadows and recursion produce
-    let lists: Vec<Intersections> = (0..BATCH / 8)
+    let lists: Vec<Intersections<'_>> = (0..BATCH / 8)
         .map(|_| {
             let mut xs = Intersections::new();
             xs.extend((0..8).map(|_| Intersection::new(rng.range(-5.0, 10.0), &sphere)));

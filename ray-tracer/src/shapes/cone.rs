@@ -139,7 +139,7 @@ impl Default for Cone {
 }
 
 impl Display for Cone {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Cone")
             .field("min", &self.min)

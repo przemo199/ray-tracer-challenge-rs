@@ -1,6 +1,13 @@
 [workspace]
 members = ["ray-tracer", "ray-tracer-cli"]
-resolver = "2"
+resolver = "3"
+
+# Shared by every member (`<field>.workspace = true` in each crate's manifest).
+[workspace.package]
+version = "0.1.0"
+authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
+edition = "2024"
+rust-version = "1.100"
 publish = false
 
 [workspace.dependencies]
@@ -18,10 +25,19 @@ criterion = { version = "0.8.2", default-features = false, features = ["cargo_be
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_debug_implementations = "warn"
+# Write `Formatter<'_>`, not `Formatter`, so borrowed types are visible in signatures.
+elided_lifetimes_in_paths = "warn"
 
 [workspace.lints.clippy]
 # Project style: every function ends with an explicit `return` (see AGENTS.md).
 needless_return = "allow"
+
+# Cargo's own lints (Rust 1.100+).
+[workspace.lints.cargo]
+missing_lints_inheritance = "warn"
+unused_dependencies = "warn"
+unused_workspace_dependencies = "warn"
+unused_workspace_package_fields = "warn"
 
 [profile.release]
 codegen-units = 1

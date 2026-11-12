@@ -84,7 +84,7 @@ pub trait Shape: Debug + Send + Sync + Transform + Intersect + DynPartialEq {
 /// (see [`DynPartialEq::dyn_eq`]).
 impl PartialEq for dyn Shape {
     fn eq(&self, other: &Self) -> bool {
-        return self.dyn_eq(DynPartialEq::as_any(other));
+        return self.dyn_eq(other);
     }
 }
 
@@ -111,8 +111,10 @@ mod tests {
     #[test]
     fn assigning_material() {
         let mut shape = Sphere::default();
-        let mut material = Material::default();
-        material.color = Color::new(0.8, 1, 0.6);
+        let material = Material {
+            color: Color::new(0.8, 1, 0.6),
+            ..Material::default()
+        };
         shape.material = material.clone();
         assert_eq!(shape.material(), &material);
     }

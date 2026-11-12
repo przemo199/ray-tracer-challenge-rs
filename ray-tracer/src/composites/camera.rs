@@ -128,7 +128,7 @@ impl Transform for Camera {
 }
 
 impl Display for Camera {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Camera")
             .field("horizontal_size", &self.horizontal_size)

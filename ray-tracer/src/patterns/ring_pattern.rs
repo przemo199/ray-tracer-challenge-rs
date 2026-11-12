@@ -37,7 +37,7 @@ impl Pattern for RingPattern {
 }
 
 impl Display for RingPattern {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("CircularPattern")
             .field("color_a", &self.color_a)

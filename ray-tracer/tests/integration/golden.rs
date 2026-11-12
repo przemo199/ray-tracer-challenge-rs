@@ -29,17 +29,17 @@ fn check(name: &str, canvas: &Canvas) {
     );
 
     // largest channel difference of each pixel
-    let differences: Vec<u8> = canvas
-        .to_rgb8()
-        .chunks(3)
-        .zip(reference.as_raw().chunks(3))
-        .map(|(actual, expected)| {
-            return actual
-                .iter()
-                .zip(expected)
-                .map(|(actual, expected)| actual.abs_diff(*expected))
-                .max()
-                .unwrap_or(0);
+    let actual = canvas.to_rgb8();
+    let (actual_pixels, _) = actual.as_chunks::<3>();
+    let (expected_pixels, _) = reference.as_raw().as_chunks::<3>();
+    let differences: Vec<u8> = actual_pixels
+        .iter()
+        .zip(expected_pixels)
+        .map(|([r, g, b], [expected_r, expected_g, expected_b])| {
+            return r
+                .abs_diff(*expected_r)
+                .max(g.abs_diff(*expected_g))
+                .max(b.abs_diff(*expected_b));
         })
         .collect();
     // Rays grazing an edge may flip to a different surface on another platform; allow a few.

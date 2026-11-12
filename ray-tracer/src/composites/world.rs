@@ -37,7 +37,7 @@ impl World {
     #[inline]
     fn shade_hit<'shapes>(
         &'shapes self,
-        computed_hit: &ComputedHit,
+        computed_hit: &ComputedHit<'_>,
         intersections: &mut Intersections<'shapes>,
         remaining_iterations: u8,
     ) -> Color {
@@ -113,7 +113,7 @@ impl World {
 
     fn reflected_color<'shapes>(
         &'shapes self,
-        computed_hit: &ComputedHit,
+        computed_hit: &ComputedHit<'_>,
         intersections: &mut Intersections<'shapes>,
         remaining_iterations: u8,
     ) -> Color {
@@ -129,7 +129,7 @@ impl World {
 
     fn refracted_color<'shapes>(
         &'shapes self,
-        computed_hit: &ComputedHit,
+        computed_hit: &ComputedHit<'_>,
         intersections: &mut Intersections<'shapes>,
         remaining_iterations: u8,
     ) -> Color {
@@ -181,7 +181,7 @@ impl PartialEq for World {
 }
 
 impl Display for World {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("World")
             .field("light", &self.lights)
@@ -278,8 +278,10 @@ mod tests {
 
     #[test]
     fn shading_intersection_from_inside() {
-        let mut world = World::default();
-        world.lights = vec![Light::new(Point::new(0, 0.25, 0), Color::WHITE)];
+        let world = World {
+            lights: vec![Light::new(Point::new(0, 0.25, 0), Color::WHITE)],
+            ..World::default()
+        };
         let ray = Ray::new(Point::ORIGIN, Vector::FORWARD);
         let intersection = Intersection::new(0.5, world.shapes[1].as_ref());
         let intersections = Intersections::new();
@@ -324,8 +326,10 @@ mod tests {
 
     #[test]
     fn shade_hit_is_given_intersection_in_shadow() {
-        let mut world = World::default();
-        world.lights = vec![Light::new(Point::new(0, 0, -10), Color::WHITE)];
+        let mut world = World {
+            lights: vec![Light::new(Point::new(0, 0, -10), Color::WHITE)],
+            ..World::default()
+        };
         world.shapes.push(Box::<Sphere>::default());
         let mut sphere = Sphere::default();
         sphere.set_transformation(transformations::translation(0, 0, 10));
@@ -511,14 +515,18 @@ mod tests {
     #[test]
     fn shade_hit_with_transparent_material() {
         let mut world = World::default();
-        let mut floor_material = Material::default();
-        floor_material.transparency = 0.5;
-        floor_material.refractive_index = 1.5;
+        let floor_material = Material {
+            transparency: 0.5,
+            refractive_index: 1.5,
+            ..Material::default()
+        };
         let floor = Plane::new(floor_material, transformations::translation(0, -1, 0));
         world.shapes.push(Box::new(floor.clone()));
-        let mut ball_material = Material::default();
-        ball_material.color = Color::RED;
-        ball_material.ambient = 0.5;
+        let ball_material = Material {
+            color: Color::RED,
+            ambient: 0.5,
+            ..Material::default()
+        };
         let mut ball = Sphere::default();
         ball.material = ball_material;
         ball.set_transformation(transformations::translation(0, -3.5, -0.5));
@@ -540,15 +548,19 @@ mod tests {
     fn shade_hit_with_reflective_and_transparent_material() {
         let mut world = World::default();
         let floor_transformation = transformations::translation(0, -1, 0);
-        let mut floor_material = Material::default();
-        floor_material.reflectiveness = 0.5;
-        floor_material.transparency = 0.5;
-        floor_material.refractive_index = 1.5;
+        let floor_material = Material {
+            reflectiveness: 0.5,
+            transparency: 0.5,
+            refractive_index: 1.5,
+            ..Material::default()
+        };
         let floor = Plane::new(floor_material, floor_transformation);
         world.shapes.push(Box::new(floor.clone()));
-        let mut ball_material = Material::default();
-        ball_material.color = Color::RED;
-        ball_material.ambient = 0.5;
+        let ball_material = Material {
+            color: Color::RED,
+            ambient: 0.5,
+            ..Material::default()
+        };
         let mut ball = Sphere::default();
         ball.material = ball_material;
         ball.set_transformation(transformations::translation(0, -3.5, -0.5));

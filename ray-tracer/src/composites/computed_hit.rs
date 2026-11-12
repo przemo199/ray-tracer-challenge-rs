@@ -19,6 +19,10 @@ pub struct ComputedHit<'shape> {
 }
 
 impl ComputedHit<'_> {
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "one argument per field; its single caller (prepare_computations) is on the hot path"
+    )]
     pub fn new(
         distance: f64,
         shape: &dyn Shape,

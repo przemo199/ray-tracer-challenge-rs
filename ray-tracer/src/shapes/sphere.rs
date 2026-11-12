@@ -33,12 +33,12 @@ impl Intersect for Sphere {
         let b = 2.0 * ray.direction.dot(&sphere_to_ray_distance);
         let c = sphere_to_ray_distance.dot(&sphere_to_ray_distance) - 1.0;
 
-        solve_quadratic(a, b, c).map(|(distance_1, distance_2)| {
+        if let Some((distance_1, distance_2)) = solve_quadratic(a, b, c) {
             intersections.extend([
                 Intersection::new(distance_1, self),
                 Intersection::new(distance_2, self),
             ]);
-        });
+        }
     }
 }
 
@@ -53,7 +53,7 @@ impl Shape for Sphere {
 }
 
 impl Display for Sphere {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Sphere")
             .field("material", &self.material)
@@ -181,8 +181,10 @@ mod tests {
     #[test]
     fn sphere_may_be_assigned_material() {
         let mut sphere = Sphere::default();
-        let mut material = Material::default();
-        material.ambient = 1.0;
+        let material = Material {
+            ambient: 1.0,
+            ..Material::default()
+        };
         sphere.material = material.clone();
         assert_eq!(sphere.material, material);
     }

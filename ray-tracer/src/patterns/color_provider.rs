@@ -9,7 +9,7 @@ pub trait ColorProvider: Debug + Display + Send + Sync + DynPartialEq + CloneCol
 
 impl PartialEq for dyn ColorProvider {
     fn eq(&self, other: &Self) -> bool {
-        return self.dyn_eq(DynPartialEq::as_any(other));
+        return self.dyn_eq(other);
     }
 }
 

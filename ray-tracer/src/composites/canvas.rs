@@ -207,12 +207,9 @@ mod tests {
             .skip(3)
             .flat_map(str::split_whitespace)
             .collect();
-        assert_eq!(numbers.len(), 10 * 2 * 3);
-        assert!(
-            numbers
-                .chunks(3)
-                .all(|pixel| pixel == ["255", "204", "153"])
-        );
+        let (pixels, remainder) = numbers.as_chunks::<3>();
+        assert_eq!((pixels.len(), remainder.len()), (10 * 2, 0));
+        assert!(pixels.iter().all(|pixel| *pixel == ["255", "204", "153"]));
     }
 
     #[test]

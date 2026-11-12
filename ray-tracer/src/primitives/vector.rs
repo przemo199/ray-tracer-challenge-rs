@@ -1,5 +1,5 @@
 use crate::primitives::Point;
-use crate::utils::{CoarseEq, Squared};
+use crate::utils::CoarseEq;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Index, Mul, Neg, Sub};
 
@@ -82,7 +82,7 @@ impl Vector {
 
     #[inline]
     pub fn magnitude(&self) -> f64 {
-        return (self.x.squared() + self.y.squared() + self.z.squared()).sqrt();
+        return self.dot(self).sqrt();
     }
 
     pub fn normalized(&self) -> Self {
@@ -90,15 +90,27 @@ impl Vector {
         return self.map(|value| value / magnitude);
     }
 
+    /// Uses `algebraic_*` arithmetic (like `cross` and `Matrix<4> * Point`): it lets LLVM reorder or
+    /// fuse the operations. `mul_add` compiles to a slow libm call without an FMA target feature.
     pub fn dot(&self, rhs: &Self) -> f64 {
-        return self.z.mul_add(rhs.z, self.x.mul_add(rhs.x, self.y * rhs.y));
+        return self
+            .x
+            .algebraic_mul(rhs.x)
+            .algebraic_add(self.y.algebraic_mul(rhs.y))
+            .algebraic_add(self.z.algebraic_mul(rhs.z));
     }
 
     pub fn cross(&self, rhs: &Self) -> Self {
         return Self::new(
-            self.y.mul_add(rhs.z, -self.z * rhs.y),
-            self.z.mul_add(rhs.x, -self.x * rhs.z),
-            self.x.mul_add(rhs.y, -self.y * rhs.x),
+            self.y
+                .algebraic_mul(rhs.z)
+                .algebraic_sub(self.z.algebraic_mul(rhs.y)),
+            self.z
+                .algebraic_mul(rhs.x)
+                .algebraic_sub(self.x.algebraic_mul(rhs.z)),
+            self.x
+                .algebraic_mul(rhs.y)
+                .algebraic_sub(self.y.algebraic_mul(rhs.x)),
         );
     }
 

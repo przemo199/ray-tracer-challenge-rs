@@ -47,7 +47,7 @@ pub enum SceneError {
 }
 
 impl Display for SceneError {
-    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         return match self {
             Self::Io { path, source } => {
                 write!(formatter, "cannot read {}: {source}", path.display())
@@ -69,7 +69,7 @@ impl Display for SceneError {
 
 // `main` reports errors with `Debug`, so make it as readable as `Display`.
 impl Debug for SceneError {
-    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         return Display::fmt(self, formatter);
     }
 }

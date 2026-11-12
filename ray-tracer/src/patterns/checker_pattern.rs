@@ -36,7 +36,7 @@ impl Pattern for CheckerPattern {
 }
 
 impl Display for CheckerPattern {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("CheckerPattern")
             .field("color_a", &self.color_a)

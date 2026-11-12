@@ -1,3 +1,7 @@
+// Unused `pub` items in this binary, which plain `dead_code` skips. Not a workspace lint: the
+// library's unit-test binary would report every public item its own tests don't call.
+#![warn(dead_code_pub_in_binary)]
+
 use crate::cli::{CliArguments, RenderingMode};
 use crate::scene_loader::load_scene_description;
 use clap::Parser;

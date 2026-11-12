@@ -17,6 +17,9 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # Fail on any warning from this workspace's code (Cargo's `build.warnings`, Rust 1.97+);
+  # setup-rust-toolchain's `build-warnings` input also defaults to deny.
+  CARGO_BUILD_WARNINGS: deny
 
 # setup-rust-toolchain installs the toolchain and components from rust-toolchain.toml,
 # caches builds and annotates warnings/errors on pull requests.
@@ -37,8 +40,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rust-lang/setup-rust-toolchain@v2
-        with:
-          build-warnings: warn # TODO: remove (default: deny) once existing warnings are fixed
       # --all-targets also type-checks tests and benchmarks
       - run: cargo clippy --workspace --all-targets
 
@@ -52,7 +53,5 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rust-lang/setup-rust-toolchain@v2
-        with:
-          build-warnings: warn # TODO: remove (default: deny) once existing warnings are fixed
       - run: cargo test --workspace
       - run: cargo test --workspace --release

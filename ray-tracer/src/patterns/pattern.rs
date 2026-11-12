@@ -79,7 +79,7 @@ mod test_pattern {
     }
 
     impl Display for TestPattern {
-        fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
+        fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
             return f
                 .debug_struct("TestPattern")
                 .field("transformation", &self.transformation())

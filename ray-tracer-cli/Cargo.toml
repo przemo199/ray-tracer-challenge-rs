@@ -1,8 +1,10 @@
 [package]
 name = "ray-tracer-cli"
-version = "0.1.0"
-authors = ["Przemyslaw Kaminski <przemyslaw.m.kaminski@gmail.com>"]
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true

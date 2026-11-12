@@ -58,7 +58,7 @@ impl Point {
 }
 
 impl Display for Point {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Point")
             .field("x", &self.x)

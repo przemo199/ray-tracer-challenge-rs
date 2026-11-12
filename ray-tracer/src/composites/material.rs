@@ -4,6 +4,23 @@ use crate::primitives::{Color, Light, Point, Vector};
 use crate::shapes::Shape;
 use core::fmt::{Display, Formatter, Result};
 
+/// How a surface reacts to light. Every field is public; set the ones you need and take the rest
+/// from [`Material::default`].
+///
+/// # Examples
+/// ```
+/// use ray_tracer::composites::Material;
+/// use ray_tracer::primitives::Color;
+///
+/// let glass = Material {
+///     color: Color::BLACK,
+///     transparency: 1.0,
+///     refractive_index: 1.5,
+///     ..Material::default()
+/// };
+///
+/// assert_eq!(glass.ambient, Material::default().ambient);
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Material {
     pub color: Color,
@@ -21,32 +38,6 @@ pub struct Material {
 impl Material {
     /// Refractive index of air
     pub const DEFAULT_REFRACTIVE_INDEX: f64 = 1.0;
-
-    pub fn new(
-        color: Color,
-        color_provider: Option<Box<dyn ColorProvider>>,
-        ambient: impl Into<f64>,
-        diffuse: impl Into<f64>,
-        specular: impl Into<f64>,
-        shininess: impl Into<f64>,
-        reflectiveness: impl Into<f64>,
-        transparency: impl Into<f64>,
-        refractive_index: impl Into<f64>,
-        casts_shadow: bool,
-    ) -> Self {
-        return Self {
-            color,
-            pattern: color_provider,
-            ambient: ambient.into(),
-            diffuse: diffuse.into(),
-            specular: specular.into(),
-            shininess: shininess.into(),
-            reflectiveness: reflectiveness.into(),
-            transparency: transparency.into(),
-            refractive_index: refractive_index.into(),
-            casts_shadow,
-        };
-    }
 
     #[inline]
     pub fn lighting(
@@ -114,7 +105,7 @@ impl Material {
 
     pub fn lighting_from_computed_hit(
         &self,
-        computed_hit: &ComputedHit,
+        computed_hit: &ComputedHit<'_>,
         light: &Light,
         in_shadow: bool,
     ) -> Color {
@@ -155,12 +146,23 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        return Self::new(Color::WHITE, None, 0.1, 0.9, 0.9, 200, 0, 0, 1, true);
+        return Self {
+            color: Color::WHITE,
+            pattern: None,
+            ambient: 0.1,
+            diffuse: 0.9,
+            specular: 0.9,
+            shininess: 200.0,
+            reflectiveness: 0.0,
+            refractive_index: Self::DEFAULT_REFRACTIVE_INDEX,
+            transparency: 0.0,
+            casts_shadow: true,
+        };
     }
 }
 
 impl Display for Material {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Material")
             .field("color", &self.color)

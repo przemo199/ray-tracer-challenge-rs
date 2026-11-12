@@ -1,18 +1,14 @@
 use core::any::Any;
 
 pub trait DynPartialEq: Any + private::Sealed {
-    fn as_any(&self) -> &dyn Any;
-
     /// What `==` on trait objects (`dyn Shape`, `dyn ColorProvider`) uses: `other` is this very
-    /// object, or has the same type and equal contents.
+    /// object, or has the same type and equal contents. Any trait object built on this trait
+    /// coerces to `&dyn Any` (trait upcasting), so pass `other` itself, e.g. `a.dyn_eq(b)` with
+    /// `b: &dyn Shape`; never a `&Box<dyn Shape>`, whose `Any` type would be the box.
     fn dyn_eq(&self, other: &dyn Any) -> bool;
 }
 
 impl<T: PartialEq + 'static> DynPartialEq for T {
-    fn as_any(&self) -> &dyn Any {
-        return self;
-    }
-
     fn dyn_eq(&self, other: &dyn Any) -> bool {
         // The same object is equal without comparing every field: the common case when
         // intersections are matched against their own shapes. Same address alone doesn't prove it
@@ -36,7 +32,7 @@ mod tests {
 
     #[test]
     fn equal_values_of_the_same_type_are_equal() {
-        assert!(Sphere::default().dyn_eq(Sphere::default().as_any()));
+        assert!(Sphere::default().dyn_eq(&Sphere::default()));
     }
 
     #[test]
@@ -57,7 +53,7 @@ mod tests {
 
     #[test]
     fn values_of_different_types_are_never_equal() {
-        assert!(!Sphere::default().dyn_eq(Cube::default().as_any()));
+        assert!(!Sphere::default().dyn_eq(&Cube::default()));
         assert!(!1_i32.dyn_eq(&1_i64));
     }
 
@@ -71,7 +67,7 @@ mod tests {
         let (first, second): (Box<dyn DynPartialEq>, Box<dyn DynPartialEq>) =
             (Box::new(First), Box::new(Second));
         assert!(core::ptr::addr_eq(first.as_ref(), second.as_ref()));
-        assert!(!first.dyn_eq(second.as_any()));
-        assert!(first.dyn_eq(First.as_any()));
+        assert!(!first.dyn_eq(second.as_ref()));
+        assert!(first.dyn_eq(&First));
     }
 }

@@ -29,6 +29,6 @@ impl Clone for Box<dyn UvPattern> {
 
 impl PartialEq for dyn UvPattern {
     fn eq(&self, other: &Self) -> bool {
-        return self.dyn_eq(DynPartialEq::as_any(other));
+        return self.dyn_eq(other);
     }
 }

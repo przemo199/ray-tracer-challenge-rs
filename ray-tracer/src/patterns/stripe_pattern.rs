@@ -36,7 +36,7 @@ impl Pattern for StripePattern {
 }
 
 impl Display for StripePattern {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("StripePattern")
             .field("color_a", &self.color_a)
@@ -84,13 +84,13 @@ mod tests {
     #[test]
     fn lighting_with_stripe_pattern_applied() {
         let shape = Sphere::default();
-        let mut material = Material::default();
-        material.pattern = Option::from(
-            Box::new(StripePattern::new(Color::WHITE, Color::BLACK)) as Box<dyn ColorProvider>
-        );
-        material.ambient = 1.0;
-        material.diffuse = 0.0;
-        material.specular = 0.0;
+        let material = Material {
+            pattern: Some(Box::new(StripePattern::new(Color::WHITE, Color::BLACK))),
+            ambient: 1.0,
+            diffuse: 0.0,
+            specular: 0.0,
+            ..Material::default()
+        };
         let camera = Vector::new(0, 0, -1);
         let normal = Vector::new(0, 0, -1);
         let light = Light::new(Point::new(0, 10, -10), Color::WHITE);

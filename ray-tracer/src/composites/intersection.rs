@@ -21,7 +21,7 @@ impl Intersection<'_> {
     pub fn prepare_computations(
         &self,
         ray: &Ray,
-        intersections: &Intersections,
+        intersections: &Intersections<'_>,
     ) -> ComputedHit<'_> {
         let point = ray.position(self.distance);
         let mut normal = self.shape.normal_at(point);
@@ -57,7 +57,7 @@ impl Intersection<'_> {
 
     /// Refractive indices on both sides of this hit (the book's "containers" algorithm): walks
     /// `intersections` in order, tracking which shapes the ray is inside.
-    fn refractive_indices(&self, intersections: &Intersections) -> (f64, f64) {
+    fn refractive_indices(&self, intersections: &Intersections<'_>) -> (f64, f64) {
         let innermost = |containers: &[&dyn Shape]| {
             return containers
                 .last()
@@ -95,7 +95,7 @@ impl Intersection<'_> {
 }
 
 impl CoarseEq<Intersection<'_>> for Intersection<'_> {
-    fn coarse_eq(&self, other: &Intersection) -> bool {
+    fn coarse_eq(&self, other: &Intersection<'_>) -> bool {
         return std::ptr::eq(self, other)
             || self.distance.coarse_eq(&other.distance) && self.shape == other.shape;
     }

@@ -162,6 +162,12 @@ recursion. Any change there is a performance change and must be measured — int
 - **Measured: storing the transposed inverse** (`normal_transformation`) saves 5% on `reflect_refract`
   although the `normal_at` microbenchmark showed no change — for hot-path changes, trust whole-render
   comparisons over microbenchmarks.
+- **Measured: `f64::algebraic_*` beats `mul_add`** in `Vector::dot`/`cross` and `Matrix<4> * Point/Vector`:
+  3–5× faster `vector/{dot,cross,reflect}`, −2–3% whole renders, byte-identical images. We build for
+  baseline x86-64 (no FMA feature), where `mul_add` is a libm call. Other `mul_add`s (cones, refraction,
+  Schlick) are candidates too — measure each.
+- **Measured: trait upcasting for `==` on trait objects** (`self.dyn_eq(other)`, `other` coercing
+  `&dyn Shape` → `&dyn Any`, replacing a virtual `as_any()` call) saves 5% on `reflect_refract`.
 
 ### Benchmarks (Criterion, `ray-tracer/benches/`)
 
@@ -175,7 +181,11 @@ cmd //c "scripts\bench.cmd -- --baseline before"        # after; add a filter, e
 ```
 
 "Regressed"/"improved" means beyond the 5% noise threshold; re-run before trusting smaller changes.
-Close IDE indexing/games first, and only compare baselines from the same machine.
+Close IDE indexing/games first, and only compare baselines from the same machine. Don't edit files
+while a baseline records: IDE re-checks triggered by the edits skewed one baseline by 10–50%. Most
+reliable is an A/B run back to back: save a baseline with the change (`--save-baseline new`), swap
+the old code in, run `--baseline new`, restore. Limit a run to one file with
+`scripts\bench.cmd --bench primitives -- …` (a `|` regex filter breaks under `cmd`).
 
 ### Whole-render comparisons
 
@@ -250,9 +260,15 @@ exact line.
 - Windows dev machine with `core.autocrlf=true`; files are LF in the repo. Don't mass-convert line endings.
 - CI is `.github/workflows/ci.yml` (hand-written YAML): `cargo fmt --check`, `cargo clippy` and debug +
   release tests on Linux, Windows and macOS. Keep it in sync when the commands above change. The
-  toolchain comes from `rust-toolchain.toml` (via `actions-rust-lang/setup-rust-toolchain`); warnings
-  don't fail CI yet (`build-warnings: warn`) — remove that once the existing warnings are fixed.
-- `.cargo/config.toml`'s `target-cpu=native` is intentionally disabled (`cfg(any())`).
+  toolchain comes from `rust-toolchain.toml` (via `actions-rust-lang/setup-rust-toolchain`). **Any
+  warning fails CI** (`CARGO_BUILD_WARNINGS: deny`, Cargo's `build.warnings`), so keep build, clippy
+  and tests warning-free; silence a lint only with `#[expect(lint, reason = "…")]`, which warns once
+  it is no longer needed (not `#[allow]`).
+- Manifests: shared package fields (`version`, `edition`, `rust-version`, …) live in
+  `[workspace.package]` and lints in `[workspace.lints.{rust,clippy,cargo}]`; members inherit both.
+  `rust-version` is 1.100 (the code uses `algebraic_*`, `Vec::from_fn`, Cargo lints); bump it when using
+  newer features. Resolver 3; `.cargo/config.toml` ignores dependency releases younger than 7 days.
+- `.cargo/config.toml`'s `target-cpu=native` is intentionally disabled (`cfg(false)`).
 - Keep all build output, benchmark builds, scratch renders and
   temporary worktrees under the repo's `target/` (excluded from scanning); never build or run binaries
   from `%TEMP%` or other new directories. Reuse target dirs instead of creating fresh ones, and prefer

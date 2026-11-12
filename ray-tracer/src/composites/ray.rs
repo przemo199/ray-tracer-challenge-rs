@@ -50,7 +50,7 @@ impl Ray {
 }
 
 impl Display for Ray {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Ray")
             .field("origin", &self.origin)

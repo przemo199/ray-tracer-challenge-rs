@@ -132,7 +132,7 @@ impl Default for Cylinder {
 }
 
 impl Display for Cylinder {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         return f
             .debug_struct("Cylinder")
             .field("min", &self.min)
@@ -249,10 +249,12 @@ mod tests {
         #[case] direction: Vector,
         #[case] count: usize,
     ) {
-        let mut cylinder = Cylinder::default();
-        cylinder.min = 1.0;
-        cylinder.max = 2.0;
-        cylinder.closed = true;
+        let cylinder = Cylinder {
+            min: 1.0,
+            max: 2.0,
+            closed: true,
+            ..Cylinder::default()
+        };
         let boxed_shape: Box<dyn Shape> = Box::new(cylinder);
         let ray = Ray::new(origin, direction.normalized());
         let mut intersections = Intersections::new();
@@ -268,10 +270,12 @@ mod tests {
     #[case(Point::new(0.5, 2, 0), Vector::UP)]
     #[case(Point::new(0, 2, 0.5), Vector::UP)]
     fn normal_vector_on_cylinder_caps(#[case] point: Point, #[case] normal: Vector) {
-        let mut cylinder = Cylinder::default();
-        cylinder.min = 1.0;
-        cylinder.max = 2.0;
-        cylinder.closed = true;
+        let cylinder = Cylinder {
+            min: 1.0,
+            max: 2.0,
+            closed: true,
+            ..Cylinder::default()
+        };
         assert_eq!(cylinder.local_normal_at(point), normal);
     }
 }

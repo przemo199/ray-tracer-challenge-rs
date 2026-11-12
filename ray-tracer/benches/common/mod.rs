@@ -79,7 +79,7 @@ impl Rng {
     }
 
     pub fn batch<T>(&mut self, mut generate: impl FnMut(&mut Self) -> T) -> Vec<T> {
-        return (0..BATCH).map(|_| generate(self)).collect();
+        return Vec::from_fn(BATCH, |_| generate(self));
     }
 }
 
