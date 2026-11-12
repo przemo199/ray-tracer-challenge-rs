@@ -147,7 +147,7 @@ impl World {
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = computed_hit.normal * n_ratio.mul_add(cos_i, -cos_t)
+        let direction = computed_hit.normal * n_ratio.algebraic_mul(cos_i).algebraic_sub(cos_t)
             - computed_hit.camera_direction * n_ratio;
         let refracted_ray = Ray::new(computed_hit.under_point(), direction);
         let refracted_color =

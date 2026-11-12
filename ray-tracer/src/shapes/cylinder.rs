@@ -38,8 +38,16 @@ impl Cylinder {
 
     fn check_cap(ray: &Ray, distance: impl Into<f64>) -> bool {
         let distance = distance.into();
-        let x = ray.direction.x.mul_add(distance, ray.origin.x);
-        let z = ray.direction.z.mul_add(distance, ray.origin.z);
+        let x = ray
+            .direction
+            .x
+            .algebraic_mul(distance)
+            .algebraic_add(ray.origin.x);
+        let z = ray
+            .direction
+            .z
+            .algebraic_mul(distance)
+            .algebraic_add(ray.origin.z);
         return (x.squared() + z.squared()) <= 1.0;
     }
 
@@ -75,7 +83,8 @@ impl Intersect for Cylinder {
                 * ray
                     .origin
                     .x
-                    .mul_add(ray.direction.x, ray.origin.z * ray.direction.z);
+                    .algebraic_mul(ray.direction.x)
+                    .algebraic_add(ray.origin.z.algebraic_mul(ray.direction.z));
             let c = ray.origin.x.squared() + ray.origin.z.squared() - 1.0;
 
             if let Some((mut distance_1, mut distance_2)) = solve_quadratic(a, b, c) {
@@ -83,12 +92,16 @@ impl Intersect for Cylinder {
                     core::mem::swap(&mut distance_1, &mut distance_2);
                 }
 
-                let y1 = distance_1.mul_add(ray.direction.y, ray.origin.y);
+                let y1 = distance_1
+                    .algebraic_mul(ray.direction.y)
+                    .algebraic_add(ray.origin.y);
                 if self.min < y1 && y1 < self.max {
                     intersections.push(Intersection::new(distance_1, self));
                 }
 
-                let y2 = distance_2.mul_add(ray.direction.y, ray.origin.y);
+                let y2 = distance_2
+                    .algebraic_mul(ray.direction.y)
+                    .algebraic_add(ray.origin.y);
                 if self.min < y2 && y2 < self.max {
                     intersections.push(Intersection::new(distance_2, self));
                 }
@@ -199,8 +212,11 @@ mod tests {
         let mut intersections = Intersections::new();
         boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 2);
-        assert_eq!(intersections[0].distance, distance_1);
-        assert_eq!(intersections[1].distance, distance_2);
+        let distances = (intersections[0].distance, intersections[1].distance);
+        assert!(
+            distances.0.coarse_eq(&distance_1) && distances.1.coarse_eq(&distance_2),
+            "{distances:?}"
+        );
     }
 
     #[rstest]

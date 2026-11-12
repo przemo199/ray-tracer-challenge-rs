@@ -164,15 +164,25 @@ recursion. Any change there is a performance change and must be measured — int
   comparisons over microbenchmarks.
 - **Measured: `f64::algebraic_*` beats `mul_add`** in `Vector::dot`/`cross` and `Matrix<4> * Point/Vector`:
   3–5× faster `vector/{dot,cross,reflect}`, −2–3% whole renders, byte-identical images. We build for
-  baseline x86-64 (no FMA feature), where `mul_add` is a libm call. Other `mul_add`s (cones, refraction,
-  Schlick) are candidates too — measure each.
+  baseline x86-64 (no FMA feature), where `mul_add` is a libm call (`fma`). Replacing the rest
+  (`solve_quadratic`, cylinder/cone intersections, Schlick, refraction) gave cylinders −7%, cones −8%.
+  **Don't use `mul_add`**; write `a.algebraic_mul(b).algebraic_add(c)`. Check for leftover libm calls
+  with `cargo rustc -p ray-tracer --release --lib -- --emit=asm -C lto=off` and grep `callq`.
+- **Measured, no gain: other `algebraic_*` uses.** `algebraic_div` merges divisions by the same value
+  into one reciprocal (`normalized`, `solve_quadratic`, `Cube::check_axis`): asm divisions halved,
+  but `cover` got 4% slower (independent divisions pipeline; a reciprocal chain doesn't) and nothing
+  got faster. Algebraic `Color` operators (only reordering without FMA): no change.
 - **Measured: trait upcasting for `==` on trait objects** (`self.dyn_eq(other)`, `other` coercing
   `&dyn Shape` → `&dyn Any`, replacing a virtual `as_any()` call) saves 5% on `reflect_refract`.
 
 ### Benchmarks (Criterion, `ray-tracer/benches/`)
 
 `primitives.rs` (vector/color/matrix ops) and `shapes.rs` (`intersect/<shape>/{hit,miss}`, `normal_at`,
-`intersections/hit`); fixed-seed inputs in batches of 1024. Full run ~45 s. Always use the script — it
+`intersections/hit`); fixed-seed inputs in batches of 1024, from `rand`'s `Xoshiro256PlusPlus` via
+`common::rng(seed)` and the `RandomInputs` helpers (`vector`, `unit_vector`, `point_in_ball`, …) in
+`benches/common/mod.rs`. Keep a named generator, not `StdRng` (its algorithm may change between `rand`
+versions, which would silently change the inputs). Changing the generator, a seed or a helper changes
+the inputs, so baselines recorded before it aren't comparable. Full run ~45 s. Always use the script — it
 pins the run to one core; unpinned, identical code varied by up to 50%, pinned by ≤6%:
 
 ```sh

@@ -42,7 +42,7 @@ impl<T> Cubed for T where T: Squared {}
 
 #[inline]
 pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
-    let discriminant = (4.0 * a).mul_add(-c, b.squared());
+    let discriminant = b.algebraic_mul(b).algebraic_sub((4.0 * a).algebraic_mul(c));
     if discriminant < 0.0 {
         return None;
     }

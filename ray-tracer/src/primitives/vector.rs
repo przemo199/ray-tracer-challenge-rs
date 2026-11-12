@@ -90,8 +90,6 @@ impl Vector {
         return self.map(|value| value / magnitude);
     }
 
-    /// Uses `algebraic_*` arithmetic (like `cross` and `Matrix<4> * Point`): it lets LLVM reorder or
-    /// fuse the operations. `mul_add` compiles to a slow libm call without an FMA target feature.
     pub fn dot(&self, rhs: &Self) -> f64 {
         return self
             .x

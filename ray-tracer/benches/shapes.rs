@@ -3,15 +3,16 @@
 
 mod common;
 
-use common::{BATCH, Rng, fast_config, map_into};
+use common::{BATCH, BenchRng, RandomInputs, fast_config, map_into, rng};
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use rand::RngExt;
 use ray_tracer::composites::{Intersection, Intersections, Material, Ray};
 use ray_tracer::primitives::{Point, Transformation, Vector};
 use ray_tracer::shapes::{Cone, Cube, Cylinder, Plane, Shape, Sphere, Triangle};
 use std::hint::black_box;
 
 /// Name, shape, and a sampler of points inside it. All but the plane fit within radius 1.8.
-type Case = (&'static str, Box<dyn Shape>, fn(&mut Rng) -> Point);
+type Case = (&'static str, Box<dyn Shape>, fn(&mut BenchRng) -> Point);
 
 fn shapes() -> Vec<Case> {
     let material = Material::default;
@@ -20,7 +21,7 @@ fn shapes() -> Vec<Case> {
             rng.point_in_ball(Point::ORIGIN, 0.5)
         }),
         ("plane", Box::new(Plane::default()), |rng| {
-            Point::new(rng.range(-2.0, 2.0), 0, rng.range(-2.0, 2.0))
+            Point::new(rng.random_range(-2.0..2.0), 0, rng.random_range(-2.0..2.0))
         }),
         ("cube", Box::new(Cube::default()), |rng| {
             rng.point_in_ball(Point::ORIGIN, 0.5)
@@ -48,13 +49,13 @@ fn shapes() -> Vec<Case> {
                 Point::new(-1, 0, 0),
                 Point::new(1, 0, 0),
             )),
-            |rng| Point::new(rng.range(-0.4, 0.4), rng.range(0.05, 0.5), 0),
+            |rng| Point::new(rng.random_range(-0.4..0.4), rng.random_range(0.05..0.5), 0),
         ),
     ];
 }
 
 /// Rays from 5 units away through `target`; `target` 3 units off-center makes them miss.
-fn rays(rng: &mut Rng, target: impl Fn(&mut Rng, Vector) -> Point) -> Vec<Ray> {
+fn rays(rng: &mut BenchRng, target: impl Fn(&mut BenchRng, Vector) -> Point) -> Vec<Ray> {
     return rng.batch(|rng| {
         let outward = rng.unit_vector();
         let origin = Point::ORIGIN + outward * 5.0;
@@ -71,7 +72,7 @@ fn intersect_all<'shape>(shape: &'shape dyn Shape, rays: &[Ray], xs: &mut Inters
 }
 
 fn bench_intersect(criterion: &mut Criterion) {
-    let mut rng = Rng::new(10);
+    let mut rng = rng(10);
     let shapes = shapes();
     let mut group = criterion.benchmark_group("intersect");
     group.throughput(Throughput::Elements(BATCH as u64));
@@ -102,7 +103,7 @@ fn bench_intersect(criterion: &mut Criterion) {
 }
 
 fn bench_normal_at(criterion: &mut Criterion) {
-    let mut rng = Rng::new(11);
+    let mut rng = rng(11);
     let sphere_points = rng.batch(|rng| Point::from(rng.unit_vector()));
     let cube_points = rng.batch(|rng| {
         // project onto the cube's surface along the largest component
@@ -126,13 +127,13 @@ fn bench_normal_at(criterion: &mut Criterion) {
 }
 
 fn bench_hit(criterion: &mut Criterion) {
-    let mut rng = Rng::new(12);
+    let mut rng = rng(12);
     let sphere = Sphere::default();
     // 8 intersections per ray, some behind the origin (negative), as shadows and recursion produce
     let lists: Vec<Intersections<'_>> = (0..BATCH / 8)
         .map(|_| {
             let mut xs = Intersections::new();
-            xs.extend((0..8).map(|_| Intersection::new(rng.range(-5.0, 10.0), &sphere)));
+            xs.extend((0..8).map(|_| Intersection::new(rng.random_range(-5.0..10.0), &sphere)));
             return xs;
         })
         .collect();

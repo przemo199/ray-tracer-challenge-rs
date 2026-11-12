@@ -21,6 +21,8 @@ serde-saphyr = { version = "2.1.1", default-features = false, features = ["deser
 rstest = "0.28.0"
 # Benchmarks only. `plotters` (charts) is left out to keep compile times down.
 criterion = { version = "0.8.2", default-features = false, features = ["cargo_bench_support"] }
+# Benchmarks only: seeded inputs. Default features (OS entropy, ChaCha `StdRng`) aren't needed.
+rand = { version = "0.10.3", default-features = false }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

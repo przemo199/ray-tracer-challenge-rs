@@ -4,14 +4,15 @@
 
 mod common;
 
-use common::{BATCH, Rng, fast_config, map_into};
+use common::{BATCH, RandomInputs, fast_config, map_into, rng};
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
+use rand::RngExt;
 use ray_tracer::primitives::{Color, Point, Transformation, Vector, transformations};
 
 fn bench_vector(criterion: &mut Criterion) {
-    let mut rng = Rng::new(1);
+    let mut rng = rng(1);
     let pairs = rng.batch(|rng| (rng.vector(), rng.unit_vector()));
-    let scalars = rng.batch(|rng| (rng.vector(), rng.range(-2.0, 2.0)));
+    let scalars = rng.batch(|rng| (rng.vector(), rng.random_range(-2.0..2.0)));
     let mut vectors = vec![Vector::ZERO; BATCH];
     let mut floats = vec![0.0; BATCH];
 
@@ -39,9 +40,9 @@ fn bench_vector(criterion: &mut Criterion) {
 }
 
 fn bench_color(criterion: &mut Criterion) {
-    let mut rng = Rng::new(2);
+    let mut rng = rng(2);
     let pairs = rng.batch(|rng| (rng.color(), rng.color()));
-    let scalars = rng.batch(|rng| (rng.color(), rng.range(0.0, 1.0)));
+    let scalars = rng.batch(|rng| (rng.color(), rng.random_range(0.0..1.0)));
     let mut colors = vec![Color::BLACK; BATCH];
 
     let mut group = criterion.benchmark_group("color");
@@ -59,7 +60,7 @@ fn bench_color(criterion: &mut Criterion) {
 }
 
 fn bench_matrix(criterion: &mut Criterion) {
-    let mut rng = Rng::new(3);
+    let mut rng = rng(3);
     let points = rng.batch(|rng| (rng.transformation(), Point::from(rng.vector())));
     let vectors = rng.batch(|rng| (rng.transformation(), rng.vector()));
     let matrices = rng.batch(|rng| (rng.transformation(), rng.transformation()));

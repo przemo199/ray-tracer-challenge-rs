@@ -76,7 +76,9 @@ impl ComputedHit<'_> {
         let reflection_coefficient = ((self.refractive_index_1 - self.refractive_index_2)
             / (self.refractive_index_1 + self.refractive_index_2))
             .squared();
-        return (1.0 - reflection_coefficient).mul_add((1.0 - cos).powi(5), reflection_coefficient);
+        return (1.0 - reflection_coefficient)
+            .algebraic_mul((1.0 - cos).powi(5))
+            .algebraic_add(reflection_coefficient);
     }
 }
 

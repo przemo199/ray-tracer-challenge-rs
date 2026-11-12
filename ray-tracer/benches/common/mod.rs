@@ -2,6 +2,8 @@
 #![allow(dead_code)] // each bench file uses a subset
 
 use criterion::Criterion;
+use rand::rngs::Xoshiro256PlusPlus;
+use rand::{RngExt, SeedableRng};
 use ray_tracer::primitives::{Color, Point, Transformation, Vector, transformations};
 use std::f64::consts::TAU;
 use std::hint::black_box;
@@ -19,35 +21,27 @@ pub fn fast_config() -> Criterion {
         .noise_threshold(0.05);
 }
 
-/// SplitMix64 PRNG, so the benchmarks need no `rand` dependency.
-/// `Clone` but deliberately not `Copy`: an implicit copy would silently repeat the sequence.
-#[derive(Clone, Debug)]
-pub struct Rng(u64);
+/// The benchmarks' random number generator. A named algorithm rather than `rand`'s `StdRng`, whose
+/// algorithm may change between `rand` versions: the same seed must keep giving the same inputs.
+pub type BenchRng = Xoshiro256PlusPlus;
 
-impl Rng {
-    pub const fn new(seed: u64) -> Self {
-        return Self(seed);
-    }
+pub fn rng(seed: u64) -> BenchRng {
+    return BenchRng::seed_from_u64(seed);
+}
 
-    /// Uniform value in `[min, max)`.
-    pub fn range(&mut self, min: f64, max: f64) -> f64 {
-        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
-        let mut z = self.0;
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-        let unit = ((z ^ (z >> 31)) >> 11) as f64 / (1_u64 << 53) as f64;
-        return (max - min).mul_add(unit, min);
-    }
-
-    pub fn vector(&mut self) -> Vector {
+/// Random ray tracer values, for any `rand` generator.
+pub trait RandomInputs: RngExt {
+    /// Components uniform in `[-1, 1)`.
+    fn vector(&mut self) -> Vector {
         return Vector::new(
-            self.range(-1.0, 1.0),
-            self.range(-1.0, 1.0),
-            self.range(-1.0, 1.0),
+            self.random_range(-1.0..1.0),
+            self.random_range(-1.0..1.0),
+            self.random_range(-1.0..1.0),
         );
     }
 
-    pub fn unit_vector(&mut self) -> Vector {
+    /// Uniformly distributed direction (rejection sampling in the unit ball).
+    fn unit_vector(&mut self) -> Vector {
         loop {
             let vector = self.vector();
             let magnitude = vector.magnitude();
@@ -57,31 +51,43 @@ impl Rng {
         }
     }
 
-    pub fn point_in_ball(&mut self, center: Point, radius: f64) -> Point {
-        return center + self.unit_vector() * (radius * self.range(0.0, 1.0).cbrt());
+    /// Uniformly distributed inside the ball.
+    fn point_in_ball(&mut self, center: Point, radius: f64) -> Point {
+        let distance = radius * self.random_range(0.0..1.0_f64).cbrt();
+        return center + self.unit_vector() * distance;
     }
 
-    pub fn color(&mut self) -> Color {
+    fn color(&mut self) -> Color {
         return Color::new(
-            self.range(0.0, 1.0),
-            self.range(0.0, 1.0),
-            self.range(0.0, 1.0),
+            self.random_range(0.0..1.0),
+            self.random_range(0.0..1.0),
+            self.random_range(0.0..1.0),
         );
     }
 
     /// Random invertible transformation.
-    pub fn transformation(&mut self) -> Transformation {
+    fn transformation(&mut self) -> Transformation {
         let offset = self.vector() * 5.0;
         return transformations::translation(offset.x, offset.y, offset.z)
-            * transformations::rotation_x(self.range(0.0, TAU))
-            * transformations::rotation_y(self.range(0.0, TAU))
-            * transformations::scaling(self.range(0.5, 2.0), self.range(0.5, 2.0), 1.5);
+            * transformations::rotation_x(self.random_range(0.0..TAU))
+            * transformations::rotation_y(self.random_range(0.0..TAU))
+            * transformations::scaling(
+                self.random_range(0.5..2.0),
+                self.random_range(0.5..2.0),
+                1.5,
+            );
     }
 
-    pub fn batch<T>(&mut self, mut generate: impl FnMut(&mut Self) -> T) -> Vec<T> {
+    /// [`BATCH`] values from `generate`.
+    fn batch<T>(&mut self, mut generate: impl FnMut(&mut Self) -> T) -> Vec<T>
+    where
+        Self: Sized,
+    {
         return Vec::from_fn(BATCH, |_| generate(self));
     }
 }
+
+impl<R: RngExt + ?Sized> RandomInputs for R {}
 
 /// Applies `operation` to every input into a reused output buffer (no allocation while timing).
 pub fn map_into<I, O>(inputs: &[I], outputs: &mut [O], operation: impl Fn(&I) -> O) {

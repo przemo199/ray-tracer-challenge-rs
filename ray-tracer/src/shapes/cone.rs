@@ -38,8 +38,16 @@ impl Cone {
 
     fn check_caps(ray: &Ray, distance: impl Into<f64>, radius: impl Into<f64>) -> bool {
         let distance = distance.into();
-        let x = ray.direction.x.mul_add(distance, ray.origin.x);
-        let z = ray.direction.z.mul_add(distance, ray.origin.z);
+        let x = ray
+            .direction
+            .x
+            .algebraic_mul(distance)
+            .algebraic_add(ray.origin.x);
+        let z = ray
+            .direction
+            .z
+            .algebraic_mul(distance)
+            .algebraic_add(ray.origin.z);
         return (x.squared() + z.squared()) <= radius.into().squared();
     }
 
@@ -70,12 +78,12 @@ impl Intersect for Cone {
     fn local_intersect<'shape>(&'shape self, ray: &Ray, intersections: &mut Intersections<'shape>) {
         let a = ray.direction.x.squared() - ray.direction.y.squared() + ray.direction.z.squared();
         let b = 2.0
-            * ray.origin.z.mul_add(
-                ray.direction.z,
-                ray.origin
-                    .x
-                    .mul_add(ray.direction.x, -ray.origin.y * ray.direction.y),
-            );
+            * ray
+                .origin
+                .x
+                .algebraic_mul(ray.direction.x)
+                .algebraic_sub(ray.origin.y.algebraic_mul(ray.direction.y))
+                .algebraic_add(ray.origin.z.algebraic_mul(ray.direction.z));
         let c = ray.origin.x.squared() - ray.origin.y.squared() + ray.origin.z.squared();
 
         if a.abs() < EPSILON && b.abs() > EPSILON {
@@ -86,12 +94,20 @@ impl Intersect for Cone {
                 core::mem::swap(&mut distance_1, &mut distance_2);
             }
 
-            let y1 = ray.direction.y.mul_add(distance_1, ray.origin.y);
+            let y1 = ray
+                .direction
+                .y
+                .algebraic_mul(distance_1)
+                .algebraic_add(ray.origin.y);
             if self.min < y1 && y1 < self.max {
                 intersections.push(Intersection::new(distance_1, self));
             }
 
-            let y2 = ray.direction.y.mul_add(distance_2, ray.origin.y);
+            let y2 = ray
+                .direction
+                .y
+                .algebraic_mul(distance_2)
+                .algebraic_add(ray.origin.y);
             if self.min < y2 && y2 < self.max {
                 intersections.push(Intersection::new(distance_2, self));
             }
@@ -179,7 +195,8 @@ mod tests {
 
     #[rstest]
     #[case(Point::new(0, 0, -5), Vector::FORWARD, 5.0, 5.0)]
-    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254015492644, 8.660254060196127)]
+    // tangent to the cone: both hits are at 5√3
+    #[case(Point::new(0, 0, -5), Vector::new(1, 1, 1), 8.660254037844386, 8.660254037844386)]
     #[case(Point::new(1, 1, -5), Vector::new(-0.5, -1, 1), 4.550055679356354, 49.44994432064365)]
     fn intersecting_ray_with_cone(
         #[case] origin: Point,
@@ -193,8 +210,11 @@ mod tests {
         let mut intersections = Intersections::new();
         boxed_shape.local_intersect(&ray, &mut intersections);
         assert_eq!(intersections.len(), 2);
-        assert_eq!(intersections[0].distance, distance_1);
-        assert_eq!(intersections[1].distance, distance_2);
+        let distances = (intersections[0].distance, intersections[1].distance);
+        assert!(
+            distances.0.coarse_eq(&distance_1) && distances.1.coarse_eq(&distance_2),
+            "{distances:?}"
+        );
     }
 
     #[test]
